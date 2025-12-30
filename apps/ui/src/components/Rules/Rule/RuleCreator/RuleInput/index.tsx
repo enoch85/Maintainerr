@@ -270,7 +270,9 @@ const RuleInput = (props: IRuleInput) => {
     if (firstval) {
       const val = JSON.parse(firstval)
       const appId = val[0]
-      if (!apps?.[appId]?.props.find((el) => el.id == val[1])) {
+      // Find application by ID instead of using array index
+      const app = apps?.find((a) => a.id === appId)
+      if (!app?.props.find((el) => el.id == val[1])) {
         setFirstVal(undefined)
       }
     }
