@@ -175,7 +175,9 @@ export class JellyfinMapper {
       actors: this.toMediaActors(item.People),
       childCount: item.ChildCount || undefined,
       watchedChildCount: item.UserData?.PlayedPercentage
-        ? Math.floor((item.ChildCount || 0) * (item.UserData.PlayedPercentage / 100))
+        ? Math.floor(
+            (item.ChildCount || 0) * (item.UserData.PlayedPercentage / 100),
+          )
         : undefined,
       index: item.IndexNumber || undefined,
       parentIndex: item.ParentIndexNumber || undefined,
@@ -199,9 +201,7 @@ export class JellyfinMapper {
   /**
    * Convert Jellyfin collection type to library type.
    */
-  static toLibraryType(
-    collectionType?: string | null,
-  ): 'movie' | 'show' {
+  static toLibraryType(collectionType?: string | null): 'movie' | 'show' {
     switch (collectionType?.toLowerCase()) {
       case 'movies':
         return 'movie';
@@ -312,12 +312,8 @@ export class JellyfinMapper {
     }
 
     return sources.map((source) => {
-      const videoStream = source.MediaStreams?.find(
-        (s) => s.Type === 'Video',
-      );
-      const audioStream = source.MediaStreams?.find(
-        (s) => s.Type === 'Audio',
-      );
+      const videoStream = source.MediaStreams?.find((s) => s.Type === 'Video');
+      const audioStream = source.MediaStreams?.find((s) => s.Type === 'Audio');
 
       return {
         id: source.Id || '',
@@ -341,9 +337,7 @@ export class JellyfinMapper {
     });
   }
 
-  private static toMediaGenres(
-    genres?: string[] | null,
-  ): MediaGenre[] {
+  private static toMediaGenres(genres?: string[] | null): MediaGenre[] {
     if (!genres || !Array.isArray(genres)) {
       return [];
     }
@@ -354,9 +348,7 @@ export class JellyfinMapper {
     }));
   }
 
-  private static toMediaActors(
-    people?: BaseItemDto['People'],
-  ): MediaActor[] {
+  private static toMediaActors(people?: BaseItemDto['People']): MediaActor[] {
     if (!people || !Array.isArray(people)) {
       return [];
     }

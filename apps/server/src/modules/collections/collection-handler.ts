@@ -40,7 +40,9 @@ export class CollectionHandler {
 
     const mediaServer = await this.getMediaServer();
     const libraries = await mediaServer.getLibraries();
-    const library = libraries.find((e) => e.id === collection.libraryId.toString());
+    const library = libraries.find(
+      (e) => e.id === collection.libraryId.toString(),
+    );
 
     // TODO Media should only be removed from the collection if the handle action is performed successfully
     await this.collectionService.removeFromCollection(collection.id, [

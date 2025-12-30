@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class RenamePlexIdToMediaServerId1767043644000
-  implements MigrationInterface
-{
+export class RenamePlexIdToMediaServerId1767043644000 implements MigrationInterface {
   name = 'RenamePlexIdToMediaServerId1767043644000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

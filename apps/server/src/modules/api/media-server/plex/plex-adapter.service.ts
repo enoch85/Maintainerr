@@ -134,7 +134,10 @@ export class PlexAdapterService implements IMediaServerService {
     type?: EMediaDataType,
   ): Promise<number> {
     const plexType = type ? PlexMapper.toPlexDataType(type) : undefined;
-    const count = await this.plexApi.getLibraryContentCount(libraryId, plexType);
+    const count = await this.plexApi.getLibraryContentCount(
+      libraryId,
+      plexType,
+    );
     return count ?? 0;
   }
 
@@ -180,7 +183,7 @@ export class PlexAdapterService implements IMediaServerService {
     const results = await this.plexApi.getRecentlyAdded(libraryId);
 
     if (!results) return [];
-    
+
     // Apply limit if provided
     const limited = options?.limit ? results.slice(0, options.limit) : results;
     return limited.map(PlexMapper.toMediaItem);
@@ -223,13 +226,17 @@ export class PlexAdapterService implements IMediaServerService {
     return collections.map(PlexMapper.toMediaCollection);
   }
 
-  async getCollection(collectionId: string): Promise<MediaCollection | undefined> {
+  async getCollection(
+    collectionId: string,
+  ): Promise<MediaCollection | undefined> {
     const collection = await this.plexApi.getCollection(collectionId);
     if (!collection) return undefined;
     return PlexMapper.toMediaCollection(collection);
   }
 
-  async createCollection(params: CreateCollectionParams): Promise<MediaCollection> {
+  async createCollection(
+    params: CreateCollectionParams,
+  ): Promise<MediaCollection> {
     const plexType = PlexMapper.toPlexDataType(params.type);
     const result = await this.plexApi.createCollection({
       libraryId: params.libraryId,
@@ -260,7 +267,10 @@ export class PlexAdapterService implements IMediaServerService {
     await this.plexApi.addChildToCollection(collectionId, itemId);
   }
 
-  async removeFromCollection(collectionId: string, itemId: string): Promise<void> {
+  async removeFromCollection(
+    collectionId: string,
+    itemId: string,
+  ): Promise<void> {
     await this.plexApi.deleteChildFromCollection(collectionId, itemId);
   }
 
@@ -282,7 +292,7 @@ export class PlexAdapterService implements IMediaServerService {
     // For now, we'll need to pass it through or look it up another way
     // This is a limitation that may need addressing
     // UpdateCollectionSettings expects libraryId which we don't have here
-    
+
     // TODO: This method needs access to libraryId to work properly
     // For now, throw an error indicating the limitation
     throw new Error(

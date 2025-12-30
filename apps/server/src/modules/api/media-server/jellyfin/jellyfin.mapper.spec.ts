@@ -15,7 +15,9 @@ describe('JellyfinMapper', () => {
     });
 
     it('should map Movie string correctly', () => {
-      expect(JellyfinMapper.toMediaDataType('Movie')).toBe(EMediaDataType.MOVIES);
+      expect(JellyfinMapper.toMediaDataType('Movie')).toBe(
+        EMediaDataType.MOVIES,
+      );
     });
 
     it('should map Series type correctly', () => {
@@ -25,7 +27,9 @@ describe('JellyfinMapper', () => {
     });
 
     it('should map Series string correctly', () => {
-      expect(JellyfinMapper.toMediaDataType('Series')).toBe(EMediaDataType.SHOWS);
+      expect(JellyfinMapper.toMediaDataType('Series')).toBe(
+        EMediaDataType.SHOWS,
+      );
     });
 
     it('should map Season type correctly', () => {
@@ -41,8 +45,12 @@ describe('JellyfinMapper', () => {
     });
 
     it('should default to MOVIE for unknown types', () => {
-      expect(JellyfinMapper.toMediaDataType(undefined)).toBe(EMediaDataType.MOVIES);
-      expect(JellyfinMapper.toMediaDataType('Unknown')).toBe(EMediaDataType.MOVIES);
+      expect(JellyfinMapper.toMediaDataType(undefined)).toBe(
+        EMediaDataType.MOVIES,
+      );
+      expect(JellyfinMapper.toMediaDataType('Unknown')).toBe(
+        EMediaDataType.MOVIES,
+      );
     });
   });
 
@@ -356,8 +364,10 @@ describe('JellyfinMapper', () => {
         PrimaryImageTag: 'imagetag',
         Policy: {
           IsAdministrator: true,
-          AuthenticationProviderId: 'Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider',
-          PasswordResetProviderId: 'Jellyfin.Server.Implementations.Users.DefaultPasswordResetProvider',
+          AuthenticationProviderId:
+            'Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider',
+          PasswordResetProviderId:
+            'Jellyfin.Server.Implementations.Users.DefaultPasswordResetProvider',
         },
       };
 
@@ -397,10 +407,17 @@ describe('JellyfinMapper', () => {
 
     it('should use current date if no lastPlayedDate', () => {
       const before = new Date();
-      const result = JellyfinMapper.toWatchRecord('user123', 'item456', undefined, 1);
+      const result = JellyfinMapper.toWatchRecord(
+        'user123',
+        'item456',
+        undefined,
+        1,
+      );
       const after = new Date();
 
-      expect(result.watchedAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
+      expect(result.watchedAt.getTime()).toBeGreaterThanOrEqual(
+        before.getTime(),
+      );
       expect(result.watchedAt.getTime()).toBeLessThanOrEqual(after.getTime());
     });
   });
@@ -468,7 +485,12 @@ describe('JellyfinMapper', () => {
     });
 
     it('should handle null optional fields', () => {
-      const result = JellyfinMapper.toMediaServerStatus('server123', '10.11.0', null, null);
+      const result = JellyfinMapper.toMediaServerStatus(
+        'server123',
+        '10.11.0',
+        null,
+        null,
+      );
 
       expect(result.name).toBeUndefined();
       expect(result.platform).toBeUndefined();

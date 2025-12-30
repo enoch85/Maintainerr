@@ -41,6 +41,8 @@ import { CollectionMedia } from '../collections/entities/collection_media.entiti
 import { CollectionLog } from '../collections/entities/collection_log.entities';
 import { Exclusion } from '../rules/entities/exclusion.entities';
 import { RuleGroup } from '../rules/entities/rule-group.entities';
+import { Rules } from '../rules/entities/rules.entities';
+import { RuleMigrationService } from './rule-migration.service';
 
 @Injectable()
 export class SettingsService implements SettingDto {
@@ -121,6 +123,9 @@ export class SettingsService implements SettingDto {
     private readonly exclusionRepo: Repository<Exclusion>,
     @InjectRepository(RuleGroup)
     private readonly ruleGroupRepo: Repository<RuleGroup>,
+    @InjectRepository(Rules)
+    private readonly rulesRepo: Repository<Rules>,
+    private readonly ruleMigrationService: RuleMigrationService,
     private readonly eventEmitter: EventEmitter2,
     private readonly logger: MaintainerrLogger,
   ) {
@@ -506,7 +511,8 @@ export class SettingsService implements SettingDto {
       }
     } catch (e) {
       this.logger.error('Error while saving Jellyfin settings: ', e);
-      const message = e instanceof Error ? e.message : 'Failed to save settings';
+      const message =
+        e instanceof Error ? e.message : 'Failed to save settings';
       return { status: 'NOK', code: 0, message };
     }
   }
@@ -1092,6 +1098,13 @@ export class SettingsService implements SettingDto {
     const radarrSettingsCount = await this.radarrSettingsRepo.count();
     const sonarrSettingsCount = await this.sonarrSettingsRepo.count();
 
+    // Preview rule migration
+    const ruleMigrationPreview =
+      await this.ruleMigrationService.previewMigration(
+        currentServerType,
+        targetServerType,
+      );
+
     return {
       currentServerType,
       targetServerType,
@@ -1110,6 +1123,7 @@ export class SettingsService implements SettingDto {
         tautulliSettings: this.tautulliConfigured(),
         notificationSettings: true,
       },
+      ruleMigration: ruleMigrationPreview,
     };
   }
 
@@ -1117,11 +1131,12 @@ export class SettingsService implements SettingDto {
    * Switch media server type and clear media server-specific data
    * Keeps: general settings, *arr settings, notification settings
    * Clears: collections, collection media, exclusions, collection logs
+   * Optionally migrates rules if migrateRules is true
    */
   public async switchMediaServer(
     request: SwitchMediaServerRequestDto,
   ): Promise<SwitchMediaServerResponseDto> {
-    const { targetServerType, confirmDataClear } = request;
+    const { targetServerType, confirmDataClear, migrateRules } = request;
 
     // Require explicit confirmation
     if (!confirmDataClear) {
@@ -1147,7 +1162,7 @@ export class SettingsService implements SettingDto {
 
     try {
       this.logger.log(
-        `Switching media server from ${currentServerType} to ${targetServerType}`,
+        `Switching media server from ${currentServerType} to ${targetServerType}${migrateRules ? ' (with rule migration)' : ''}`,
       );
 
       // Count data before clearing (for response)
@@ -1155,6 +1170,20 @@ export class SettingsService implements SettingDto {
       const collectionMediaCount = await this.collectionMediaRepo.count();
       const exclusionsCount = await this.exclusionRepo.count();
       const collectionLogsCount = await this.collectionLogRepo.count();
+
+      // Migrate rules if requested (BEFORE clearing data)
+      let ruleMigrationResult = undefined;
+      if (migrateRules) {
+        this.logger.log('Attempting rule migration...');
+        ruleMigrationResult = await this.ruleMigrationService.migrateRules(
+          currentServerType,
+          targetServerType,
+          true, // skipIncompatible
+        );
+        this.logger.log(
+          `Rule migration complete: ${ruleMigrationResult.migratedRules}/${ruleMigrationResult.totalRules} rules migrated`,
+        );
+      }
 
       // Clear media server-specific data in correct order (respecting foreign keys)
       // 1. Collection media (references collections)
@@ -1169,9 +1198,27 @@ export class SettingsService implements SettingDto {
       await this.exclusionRepo.clear();
       this.logger.log(`Cleared ${exclusionsCount} exclusions`);
 
-      // 4. Rule groups (references collections via OneToOne)
-      await this.ruleGroupRepo.clear();
-      this.logger.log(`Cleared rule groups`);
+      // If NOT migrating rules, also clear rules and rule groups
+      if (!migrateRules) {
+        // 4. Rule groups (references collections via OneToOne) - cascades to rules
+        await this.ruleGroupRepo.clear();
+        this.logger.log(`Cleared rule groups and rules`);
+      } else {
+        // When migrating rules, we need to:
+        // 1. Unlink rule groups from collections (which will be deleted)
+        // 2. Reset libraryId (will need to be re-assigned by user)
+        await this.ruleGroupRepo
+          .createQueryBuilder()
+          .update(RuleGroup)
+          .set({
+            collectionId: null,
+            libraryId: 0, // Mark as needing library assignment
+          })
+          .execute();
+        this.logger.log(
+          `Unlinked rule groups from collections, reset library IDs`,
+        );
+      }
 
       // 5. Collections
       await this.collectionRepo.clear();
@@ -1212,10 +1259,12 @@ export class SettingsService implements SettingDto {
         `Successfully switched media server to ${targetServerType}`,
       );
 
-      return {
+      const response: SwitchMediaServerResponseDto = {
         status: 'OK',
         code: 1,
-        message: `Successfully switched from ${currentServerType} to ${targetServerType}`,
+        message: migrateRules
+          ? `Successfully switched from ${currentServerType} to ${targetServerType}. ${ruleMigrationResult?.migratedRules || 0} rules migrated. Rule groups need library re-assignment.`
+          : `Successfully switched from ${currentServerType} to ${targetServerType}`,
         clearedData: {
           collections: collectionsCount,
           collectionMedia: collectionMediaCount,
@@ -1223,6 +1272,12 @@ export class SettingsService implements SettingDto {
           collectionLogs: collectionLogsCount,
         },
       };
+
+      if (ruleMigrationResult) {
+        response.ruleMigration = ruleMigrationResult;
+      }
+
+      return response;
     } catch (error) {
       this.logger.error(`Error switching media server: ${error}`);
       return {

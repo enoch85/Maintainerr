@@ -119,7 +119,9 @@ export class PlexMapper {
    * - "tvdb://12345"
    * - "plex://movie/5d776830880197001ec7f3eb"
    */
-  static extractProviderIds(guids: { id: string }[] | undefined): MediaProviderIds {
+  static extractProviderIds(
+    guids: { id: string }[] | undefined,
+  ): MediaProviderIds {
     const providerIds: MediaProviderIds = {};
 
     if (!guids || !Array.isArray(guids)) {

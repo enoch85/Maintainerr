@@ -71,7 +71,9 @@ export interface BuildWatchedCacheOptions {
  */
 export function hasProviderIds(
   item: BaseItemDto,
-): item is BaseItemDto & { ProviderIds: NonNullable<BaseItemDto['ProviderIds']> } {
+): item is BaseItemDto & {
+  ProviderIds: NonNullable<BaseItemDto['ProviderIds']>;
+} {
   return item.ProviderIds !== undefined && item.ProviderIds !== null;
 }
 
@@ -89,6 +91,8 @@ export function hasUserData(
  */
 export function hasMediaSources(
   item: BaseItemDto,
-): item is BaseItemDto & { MediaSources: NonNullable<BaseItemDto['MediaSources']> } {
+): item is BaseItemDto & {
+  MediaSources: NonNullable<BaseItemDto['MediaSources']>;
+} {
   return item.MediaSources !== undefined && item.MediaSources !== null;
 }

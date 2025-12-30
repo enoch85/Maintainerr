@@ -1,5 +1,10 @@
 import { Mocked, TestBed } from '@suites/unit';
-import { EMediaDataType, MediaItem, MediaUser, WatchRecord } from '@maintainerr/contracts';
+import {
+  EMediaDataType,
+  MediaItem,
+  MediaUser,
+  WatchRecord,
+} from '@maintainerr/contracts';
 import {
   createCollection,
   createPlexLibraryItem,
@@ -51,7 +56,9 @@ const createMediaUser = (overrides: Partial<MediaUser> = {}): MediaUser => ({
 });
 
 // Helper to create mock WatchRecord
-const createWatchRecord = (overrides: Partial<WatchRecord> = {}): WatchRecord => ({
+const createWatchRecord = (
+  overrides: Partial<WatchRecord> = {},
+): WatchRecord => ({
   userId: 'user-1',
   itemId: 'jellyfin-item-123',
   watchedAt: new Date('2024-06-15'),
@@ -64,8 +71,9 @@ describe('JellyfinGetterService', () => {
   let logger: Mocked<MaintainerrLogger>;
 
   beforeEach(async () => {
-    const { unit, unitRef } =
-      await TestBed.solitary(JellyfinGetterService).compile();
+    const { unit, unitRef } = await TestBed.solitary(
+      JellyfinGetterService,
+    ).compile();
 
     jellyfinGetterService = unit;
     jellyfinService = unitRef.get(JellyfinService);
@@ -115,7 +123,9 @@ describe('JellyfinGetterService', () => {
 
     it('should return null when addedAt is missing', async () => {
       const plexLibraryItem = createPlexLibraryItem('movie');
-      const mediaItem = createMediaItem({ addedAt: undefined as unknown as Date });
+      const mediaItem = createMediaItem({
+        addedAt: undefined as unknown as Date,
+      });
       jellyfinService.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(

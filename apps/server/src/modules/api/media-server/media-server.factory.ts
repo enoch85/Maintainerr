@@ -37,13 +37,13 @@ export class MediaServerFactory {
    */
   async getService(): Promise<IMediaServerService> {
     const settings = await this.settingsService.getSettings();
-    
+
     // Handle case where getSettings returns error response
     if (!isSettings(settings)) {
       // Fall back to Plex if settings unavailable
       return this.plexAdapter;
     }
-    
+
     const serverType =
       (settings.media_server_type as EMediaServerType) || EMediaServerType.PLEX;
 
@@ -73,11 +73,11 @@ export class MediaServerFactory {
    */
   async getConfiguredServerType(): Promise<EMediaServerType> {
     const settings = await this.settingsService.getSettings();
-    
+
     if (!isSettings(settings)) {
       return EMediaServerType.PLEX;
     }
-    
+
     return (
       (settings.media_server_type as EMediaServerType) || EMediaServerType.PLEX
     );

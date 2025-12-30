@@ -29,15 +29,7 @@ import { JellyfinService } from './jellyfin/jellyfin.service';
     forwardRef(() => SettingsModule),
     JellyfinModule,
   ],
-  providers: [
-    PlexAdapterService,
-    JellyfinService,
-    MediaServerFactory,
-  ],
-  exports: [
-    PlexAdapterService,
-    JellyfinService,
-    MediaServerFactory,
-  ],
+  providers: [PlexAdapterService, JellyfinService, MediaServerFactory],
+  exports: [PlexAdapterService, JellyfinService, MediaServerFactory],
 })
 export class MediaServerModule {}

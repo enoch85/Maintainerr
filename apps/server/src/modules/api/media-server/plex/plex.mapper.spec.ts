@@ -24,11 +24,15 @@ describe('PlexMapper', () => {
     });
 
     it('should map episode type correctly', () => {
-      expect(PlexMapper.toMediaDataType('episode')).toBe(EMediaDataType.EPISODES);
+      expect(PlexMapper.toMediaDataType('episode')).toBe(
+        EMediaDataType.EPISODES,
+      );
     });
 
     it('should map collection type to movie as fallback', () => {
-      expect(PlexMapper.toMediaDataType('collection')).toBe(EMediaDataType.MOVIES);
+      expect(PlexMapper.toMediaDataType('collection')).toBe(
+        EMediaDataType.MOVIES,
+      );
     });
   });
 
@@ -173,7 +177,15 @@ describe('PlexMapper', () => {
       audienceRating: 9.0,
       userRating: 10,
       Genre: [{ id: 1, filter: 'genre/1', tag: 'Action' }],
-      Role: [{ id: 1, filter: 'role/1', tag: 'Actor Name', role: 'Hero', thumb: '/thumb' }],
+      Role: [
+        {
+          id: 1,
+          filter: 'role/1',
+          tag: 'Actor Name',
+          role: 'Hero',
+          thumb: '/thumb',
+        },
+      ],
       leafCount: 10,
       viewedLeafCount: 5,
       index: 1,

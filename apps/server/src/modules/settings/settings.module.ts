@@ -16,6 +16,8 @@ import { CollectionMedia } from '../collections/entities/collection_media.entiti
 import { CollectionLog } from '../collections/entities/collection_log.entities';
 import { Exclusion } from '../rules/entities/exclusion.entities';
 import { RuleGroup } from '../rules/entities/rule-group.entities';
+import { Rules } from '../rules/entities/rules.entities';
+import { RuleMigrationService } from './rule-migration.service';
 
 @Global()
 @Module({
@@ -35,10 +37,11 @@ import { RuleGroup } from '../rules/entities/rule-group.entities';
       CollectionLog,
       Exclusion,
       RuleGroup,
+      Rules,
     ]),
   ],
-  providers: [SettingsService],
-  exports: [SettingsService],
+  providers: [SettingsService, RuleMigrationService],
+  exports: [SettingsService, RuleMigrationService],
   controllers: [SettingsController],
 })
 export class SettingsModule {}

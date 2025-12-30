@@ -157,7 +157,9 @@ export class CollectionsService {
             // Get parent metadata if needed (for episodes/seasons)
             let parentItem: MediaItem | undefined;
             if (mediaItem.grandparentId) {
-              parentItem = await mediaServer.getMetadata(mediaItem.grandparentId);
+              parentItem = await mediaServer.getMetadata(
+                mediaItem.grandparentId,
+              );
             } else if (mediaItem.parentId) {
               parentItem = await mediaServer.getMetadata(mediaItem.parentId);
             }
@@ -217,7 +219,9 @@ export class CollectionsService {
       entities = (
         await Promise.all(
           entities.map(async (el) => {
-            const mediaItem = await mediaServer.getMetadata(el.mediaServerId.toString());
+            const mediaItem = await mediaServer.getMetadata(
+              el.mediaServerId.toString(),
+            );
 
             if (!mediaItem) {
               return { ...el, mediaData: undefined };
@@ -226,7 +230,9 @@ export class CollectionsService {
             // Get parent metadata if needed (for episodes/seasons)
             let parentItem: MediaItem | undefined;
             if (mediaItem.grandparentId) {
-              parentItem = await mediaServer.getMetadata(mediaItem.grandparentId);
+              parentItem = await mediaServer.getMetadata(
+                mediaItem.grandparentId,
+              );
             } else if (mediaItem.parentId) {
               parentItem = await mediaServer.getMetadata(mediaItem.parentId);
             }
@@ -322,7 +328,9 @@ export class CollectionsService {
         });
 
         // Handle visibility settings (Plex-only feature)
-        if (mediaServer.supportsFeature(EMediaServerFeature.COLLECTION_VISIBILITY)) {
+        if (
+          mediaServer.supportsFeature(EMediaServerFeature.COLLECTION_VISIBILITY)
+        ) {
           await this.plexApi.UpdateCollectionSettings({
             libraryId: collection.libraryId.toString(),
             collectionId: mediaCollection.id,
@@ -345,7 +353,11 @@ export class CollectionsService {
         );
         if (foundCollection) {
           // Handle visibility settings (Plex-only feature)
-          if (mediaServer.supportsFeature(EMediaServerFeature.COLLECTION_VISIBILITY)) {
+          if (
+            mediaServer.supportsFeature(
+              EMediaServerFeature.COLLECTION_VISIBILITY,
+            )
+          ) {
             await this.plexApi.UpdateCollectionSettings({
               libraryId: collection.libraryId,
               collectionId: foundCollection.id,
@@ -359,7 +371,9 @@ export class CollectionsService {
 
           // For backwards compatibility
           if (mediaServerType === EMediaServerType.PLEX) {
-            plexCollection = await this.plexApi.getCollection(foundCollection.id);
+            plexCollection = await this.plexApi.getCollection(
+              foundCollection.id,
+            );
           }
         } else {
           this.logger.error(
@@ -400,7 +414,9 @@ export class CollectionsService {
       for (const childMedia of media) {
         await this.addChildToCollection(
           {
-            mediaServerId: createdCollection.plexCollection?.ratingKey || createdCollection.dbCollection?.id?.toString(),
+            mediaServerId:
+              createdCollection.plexCollection?.ratingKey ||
+              createdCollection.dbCollection?.id?.toString(),
             dbId: createdCollection.dbCollection.id,
           },
           childMedia.mediaServerId,
@@ -452,7 +468,11 @@ export class CollectionsService {
         ) {
           plexColl = await this.plexApi.updateCollection(collectionObj);
           // Handle visibility settings (Plex-only feature)
-          if (mediaServer.supportsFeature(EMediaServerFeature.COLLECTION_VISIBILITY)) {
+          if (
+            mediaServer.supportsFeature(
+              EMediaServerFeature.COLLECTION_VISIBILITY,
+            )
+          ) {
             await this.plexApi.UpdateCollectionSettings({
               libraryId: dbCollection.libraryId,
               collectionId: dbCollection.mediaServerId,
@@ -587,7 +607,11 @@ export class CollectionsService {
       }
 
       // If the collection is empty, remove it. Otherwise issues when adding media
-      if (serverColl && collection.mediaServerId !== null && serverColl.childCount <= 0) {
+      if (
+        serverColl &&
+        collection.mediaServerId !== null &&
+        serverColl.childCount <= 0
+      ) {
         await mediaServer.deleteCollection(serverColl.id);
         serverColl = undefined;
       }
@@ -661,7 +685,8 @@ export class CollectionsService {
 
       // filter already existing out
       media = media.filter(
-        (m) => !collectionMedia.find((el) => el.mediaServerId === m.mediaServerId),
+        (m) =>
+          !collectionMedia.find((el) => el.mediaServerId === m.mediaServerId),
       );
 
       if (collection) {
@@ -689,7 +714,11 @@ export class CollectionsService {
                 mediaServerId: newColl.id,
               });
               // Handle visibility settings (Plex-only feature)
-              if (mediaServer.supportsFeature(EMediaServerFeature.COLLECTION_VISIBILITY)) {
+              if (
+                mediaServer.supportsFeature(
+                  EMediaServerFeature.COLLECTION_VISIBILITY,
+                )
+              ) {
                 await this.plexApi.UpdateCollectionSettings({
                   libraryId: collection.libraryId,
                   collectionId: collection.mediaServerId,
@@ -746,8 +775,9 @@ export class CollectionsService {
       if (collectionMedia.length > 0) {
         for (const childMedia of media) {
           if (
-            collectionMedia.find((el) => el.mediaServerId === childMedia.mediaServerId) !==
-            undefined
+            collectionMedia.find(
+              (el) => el.mediaServerId === childMedia.mediaServerId,
+            ) !== undefined
           ) {
             await this.removeChildFromCollection(
               { mediaServerId: collection.mediaServerId, dbId: collection.id },
@@ -773,7 +803,9 @@ export class CollectionsService {
               mediaServerId: null,
             });
           } catch (err) {
-            this.logger.warn(`Failed to delete collection from media server: ${err.message}`);
+            this.logger.warn(
+              `Failed to delete collection from media server: ${err.message}`,
+            );
           }
         }
       }
@@ -814,7 +846,9 @@ export class CollectionsService {
         try {
           await mediaServer.deleteCollection(collection.mediaServerId);
         } catch (err) {
-          this.logger.warn(`Failed to delete collection from media server: ${err.message}`);
+          this.logger.warn(
+            `Failed to delete collection from media server: ${err.message}`,
+          );
         }
       }
       return await this.RemoveCollectionFromDB(collection);
@@ -837,7 +871,9 @@ export class CollectionsService {
         try {
           await mediaServer.deleteCollection(collection.mediaServerId);
         } catch (err) {
-          this.logger.warn(`Failed to delete collection from media server: ${err.message}`);
+          this.logger.warn(
+            `Failed to delete collection from media server: ${err.message}`,
+          );
         }
       }
 
@@ -958,9 +994,7 @@ export class CollectionsService {
           logMeta,
         );
       } catch (err) {
-        this.logger.warn(
-          `Couldn't add media to collection: ${err.message}`,
-        );
+        this.logger.warn(`Couldn't add media to collection: ${err.message}`);
       }
     } catch (err) {
       this.logger.warn(
@@ -1007,7 +1041,10 @@ export class CollectionsService {
       this.infoLogger(`Removing media with id ${childId} from collection..`);
 
       try {
-        await mediaServer.removeFromCollection(collectionIds.mediaServerId, childId);
+        await mediaServer.removeFromCollection(
+          collectionIds.mediaServerId,
+          childId,
+        );
 
         await this.connection
           .createQueryBuilder()
@@ -1176,7 +1213,9 @@ export class CollectionsService {
   ): Promise<MediaCollection | undefined> {
     try {
       const mediaServer = await this.getMediaServer();
-      const collections = await mediaServer.getCollections(libraryId.toString());
+      const collections = await mediaServer.getCollections(
+        libraryId.toString(),
+      );
       if (collections) {
         const found = collections.find((coll) => {
           return coll.title.trim() === name.trim() && !coll.smart;

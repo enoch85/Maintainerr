@@ -31,10 +31,18 @@ export class AddJellyfinSettings1767071000000 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`ALTER TABLE settings DROP COLUMN "media_server_type"`);
+    await queryRunner.query(
+      `ALTER TABLE settings DROP COLUMN "media_server_type"`,
+    );
     await queryRunner.query(`ALTER TABLE settings DROP COLUMN "jellyfin_url"`);
-    await queryRunner.query(`ALTER TABLE settings DROP COLUMN "jellyfin_api_key"`);
-    await queryRunner.query(`ALTER TABLE settings DROP COLUMN "jellyfin_user_id"`);
-    await queryRunner.query(`ALTER TABLE settings DROP COLUMN "jellyfin_server_name"`);
+    await queryRunner.query(
+      `ALTER TABLE settings DROP COLUMN "jellyfin_api_key"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE settings DROP COLUMN "jellyfin_user_id"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE settings DROP COLUMN "jellyfin_server_name"`,
+    );
   }
 }

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import {
+  MediaServerSwitchPreview,
   MediaServerType,
   usePreviewMediaServerSwitch,
   useSwitchMediaServer,
@@ -43,18 +44,14 @@ const MediaServerSelector = ({
   const queryClient = useQueryClient()
   const [pendingType, setPendingType] = useState<MediaServerType | null>(null)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [migrateRules, setMigrateRules] = useState(true)
 
   const { mutateAsync: previewSwitch, isPending: isPreviewPending } =
     usePreviewMediaServerSwitch()
   const { mutateAsync: switchServer, isPending: isSwitchPending } =
     useSwitchMediaServer()
 
-  const [previewData, setPreviewData] = useState<{
-    collections: number
-    collectionMedia: number
-    exclusions: number
-    collectionLogs: number
-  } | null>(null)
+  const [previewData, setPreviewData] = useState<MediaServerSwitchPreview | null>(null)
 
   const handleServerClick = async (type: MediaServerType) => {
     if (type === currentType) return
@@ -90,7 +87,7 @@ const MediaServerSelector = ({
     // For switching (when currentType exists), show preview modal
     try {
       const preview = await previewSwitch(type)
-      setPreviewData(preview.dataToBeCleared)
+      setPreviewData(preview)
       setShowConfirmModal(true)
     } catch (err) {
       toast.error('Failed to preview switch')
@@ -102,11 +99,29 @@ const MediaServerSelector = ({
     if (!pendingType) return
 
     try {
-      await switchServer({
+      const result = await switchServer({
         targetServerType: pendingType,
         confirmDataClear: true,
+        migrateRules: migrateRules,
       })
-      toast.success(`Switched to ${pendingType === 'plex' ? 'Plex' : 'Jellyfin'}`)
+      
+      // Show appropriate success message
+      if (result.ruleMigration) {
+        const { migratedRules, totalRules, skippedRules } = result.ruleMigration
+        if (skippedRules > 0) {
+          toast.warning(
+            `Switched to ${pendingType === 'plex' ? 'Plex' : 'Jellyfin'}. ${migratedRules}/${totalRules} rules migrated, ${skippedRules} skipped (incompatible properties).`,
+            { autoClose: 8000 }
+          )
+        } else {
+          toast.success(
+            `Switched to ${pendingType === 'plex' ? 'Plex' : 'Jellyfin'}. All ${migratedRules} rules migrated successfully!`
+          )
+        }
+      } else {
+        toast.success(`Switched to ${pendingType === 'plex' ? 'Plex' : 'Jellyfin'}`)
+      }
+      
       setShowConfirmModal(false)
       
       // Wait for settings to refetch before navigating
@@ -125,13 +140,17 @@ const MediaServerSelector = ({
     setShowConfirmModal(false)
     setPendingType(null)
     setPreviewData(null)
+    setMigrateRules(true)
   }
 
   const hasDataToDelete =
-    previewData &&
-    (previewData.collections > 0 ||
-      previewData.collectionMedia > 0 ||
-      previewData.exclusions > 0)
+    previewData?.dataToBeCleared &&
+    (previewData.dataToBeCleared.collections > 0 ||
+      previewData.dataToBeCleared.collectionMedia > 0 ||
+      previewData.dataToBeCleared.exclusions > 0)
+
+  const hasRulesToMigrate =
+    previewData?.ruleMigration && previewData.ruleMigration.totalRules > 0
 
   return (
     <>
@@ -226,17 +245,17 @@ const MediaServerSelector = ({
                   The following data will be permanently deleted:
                 </p>
                 <ul className="mb-4 list-inside list-disc space-y-1 text-sm">
-                  {previewData!.collections > 0 && (
-                    <li>{previewData!.collections} collection(s)</li>
+                  {previewData!.dataToBeCleared.collections > 0 && (
+                    <li>{previewData!.dataToBeCleared.collections} collection(s)</li>
                   )}
-                  {previewData!.collectionMedia > 0 && (
-                    <li>{previewData!.collectionMedia} collection media item(s)</li>
+                  {previewData!.dataToBeCleared.collectionMedia > 0 && (
+                    <li>{previewData!.dataToBeCleared.collectionMedia} collection media item(s)</li>
                   )}
-                  {previewData!.exclusions > 0 && (
-                    <li>{previewData!.exclusions} exclusion(s)</li>
+                  {previewData!.dataToBeCleared.exclusions > 0 && (
+                    <li>{previewData!.dataToBeCleared.exclusions} exclusion(s)</li>
                   )}
-                  {previewData!.collectionLogs > 0 && (
-                    <li>{previewData!.collectionLogs} log entries</li>
+                  {previewData!.dataToBeCleared.collectionLogs > 0 && (
+                    <li>{previewData!.dataToBeCleared.collectionLogs} log entries</li>
                   )}
                 </ul>
               </>
@@ -244,6 +263,63 @@ const MediaServerSelector = ({
               <p className="mb-4 text-green-400">
                 No data will be deleted (no collections exist).
               </p>
+            )}
+
+            {/* Rule Migration Section */}
+            {hasRulesToMigrate && (
+              <div className="mb-4 rounded-md border border-zinc-700 bg-zinc-800/50 p-3">
+                <div className="flex items-start">
+                  <input
+                    type="checkbox"
+                    id="migrateRules"
+                    checked={migrateRules}
+                    onChange={(e) => setMigrateRules(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-zinc-600 bg-zinc-700 text-amber-500 focus:ring-amber-500"
+                  />
+                  <label htmlFor="migrateRules" className="ml-3 cursor-pointer">
+                    <span className="block font-medium text-zinc-100">
+                      Migrate rules to {pendingType === 'plex' ? 'Plex' : 'Jellyfin'}
+                    </span>
+                    <span className="block text-sm text-zinc-400">
+                      {previewData!.ruleMigration!.migratableRules} of {previewData!.ruleMigration!.totalRules} rules can be migrated.
+                      {previewData!.ruleMigration!.skippedRules > 0 && (
+                        <span className="text-amber-400">
+                          {' '}{previewData!.ruleMigration!.skippedRules} rule(s) use properties not available in {pendingType === 'plex' ? 'Plex' : 'Jellyfin'}.
+                        </span>
+                      )}
+                    </span>
+                    {migrateRules && (
+                      <span className="mt-1 block text-xs text-zinc-500">
+                        Note: Rule groups will need library re-assignment after migration.
+                      </span>
+                    )}
+                  </label>
+                </div>
+                
+                {/* Show skipped rules details if any */}
+                {previewData!.ruleMigration!.skippedRules > 0 && previewData!.ruleMigration!.skippedDetails.length > 0 && (
+                  <details className="mt-2 text-xs">
+                    <summary className="cursor-pointer text-zinc-400 hover:text-zinc-300">
+                      Show incompatible rules ({previewData!.ruleMigration!.skippedRules})
+                    </summary>
+                    <ul className="mt-1 space-y-1 pl-4 text-zinc-500">
+                      {previewData!.ruleMigration!.skippedDetails.slice(0, 5).map((detail, idx) => (
+                        <li key={idx}>
+                          <span className="text-zinc-400">{detail.ruleGroupName}</span>
+                          {detail.propertyName && (
+                            <span> - uses {detail.propertyName}</span>
+                          )}
+                        </li>
+                      ))}
+                      {previewData!.ruleMigration!.skippedDetails.length > 5 && (
+                        <li className="text-zinc-400">
+                          ...and {previewData!.ruleMigration!.skippedDetails.length - 5} more
+                        </li>
+                      )}
+                    </ul>
+                  </details>
+                )}
+              </div>
             )}
 
             <p className="text-sm text-zinc-400">

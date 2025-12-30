@@ -35,9 +35,9 @@ export class JellyfinGetterService {
   ) {
     logger.setContext(JellyfinGetterService.name);
     const ruleConstants = new RuleConstants();
-    this.jellyfinProperties = ruleConstants.applications.find(
-      (el) => el.id === Application.JELLYFIN,
-    )?.props ?? [];
+    this.jellyfinProperties =
+      ruleConstants.applications.find((el) => el.id === Application.JELLYFIN)
+        ?.props ?? [];
     this.cache = cacheManager.getCache('jellyfin');
   }
 
@@ -80,9 +80,7 @@ export class JellyfinGetterService {
         return parentPromise;
       };
 
-      let grandparentPromise:
-        | Promise<typeof metadata | undefined>
-        | undefined;
+      let grandparentPromise: Promise<typeof metadata | undefined> | undefined;
       const getGrandparent = async () => {
         if (!metadata?.grandparentId) return undefined;
         grandparentPromise ??= this.jellyfinService.getMetadata(

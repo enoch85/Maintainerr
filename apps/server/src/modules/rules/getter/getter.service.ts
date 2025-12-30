@@ -34,7 +34,12 @@ export class ValueGetterService {
         return await this.plexGetter.get(val2, libItem, dataType, ruleGroup);
       }
       case Application.JELLYFIN: {
-        return await this.jellyfinGetter.get(val2, libItem, dataType, ruleGroup);
+        return await this.jellyfinGetter.get(
+          val2,
+          libItem,
+          dataType,
+          ruleGroup,
+        );
       }
       case Application.RADARR: {
         return await this.radarrGetter.get(val2, libItem, ruleGroup);

@@ -262,11 +262,38 @@ export interface MediaServerSwitchPreview {
     tautulliSettings: boolean
     notificationSettings: boolean
   }
+  ruleMigration?: {
+    canMigrate: boolean
+    totalGroups: number
+    totalRules: number
+    migratableRules: number
+    skippedRules: number
+    skippedDetails: SkippedRuleDetail[]
+  }
+}
+
+export interface SkippedRuleDetail {
+  ruleGroupId: number
+  ruleGroupName: string
+  ruleId: number
+  reason: string
+  propertyName?: string
+}
+
+export interface RuleMigrationResult {
+  totalRules: number
+  migratedRules: number
+  skippedRules: number
+  fullyMigratedGroups: number
+  partiallyMigratedGroups: number
+  skippedGroups: number
+  skippedDetails: SkippedRuleDetail[]
 }
 
 export interface SwitchMediaServerRequest {
   targetServerType: MediaServerType
   confirmDataClear: boolean
+  migrateRules?: boolean
 }
 
 export interface SwitchMediaServerResponse {
@@ -279,6 +306,7 @@ export interface SwitchMediaServerResponse {
     exclusions: number
     collectionLogs: number
   }
+  ruleMigration?: RuleMigrationResult
 }
 
 type UsePreviewMediaServerSwitchOptions = Omit<

@@ -57,7 +57,10 @@ export class RulesController {
   getExclusion(
     @Query() query: { rulegroupId?: number; mediaServerId?: string },
   ) {
-    return this.rulesService.getExclusions(query.rulegroupId, query.mediaServerId);
+    return this.rulesService.getExclusions(
+      query.rulegroupId,
+      query.mediaServerId,
+    );
   }
 
   @Get('/count')
