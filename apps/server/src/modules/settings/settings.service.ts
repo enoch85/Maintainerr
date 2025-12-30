@@ -21,7 +21,13 @@ import { OverseerrApiService } from '../api/overseerr-api/overseerr-api.service'
 import { PlexApiService } from '../api/plex-api/plex-api.service';
 import { ServarrService } from '../api/servarr-api/servarr.service';
 import { TautulliApiService } from '../api/tautulli-api/tautulli-api.service';
+import { Collection } from '../collections/entities/collection.entities';
+import { CollectionLog } from '../collections/entities/collection_log.entities';
+import { CollectionMedia } from '../collections/entities/collection_media.entities';
 import { MaintainerrLogger } from '../logging/logs.service';
+import { Exclusion } from '../rules/entities/exclusion.entities';
+import { RuleGroup } from '../rules/entities/rule-group.entities';
+import { Rules } from '../rules/entities/rules.entities';
 import {
   DeleteRadarrSettingResponseDto,
   RadarrSettingRawDto,
@@ -36,12 +42,6 @@ import {
 import { RadarrSettings } from './entities/radarr_settings.entities';
 import { Settings } from './entities/settings.entities';
 import { SonarrSettings } from './entities/sonarr_settings.entities';
-import { Collection } from '../collections/entities/collection.entities';
-import { CollectionMedia } from '../collections/entities/collection_media.entities';
-import { CollectionLog } from '../collections/entities/collection_log.entities';
-import { Exclusion } from '../rules/entities/exclusion.entities';
-import { RuleGroup } from '../rules/entities/rule-group.entities';
-import { Rules } from '../rules/entities/rules.entities';
 import { RuleMigrationService } from './rule-migration.service';
 
 @Injectable()
