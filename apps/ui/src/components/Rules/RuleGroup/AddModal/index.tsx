@@ -197,9 +197,10 @@ const AddModal = (props: AddModal) => {
   const navigate = useNavigate()
   const { isPlex, isJellyfin } = useMediaServerType()
   const mediaServerName = isPlex ? 'Plex' : isJellyfin ? 'Jellyfin' : 'your media server'
-  // Jellyfin calls collections "Box Sets"
-  const collectionTerm = isJellyfin ? 'box set' : 'collection'
-  const collectionTermCapitalized = isJellyfin ? 'Box set' : 'Collection'
+  // Both Plex and Jellyfin call them "Collections" in their GUI
+  // (Jellyfin's internal API type is "BoxSet" but the user-facing term is "Collection")
+  const collectionTerm = 'collection'
+  const collectionTermCapitalized = 'Collection'
   const {
     register,
     handleSubmit,
