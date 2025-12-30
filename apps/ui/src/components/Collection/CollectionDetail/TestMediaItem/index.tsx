@@ -97,7 +97,7 @@ const TestMediaItem = (props: ITestMediaItem) => {
 
     if (item?.type == EPlexDataType.SHOWS) {
       // get seasons
-      GetApiHandler(`/plex/meta/${item.id}/children`).then(
+      GetApiHandler(`/media-server/meta/${item.id}/children`).then(
         (resp: [{ ratingKey: number; title: string }]) => {
           setSeasonOptions([
             emptyOption,
@@ -120,7 +120,7 @@ const TestMediaItem = (props: ITestMediaItem) => {
 
     if (seasons !== -1) {
       // get episodes
-      GetApiHandler(`/plex/meta/${seasons}/children`).then(
+      GetApiHandler(`/media-server/meta/${seasons}/children`).then(
         (resp: [{ ratingKey: number; index: number }]) => {
           setEpisodeOptions([
             emptyOption,

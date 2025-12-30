@@ -64,13 +64,13 @@ const MediaModalContent: React.FC<ModalContentProps> = memo(
     const basePath = import.meta.env.VITE_BASE_PATH ?? ''
 
     useEffect(() => {
-      GetApiHandler('/plex').then((resp) =>
-        setMachineId(resp.machineIdentifier),
+      GetApiHandler('/media-server').then((resp) =>
+        setMachineId(resp?.machineId),
       )
       GetApiHandler('/settings').then((resp) =>
         setTautulliModalUrl(resp?.tautulli_url || null),
       )
-      GetApiHandler<Metadata>(`/plex/meta/${id}`).then((data) => {
+      GetApiHandler<Metadata>(`/media-server/meta/${id}`).then((data) => {
         setMetadata(data)
         setLoading(false)
       })

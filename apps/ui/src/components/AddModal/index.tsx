@@ -116,7 +116,7 @@ const AddModal = (props: IAddModal) => {
 
     if (props.type && props.type === 2) {
       // get seasons
-      GetApiHandler(`/plex/meta/${props.plexId}/children`).then(
+      GetApiHandler(`/media-server/meta/${props.plexId}/children`).then(
         (resp: [{ ratingKey: number; title: string }]) => {
           setSeasonOptions([
             {
@@ -145,7 +145,7 @@ const AddModal = (props: IAddModal) => {
       setLoading(true)
 
       // get episodes
-      GetApiHandler(`/plex/meta/${selectedSeasons}/children`).then(
+      GetApiHandler(`/media-server/meta/${selectedSeasons}/children`).then(
         (resp: [{ ratingKey: number; index: number }]) => {
           setEpisodeOptions([
             {

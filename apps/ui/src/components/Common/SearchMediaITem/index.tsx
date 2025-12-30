@@ -21,9 +21,8 @@ const SearchMediaItem = (props: ISearchMediaITem) => {
     // load your data using query
 
     const resp: IPlexMetadata[] = await GetApiHandler(
-      `/plex/library/${props.libraryId}/content/search/${query}?type=${props.mediatype == EPlexDataType.MOVIES ? EPlexDataType.MOVIES : EPlexDataType.SHOWS}`,
+      `/media-server/library/${props.libraryId}/content/search/${query}?type=${props.mediatype == EPlexDataType.MOVIES ? EPlexDataType.MOVIES : EPlexDataType.SHOWS}`,
     )
-    //const resp: IPlexMetadata[] = await GetApiHandler(`/plex//search/${query}`)
     const output = resp.map((el) => {
       return {
         id: el.ratingKey,
