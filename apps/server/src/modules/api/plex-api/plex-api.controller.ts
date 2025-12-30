@@ -9,7 +9,9 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { MediaServerSetupGuard } from '../media-server/guards';
 import { BasicResponseDto } from './dto/basic-response.dto';
 import { CollectionHubSettingsDto } from './dto/collection-hub-settings.dto';
 import { EPlexDataType } from './enums/plex-data-type-enum';
@@ -21,6 +23,7 @@ import { PlexHub, PlexLibraryItem } from './interfaces/library.interfaces';
 import { PlexApiService } from './plex-api.service';
 
 @Controller('api/plex')
+@UseGuards(MediaServerSetupGuard)
 export class PlexApiController {
   constructor(private readonly plexApiService: PlexApiService) {}
   @Get()
