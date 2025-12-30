@@ -240,6 +240,9 @@ export class PlexApiService {
     id: string | number,
     datatype?: EPlexDataType,
   ): Promise<number | undefined> {
+    if (!this.isPlexSetup()) {
+      return undefined;
+    }
     try {
       const type = datatype ? '?type=' + datatype : '';
       const response = await this.plexClient.query<PlexLibrariesResponse>({
@@ -266,6 +269,9 @@ export class PlexApiService {
     datatype?: EPlexDataType,
     useCache: boolean = true,
   ): Promise<{ totalSize: number; items: PlexLibraryItem[] }> {
+    if (!this.isPlexSetup()) {
+      return undefined;
+    }
     try {
       const type = datatype ? '&type=' + datatype : '';
       const response = await this.plexClient.query<PlexLibraryResponse>(
@@ -297,6 +303,9 @@ export class PlexApiService {
     query: string,
     datatype?: EPlexDataType,
   ): Promise<PlexLibraryItem[]> {
+    if (!this.isPlexSetup()) {
+      return undefined;
+    }
     try {
       const params = new URLSearchParams({
         includeGuids: '1',
@@ -323,6 +332,9 @@ export class PlexApiService {
     options: { includeChildren?: boolean } = {},
     useCache: boolean = true,
   ): Promise<PlexMetadata> {
+    if (!this.isPlexSetup()) {
+      return undefined;
+    }
     try {
       const response = await this.plexClient.query<PlexMetadataResponse>(
         `/library/metadata/${key}${
@@ -406,6 +418,9 @@ export class PlexApiService {
   }
 
   public async getChildrenMetadata(key: string): Promise<PlexMetadata[]> {
+    if (!this.isPlexSetup()) {
+      return undefined;
+    }
     try {
       const response = await this.plexClient.queryAll<PlexMetadataResponse>({
         uri: `/library/metadata/${key}/children`,
@@ -427,6 +442,9 @@ export class PlexApiService {
       addedAt: Date.now() - 1000 * 60 * 60,
     },
   ): Promise<PlexLibraryItem[]> {
+    if (!this.isPlexSetup()) {
+      return undefined;
+    }
     try {
       const response = await this.plexClient.queryAll<PlexLibraryResponse>({
         uri: `/library/sections/${id}/all?sort=addedAt%3Adesc&addedAt>>=${Math.floor(
@@ -444,6 +462,9 @@ export class PlexApiService {
   }
 
   public async getWatchHistory(itemId: string): Promise<PlexSeenBy[]> {
+    if (!this.isPlexSetup()) {
+      return undefined;
+    }
     try {
       const response: PlexLibraryResponse =
         await this.plexClient.queryAll<PlexLibraryResponse>({
@@ -463,6 +484,9 @@ export class PlexApiService {
     libraryId: string | number,
     subType?: 'movie' | 'show' | 'season' | 'episode',
   ): Promise<PlexCollection[]> {
+    if (!this.isPlexSetup()) {
+      return undefined;
+    }
     try {
       const response = await this.plexClient.queryAll<PlexLibraryResponse>({
         uri: `/library/sections/${libraryId}/collections?${subType ? `subtype=${subType}` : ''}`,
@@ -486,6 +510,9 @@ export class PlexApiService {
    * @return {Promise<PlexPlaylist[]>} A promise that resolves to an array of Plex playlists.
    */
   public async getPlaylists(libraryId: string): Promise<PlexPlaylist[]> {
+    if (!this.isPlexSetup()) {
+      return undefined;
+    }
     try {
       const filteredItems: PlexPlaylist[] = [];
 
@@ -522,6 +549,9 @@ export class PlexApiService {
   }
 
   public async deleteMediaFromDisk(plexId: number | string): Promise<void> {
+    if (!this.isPlexSetup()) {
+      return;
+    }
     try {
       await this.plexClient.deleteQuery({
         uri: `/library/metadata/${plexId}`,
@@ -540,6 +570,9 @@ export class PlexApiService {
   public async getCollection(
     collectionId: string | number,
   ): Promise<PlexCollection> {
+    if (!this.isPlexSetup()) {
+      return undefined;
+    }
     try {
       const response = await this.plexClient.query<PlexLibraryResponse>(
         {
@@ -561,6 +594,9 @@ export class PlexApiService {
   }
 
   public async createCollection(params: CreateUpdateCollection) {
+    if (!this.isPlexSetup()) {
+      return undefined;
+    }
     try {
       const response = await this.plexClient.postQuery<any>({
         uri: `/library/collections?type=${
@@ -586,6 +622,9 @@ export class PlexApiService {
   }
 
   public async updateCollection(body: CreateUpdateCollection) {
+    if (!this.isPlexSetup()) {
+      return undefined;
+    }
     try {
       let uri = `/library/sections/${body.libraryId}/all?type=18&id=${body.collectionId}`;
 
@@ -616,6 +655,13 @@ export class PlexApiService {
   public async deleteCollection(
     collectionId: string,
   ): Promise<BasicResponseDto> {
+    if (!this.isPlexSetup()) {
+      return {
+        status: 'NOK',
+        code: 0,
+        message: 'Plex is not configured',
+      };
+    }
     try {
       await this.plexClient.deleteQuery({
         uri: `/library/collections/${collectionId}`,
@@ -643,6 +689,9 @@ export class PlexApiService {
     collectionId: string,
     useCache: boolean = true,
   ): Promise<PlexLibraryItem[]> {
+    if (!this.isPlexSetup()) {
+      return undefined;
+    }
     try {
       const response: PlexLibraryResponse =
         await this.plexClient.queryAll<PlexLibraryResponse>(
@@ -671,6 +720,13 @@ export class PlexApiService {
     collectionId: string,
     childId: string,
   ): Promise<PlexCollection | BasicResponseDto> {
+    if (!this.isPlexSetup()) {
+      return {
+        status: 'NOK',
+        code: 0,
+        message: 'Plex is not configured',
+      } as BasicResponseDto;
+    }
     try {
       await this.forceMachineId();
       const response: PlexLibraryResponse = await this.plexClient.putQuery({
@@ -695,6 +751,13 @@ export class PlexApiService {
     collectionId: string,
     childId: string,
   ): Promise<BasicResponseDto> {
+    if (!this.isPlexSetup()) {
+      return {
+        status: 'NOK',
+        code: 0,
+        message: 'Plex is not configured',
+      } as BasicResponseDto;
+    }
     try {
       await this.plexClient.deleteQuery({
         uri: `/library/collections/${collectionId}/children/${childId}`,
@@ -720,6 +783,9 @@ export class PlexApiService {
   public async UpdateCollectionSettings(
     params: CollectionHubSettingsDto,
   ): Promise<PlexHub> {
+    if (!this.isPlexSetup()) {
+      return undefined;
+    }
     try {
       const response: PlexHubResponse = await this.plexClient.postQuery({
         uri: `/hubs/sections/${params.libraryId}/manage?metadataItemId=${
