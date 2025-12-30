@@ -1203,26 +1203,38 @@ export class SettingsService implements SettingDto {
         // 4. Rule groups (references collections via OneToOne) - cascades to rules
         await this.ruleGroupRepo.clear();
         this.logger.log(`Cleared rule groups and rules`);
+
+        // 5. Collections - only clear if not migrating
+        await this.collectionRepo.clear();
+        this.logger.log(`Cleared ${collectionsCount} collections`);
       } else {
-        // When migrating rules, we need to:
-        // 1. Unlink rule groups from collections (which will be deleted)
-        // 2. Reset libraryId (will need to be re-assigned by user)
+        // When migrating rules, preserve collections but reset media server references
+        // 1. Reset libraryId on rule groups (will need to be re-assigned by user)
+        // 2. Keep collectionId linked so the collection metadata is preserved
         await this.ruleGroupRepo
           .createQueryBuilder()
           .update(RuleGroup)
           .set({
-            collectionId: null,
             libraryId: 0, // Mark as needing library assignment
           })
           .execute();
+
+        // 3. Reset media server ID on collections (the Plex/Jellyfin collection will be recreated)
+        // Also reset libraryId since library IDs differ between servers
+        await this.collectionRepo
+          .createQueryBuilder()
+          .update(Collection)
+          .set({
+            mediaServerId: null,
+            mediaServerType: targetServerType,
+            libraryId: 0, // Will be updated when user assigns library
+          })
+          .execute();
+
         this.logger.log(
-          `Unlinked rule groups from collections, reset library IDs`,
+          `Preserved ${collectionsCount} collections, reset media server references`,
         );
       }
-
-      // 5. Collections
-      await this.collectionRepo.clear();
-      this.logger.log(`Cleared ${collectionsCount} collections`);
 
       // Update media server type and clear old server credentials
       const settingsDb = await this.settingsRepo.findOne({ where: {} });

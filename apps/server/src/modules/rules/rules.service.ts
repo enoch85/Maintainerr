@@ -19,7 +19,6 @@ import { CollectionsService } from '../collections/collections.service';
 import { Collection } from '../collections/entities/collection.entities';
 import { CollectionMedia } from '../collections/entities/collection_media.entities';
 import { AddRemoveCollectionMedia } from '../collections/interfaces/collection-media.interface';
-import { ICollection } from '../collections/interfaces/collection.interface';
 import { MaintainerrLogger } from '../logging/logs.service';
 import { Notification } from '../notifications/entities/notification.entities';
 import { RadarrSettings } from '../settings/entities/radarr_settings.entities';
@@ -470,21 +469,20 @@ export class RulesService {
 
         // If there's no existing collection (e.g., after rule migration), create a new one
         // Otherwise, update the existing collection
-        let collection: ICollection;
+        let collectionId: number | undefined;
         if (group.collectionId) {
-          collection = (
-            await this.collectionService.updateCollection({
-              id: group.collectionId,
-              ...collectionData,
-            })
-          )?.dbCollection;
+          const result = await this.collectionService.updateCollection({
+            id: group.collectionId,
+            ...collectionData,
+          });
+          collectionId = result?.dbCollection?.id;
         } else {
-          collection = (
-            await this.collectionService.createCollection(collectionData)
-          )?.dbCollection;
+          const result =
+            await this.collectionService.createCollection(collectionData);
+          collectionId = result?.dbCollection?.id;
         }
 
-        if (!collection) {
+        if (!collectionId) {
           return this.createReturnStatus(
             false,
             'Failed to create/update collection',
@@ -496,7 +494,7 @@ export class RulesService {
           params.name,
           params.description,
           params.libraryId,
-          collection.id,
+          collectionId,
           params.useRules !== undefined ? params.useRules : true,
           params.isActive !== undefined ? params.isActive : true,
           params.dataType !== undefined ? params.dataType : undefined,
