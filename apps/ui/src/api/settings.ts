@@ -333,7 +333,11 @@ export type UsePreviewMediaServerSwitchResult = ReturnType<
 >
 
 type UseSwitchMediaServerOptions = Omit<
-  UseMutationOptions<SwitchMediaServerResponse, Error, SwitchMediaServerRequest>,
+  UseMutationOptions<
+    SwitchMediaServerResponse,
+    Error,
+    SwitchMediaServerRequest
+  >,
   'mutationFn' | 'mutationKey' | 'onSuccess'
 >
 

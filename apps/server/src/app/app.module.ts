@@ -63,9 +63,7 @@ import ormConfig from './config/typeOrmConfig';
           {
             rootPath: join(__dirname, '..', 'ui'),
             serveRoot: process.env.BASE_PATH || undefined,
-            serveStaticOptions: {
-              extensions: ['html'],
-            },
+            exclude: ['/api/{*path}'],
           },
         ];
       },

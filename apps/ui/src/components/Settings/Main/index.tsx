@@ -125,9 +125,7 @@ const MainSettings = () => {
         </div>
 
         {/* Media Server Selector */}
-        <MediaServerSelector
-          currentType={settings.media_server_type ?? null}
-        />
+        <MediaServerSelector currentType={settings.media_server_type ?? null} />
       </div>
     </>
   )

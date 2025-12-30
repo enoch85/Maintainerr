@@ -1,56 +1,56 @@
-import { EMediaDataType } from './enums';
+import { EMediaDataType } from './enums'
 
 /**
  * Provider IDs for external databases (IMDB, TMDB, TVDB)
  */
 export interface MediaProviderIds {
-  imdb?: string;
-  tmdb?: string;
-  tvdb?: string;
+  imdb?: string
+  tmdb?: string
+  tvdb?: string
 }
 
 /**
  * Media source/file information
  */
 export interface MediaSource {
-  id: string;
-  duration: number;
-  bitrate?: number;
-  width?: number;
-  height?: number;
-  aspectRatio?: number;
-  audioChannels?: number;
-  audioCodec?: string;
-  videoCodec?: string;
-  videoResolution?: string;
-  container?: string;
+  id: string
+  duration: number
+  bitrate?: number
+  width?: number
+  height?: number
+  aspectRatio?: number
+  audioChannels?: number
+  audioCodec?: string
+  videoCodec?: string
+  videoResolution?: string
+  container?: string
 }
 
 /**
  * Genre information
  */
 export interface MediaGenre {
-  id?: number | string;
-  name: string;
+  id?: number | string
+  name: string
 }
 
 /**
  * Actor/role information
  */
 export interface MediaActor {
-  id?: number | string;
-  name: string;
-  role?: string;
-  thumb?: string;
+  id?: number | string
+  name: string
+  role?: string
+  thumb?: string
 }
 
 /**
  * Rating information (critic/audience)
  */
 export interface MediaRating {
-  source: string;
-  value: number;
-  type?: 'audience' | 'critic';
+  source: string
+  value: number
+  type?: 'audience' | 'critic'
 }
 
 /**
@@ -59,79 +59,79 @@ export interface MediaRating {
  */
 export interface MediaItem {
   /** Unique identifier within the media server */
-  id: string;
+  id: string
   /** Parent item ID (for seasons -> show, episodes -> season) */
-  parentId?: string;
+  parentId?: string
   /** Grandparent item ID (for episodes -> show) */
-  grandparentId?: string;
+  grandparentId?: string
   /** Display title */
-  title: string;
+  title: string
   /** Parent title (e.g., show name for episode) */
-  parentTitle?: string;
+  parentTitle?: string
   /** Grandparent title */
-  grandparentTitle?: string;
+  grandparentTitle?: string
   /** Internal GUID/identifier */
-  guid: string;
+  guid: string
   /** Parent GUID */
-  parentGuid?: string;
+  parentGuid?: string
   /** Grandparent GUID */
-  grandparentGuid?: string;
+  grandparentGuid?: string
   /** Media type */
-  type: EMediaDataType;
+  type: EMediaDataType
   /** When the item was added to the library */
-  addedAt: Date;
+  addedAt: Date
   /** When the item was last updated */
-  updatedAt?: Date;
+  updatedAt?: Date
   /** External provider IDs */
-  providerIds: MediaProviderIds;
+  providerIds: MediaProviderIds
   /** Media sources/files */
-  mediaSources: MediaSource[];
+  mediaSources: MediaSource[]
   /** Library section information */
   library: {
-    id: string;
-    title: string;
-  };
+    id: string
+    title: string
+  }
   /** Summary/description */
-  summary?: string;
+  summary?: string
   /** View count */
-  viewCount?: number;
+  viewCount?: number
   /** Skip count */
-  skipCount?: number;
+  skipCount?: number
   /** Last viewed timestamp */
-  lastViewedAt?: Date;
+  lastViewedAt?: Date
   /** Release year */
-  year?: number;
+  year?: number
   /** Duration in milliseconds */
-  durationMs?: number;
+  durationMs?: number
   /** Original air date */
-  originallyAvailableAt?: Date;
+  originallyAvailableAt?: Date
   /** Ratings */
-  ratings?: MediaRating[];
+  ratings?: MediaRating[]
   /** User rating (0-10) */
-  userRating?: number;
+  userRating?: number
   /** Genres */
-  genres?: MediaGenre[];
+  genres?: MediaGenre[]
   /** Cast/actors */
-  actors?: MediaActor[];
+  actors?: MediaActor[]
   /** Number of child items (for shows/seasons) */
-  childCount?: number;
+  childCount?: number
   /** Number of watched child items */
-  watchedChildCount?: number;
+  watchedChildCount?: number
   /** Index within parent (episode number, season number) */
-  index?: number;
+  index?: number
   /** Parent index (season number for episodes) */
-  parentIndex?: number;
+  parentIndex?: number
   /** Collection tags */
-  collections?: string[];
+  collections?: string[]
   /** Labels/tags */
-  labels?: string[];
+  labels?: string[]
 
   /** Maintainerr-specific: exclusion type */
-  maintainerrExclusionType?: 'specific' | 'global';
+  maintainerrExclusionType?: 'specific' | 'global'
   /** Maintainerr-specific: exclusion ID */
-  maintainerrExclusionId?: number;
+  maintainerrExclusionId?: number
   /** Maintainerr-specific: manual addition flag */
-  maintainerrIsManual?: boolean;
+  maintainerrIsManual?: boolean
 }
 
 /**
@@ -140,7 +140,7 @@ export interface MediaItem {
  */
 export interface MediaItemWithParent extends MediaItem {
   /** Parent item metadata (for episodes/seasons) */
-  parentItem?: MediaItem;
+  parentItem?: MediaItem
 }
 
 /**
@@ -148,13 +148,13 @@ export interface MediaItemWithParent extends MediaItem {
  */
 export interface MediaLibrary {
   /** Unique identifier */
-  id: string;
+  id: string
   /** Display name */
-  title: string;
+  title: string
   /** Library type (movie/show) */
-  type: 'movie' | 'show';
+  type: 'movie' | 'show'
   /** Agent used for metadata */
-  agent?: string;
+  agent?: string
 }
 
 /**
@@ -162,11 +162,11 @@ export interface MediaLibrary {
  */
 export interface MediaUser {
   /** Unique identifier */
-  id: string;
+  id: string
   /** Username/display name */
-  name: string;
+  name: string
   /** User thumbnail */
-  thumb?: string;
+  thumb?: string
 }
 
 /**
@@ -174,13 +174,13 @@ export interface MediaUser {
  */
 export interface WatchRecord {
   /** User who watched */
-  userId: string;
+  userId: string
   /** Item that was watched */
-  itemId: string;
+  itemId: string
   /** When it was watched */
-  watchedAt: Date;
+  watchedAt: Date
   /** Playback progress (0-100) */
-  progress?: number;
+  progress?: number
 }
 
 /**
@@ -188,23 +188,23 @@ export interface WatchRecord {
  */
 export interface MediaCollection {
   /** Unique identifier */
-  id: string;
+  id: string
   /** Collection title */
-  title: string;
+  title: string
   /** Collection summary */
-  summary?: string;
+  summary?: string
   /** Thumbnail URL */
-  thumb?: string;
+  thumb?: string
   /** Number of items in collection */
-  childCount: number;
+  childCount: number
   /** When the collection was added */
-  addedAt?: Date;
+  addedAt?: Date
   /** When the collection was last updated */
-  updatedAt?: Date;
+  updatedAt?: Date
   /** Whether this is a smart collection */
-  smart?: boolean;
+  smart?: boolean
   /** Library ID this collection belongs to */
-  libraryId?: string;
+  libraryId?: string
 }
 
 /**
@@ -212,21 +212,21 @@ export interface MediaCollection {
  */
 export interface MediaPlaylist {
   /** Unique identifier */
-  id: string;
+  id: string
   /** Playlist title */
-  title: string;
+  title: string
   /** Playlist summary */
-  summary?: string;
+  summary?: string
   /** Whether this is a smart playlist */
-  smart?: boolean;
+  smart?: boolean
   /** Number of items */
-  itemCount: number;
+  itemCount: number
   /** Total duration in milliseconds */
-  durationMs?: number;
+  durationMs?: number
   /** When the playlist was added */
-  addedAt?: Date;
+  addedAt?: Date
   /** When the playlist was last updated */
-  updatedAt?: Date;
+  updatedAt?: Date
 }
 
 /**
@@ -234,13 +234,13 @@ export interface MediaPlaylist {
  */
 export interface MediaServerStatus {
   /** Server identifier */
-  machineId: string;
+  machineId: string
   /** Server version */
-  version: string;
+  version: string
   /** Server name */
-  name?: string;
+  name?: string
   /** Operating system */
-  platform?: string;
+  platform?: string
 }
 
 /**
@@ -248,15 +248,15 @@ export interface MediaServerStatus {
  */
 export interface LibraryQueryOptions {
   /** Filter by media type */
-  type?: EMediaDataType;
+  type?: EMediaDataType
   /** Pagination offset */
-  offset?: number;
+  offset?: number
   /** Number of items to return */
-  limit?: number;
+  limit?: number
   /** Sort field */
-  sort?: string;
+  sort?: string
   /** Sort direction */
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: 'asc' | 'desc'
 }
 
 /**
@@ -264,9 +264,9 @@ export interface LibraryQueryOptions {
  */
 export interface RecentlyAddedOptions {
   /** Number of items to return */
-  limit?: number;
+  limit?: number
   /** Filter by media type */
-  type?: EMediaDataType;
+  type?: EMediaDataType
 }
 
 /**
@@ -274,13 +274,13 @@ export interface RecentlyAddedOptions {
  */
 export interface PagedResult<T> {
   /** Items in this page */
-  items: T[];
+  items: T[]
   /** Total number of items */
-  totalSize: number;
+  totalSize: number
   /** Current offset */
-  offset: number;
+  offset: number
   /** Page size */
-  limit: number;
+  limit: number
 }
 
 /**
@@ -288,15 +288,15 @@ export interface PagedResult<T> {
  */
 export interface CreateCollectionParams {
   /** Library to create collection in */
-  libraryId: string;
+  libraryId: string
   /** Collection title */
-  title: string;
+  title: string
   /** Collection summary */
-  summary?: string;
+  summary?: string
   /** Media type for the collection */
-  type: EMediaDataType;
+  type: EMediaDataType
   /** Sort title override */
-  sortTitle?: string;
+  sortTitle?: string
 }
 
 /**
@@ -304,7 +304,7 @@ export interface CreateCollectionParams {
  */
 export interface CollectionVisibilitySettings {
   /** Visible on home screen */
-  homeVisibility?: boolean;
+  homeVisibility?: boolean
   /** Visible in recommendations */
-  recommendationsVisibility?: boolean;
+  recommendationsVisibility?: boolean
 }

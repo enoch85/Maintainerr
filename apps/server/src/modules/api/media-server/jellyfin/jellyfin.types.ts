@@ -69,9 +69,7 @@ export interface BuildWatchedCacheOptions {
 /**
  * Type guard to check if an item has provider IDs
  */
-export function hasProviderIds(
-  item: BaseItemDto,
-): item is BaseItemDto & {
+export function hasProviderIds(item: BaseItemDto): item is BaseItemDto & {
   ProviderIds: NonNullable<BaseItemDto['ProviderIds']>;
 } {
   return item.ProviderIds !== undefined && item.ProviderIds !== null;
@@ -89,9 +87,7 @@ export function hasUserData(
 /**
  * Type guard to check if an item has media sources
  */
-export function hasMediaSources(
-  item: BaseItemDto,
-): item is BaseItemDto & {
+export function hasMediaSources(item: BaseItemDto): item is BaseItemDto & {
   MediaSources: NonNullable<BaseItemDto['MediaSources']>;
 } {
   return item.MediaSources !== undefined && item.MediaSources !== null;

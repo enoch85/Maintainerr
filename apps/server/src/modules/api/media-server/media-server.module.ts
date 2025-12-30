@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { PlexApiModule } from '../plex-api/plex-api.module';
 import { SettingsModule } from '../../settings/settings.module';
+import { MediaServerSetupGuard } from './guards/media-server-setup.guard';
 import { MediaServerFactory } from './media-server.factory';
 import { PlexAdapterService } from './plex/plex-adapter.service';
 import { JellyfinModule } from './jellyfin/jellyfin.module';
@@ -29,7 +30,17 @@ import { JellyfinService } from './jellyfin/jellyfin.service';
     forwardRef(() => SettingsModule),
     JellyfinModule,
   ],
-  providers: [PlexAdapterService, JellyfinService, MediaServerFactory],
-  exports: [PlexAdapterService, JellyfinService, MediaServerFactory],
+  providers: [
+    PlexAdapterService,
+    JellyfinService,
+    MediaServerFactory,
+    MediaServerSetupGuard,
+  ],
+  exports: [
+    PlexAdapterService,
+    JellyfinService,
+    MediaServerFactory,
+    MediaServerSetupGuard,
+  ],
 })
 export class MediaServerModule {}

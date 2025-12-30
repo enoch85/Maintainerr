@@ -137,7 +137,7 @@ const SettingsWrapper = () => {
     // Allow access if either Plex or Jellyfin is configured
     const isMediaServerConfigured = Boolean(
       settings.plex_auth_token !== null ||
-        (settings.jellyfin_url && settings.jellyfin_api_key),
+      (settings.jellyfin_url && settings.jellyfin_api_key),
     )
 
     return (

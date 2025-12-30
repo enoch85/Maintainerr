@@ -30,10 +30,8 @@ const JellyfinSettings = () => {
 
   const { settings } = useSettingsOutletContext()
 
-  const {
-    mutateAsync: testJellyfin,
-    isPending: isTestPending,
-  } = useTestJellyfin()
+  const { mutateAsync: testJellyfin, isPending: isTestPending } =
+    useTestJellyfin()
 
   const {
     mutateAsync: saveSettings,
@@ -150,13 +148,18 @@ const JellyfinSettings = () => {
       <div className="h-full w-full">
         <div className="section h-full w-full">
           <h3 className="heading">Jellyfin Settings</h3>
-          <p className="description">Configure your Jellyfin server connection</p>
+          <p className="description">
+            Configure your Jellyfin server connection
+          </p>
         </div>
 
         {error && <Alert type="error" title={error} />}
 
         {saveError && (
-          <Alert type="error" title="There was an error saving Jellyfin settings." />
+          <Alert
+            type="error"
+            title="There was an error saving Jellyfin settings."
+          />
         )}
 
         {(saveSuccess || deleteSuccess) && (
@@ -164,7 +167,10 @@ const JellyfinSettings = () => {
         )}
 
         {testResult && (
-          <Alert type={testResult.status ? 'info' : 'error'} title={testResult.message} />
+          <Alert
+            type={testResult.status ? 'info' : 'error'}
+            title={testResult.message}
+          />
         )}
 
         <Alert type="info" title="Getting your API Key">
@@ -292,7 +298,9 @@ const JellyfinSettings = () => {
                   >
                     <TrashIcon className="h-5 w-5" />
                     <span className="ml-1">
-                      {isDeletePending ? 'Clearing...' : 'Clear Jellyfin Settings'}
+                      {isDeletePending
+                        ? 'Clearing...'
+                        : 'Clear Jellyfin Settings'}
                     </span>
                   </Button>
                 </div>

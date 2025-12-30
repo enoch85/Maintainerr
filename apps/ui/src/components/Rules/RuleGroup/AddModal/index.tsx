@@ -179,8 +179,7 @@ const buildFormDefaults = (editData?: IRuleGroup): RuleGroupFormValues => ({
   listExclusions: editData?.collection?.listExclusions ?? true,
   forceOverseerr: editData?.collection?.forceOverseerr ?? false,
   manualCollection: editData?.collection?.manualCollection ?? false,
-  manualCollectionName:
-    editData?.collection?.manualCollectionName ?? '',
+  manualCollectionName: editData?.collection?.manualCollectionName ?? '',
   sortTitle: editData?.collection?.sortTitle ?? '',
   active: editData?.isActive ?? true,
   useRules: editData?.useRules ?? true,
@@ -196,7 +195,11 @@ const buildFormDefaults = (editData?: IRuleGroup): RuleGroupFormValues => ({
 const AddModal = (props: AddModal) => {
   const navigate = useNavigate()
   const { isPlex, isJellyfin } = useMediaServerType()
-  const mediaServerName = isPlex ? 'Plex' : isJellyfin ? 'Jellyfin' : 'your media server'
+  const mediaServerName = isPlex
+    ? 'Plex'
+    : isJellyfin
+      ? 'Jellyfin'
+      : 'your media server'
   // Both Plex and Jellyfin call them "Collections" in their GUI
   // (Jellyfin's internal API type is "BoxSet" but the user-facing term is "Collection")
   const collectionTerm = 'collection'
@@ -597,7 +600,8 @@ const AddModal = (props: AddModal) => {
                     <label htmlFor="name" className="text-label">
                       Name *
                       <p className="text-xs font-normal">
-                        Will also be the name of the {collectionTerm} in {mediaServerName}.
+                        Will also be the name of the {collectionTerm} in{' '}
+                        {mediaServerName}.
                       </p>
                     </label>
                     <div className="form-input">
@@ -902,8 +906,8 @@ const AddModal = (props: AddModal) => {
                           >
                             Show on {mediaServerName} library recommended
                             <p className="text-xs font-normal">
-                              Show the {collectionTerm} on the {mediaServerName} library recommended
-                              screen
+                              Show the {collectionTerm} on the {mediaServerName}{' '}
+                              library recommended screen
                             </p>
                           </label>
                           <div className="form-input">
@@ -925,7 +929,8 @@ const AddModal = (props: AddModal) => {
                           >
                             Show on {mediaServerName} home
                             <p className="text-xs font-normal">
-                              Show the {collectionTerm} on the {mediaServerName} home screen
+                              Show the {collectionTerm} on the {mediaServerName}{' '}
+                              home screen
                             </p>
                           </label>
                           <div className="form-input">
@@ -1043,7 +1048,8 @@ const AddModal = (props: AddModal) => {
                       >
                         Custom {collectionTerm} name
                         <p className="text-xs font-normal">
-                          {collectionTermCapitalized} must exist in {mediaServerName}
+                          {collectionTermCapitalized} must exist in{' '}
+                          {mediaServerName}
                         </p>
                       </label>
 
@@ -1103,8 +1109,8 @@ const AddModal = (props: AddModal) => {
                       >
                         Keep logs for months*
                         <p className="text-xs font-normal">
-                          Duration for which {collectionTerm} logs should be retained,
-                          measured in months (0 = forever)
+                          Duration for which {collectionTerm} logs should be
+                          retained, measured in months (0 = forever)
                         </p>
                       </label>
                       <div className="form-input">
@@ -1131,7 +1137,8 @@ const AddModal = (props: AddModal) => {
                       >
                         Sort title
                         <p className="text-xs font-normal">
-                          Custom sort title for the {collectionTerm} in {mediaServerName}
+                          Custom sort title for the {collectionTerm} in{' '}
+                          {mediaServerName}
                         </p>
                       </label>
                       <div className="flex justify-end px-2 py-2">

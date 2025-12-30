@@ -1,8 +1,4 @@
-import {
-  createContext,
-  ReactNode,
-  useState,
-} from 'react'
+import { createContext, ReactNode, useState } from 'react'
 
 export interface ISearch {
   text: string
