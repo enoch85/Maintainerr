@@ -1,6 +1,7 @@
 import {
   BasicResponseDto,
   EMediaServerType,
+  JellyfinSettingDto,
   JellyseerrSettingDto,
   MediaServerSwitchPreviewDto,
   OverseerrSettingDto,
@@ -211,6 +212,27 @@ export class SettingsController {
     @Body() payload: OverseerrSettingDto,
   ): Promise<BasicResponseDto> {
     return this.settingsService.testOverseerr(payload);
+  }
+
+  // ============================================================
+  // JELLYFIN SETTINGS
+  // ============================================================
+
+  @Post('/jellyfin/test')
+  testJellyfin(@Body() payload: JellyfinSettingDto): Promise<BasicResponseDto> {
+    return this.settingsService.testJellyfin(payload);
+  }
+
+  @Post('/jellyfin')
+  async saveJellyfinSettings(
+    @Body() payload: JellyfinSettingDto,
+  ): Promise<BasicResponseDto> {
+    return await this.settingsService.saveJellyfinSettings(payload);
+  }
+
+  @Delete('/jellyfin')
+  async removeJellyfinSettings(): Promise<BasicResponseDto> {
+    return await this.settingsService.removeJellyfinSettings();
   }
 
   @Delete('/sonarr/:id')

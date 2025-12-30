@@ -28,9 +28,9 @@ export class Settings implements SettingDto {
   @Column({ nullable: false, default: 'en' })
   locale: string;
 
-  // Media server type selection
-  @Column({ type: 'varchar', nullable: true, default: 'plex' })
-  media_server_type?: MediaServerType;
+  // Media server type selection - null until user chooses
+  @Column({ type: 'varchar', nullable: true, default: null })
+  media_server_type?: MediaServerType | null;
 
   // Plex settings
   @Column({ nullable: true })

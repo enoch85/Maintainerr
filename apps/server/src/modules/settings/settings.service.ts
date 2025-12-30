@@ -391,6 +391,154 @@ export class SettingsService implements SettingDto {
     }
   }
 
+  // ============================================================
+  // JELLYFIN SETTINGS
+  // ============================================================
+
+  /**
+   * Test connection to a Jellyfin server
+   */
+  public async testJellyfin(settings: {
+    jellyfin_url: string;
+    jellyfin_api_key: string;
+    jellyfin_user_id?: string;
+  }): Promise<BasicResponseDto & { serverName?: string; version?: string }> {
+    try {
+      // Import Jellyfin SDK dynamically to avoid circular dependencies
+      const { Jellyfin } = await import('@jellyfin/sdk');
+      const { getSystemApi } = await import('@jellyfin/sdk/lib/utils/api');
+
+      const jellyfin = new Jellyfin({
+        clientInfo: { name: 'Maintainerr', version: '2.0.0' },
+        deviceInfo: { name: 'Maintainerr-Test', id: 'maintainerr-test' },
+      });
+
+      const api = jellyfin.createApi(
+        settings.jellyfin_url,
+        settings.jellyfin_api_key,
+      );
+
+      // Add timeout to prevent hanging on unreachable servers
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error('Connection timeout after 10 seconds')),
+          10000,
+        ),
+      );
+
+      const systemInfo = await Promise.race([
+        getSystemApi(api).getPublicSystemInfo(),
+        timeoutPromise,
+      ]);
+
+      this.logger.log(
+        `Jellyfin connection test successful: ${systemInfo.data.ServerName} (${systemInfo.data.Version})`,
+      );
+
+      return {
+        status: 'OK',
+        code: 1,
+        message: `Connected to ${systemInfo.data.ServerName}`,
+        serverName: systemInfo.data.ServerName || undefined,
+        version: systemInfo.data.Version || undefined,
+      };
+    } catch (e) {
+      this.logger.error('Jellyfin connection test failed: ', e);
+      const message = e instanceof Error ? e.message : 'Connection failed';
+      return { status: 'NOK', code: 0, message };
+    }
+  }
+
+  /**
+   * Save Jellyfin settings and initialize the service
+   */
+  public async saveJellyfinSettings(settings: {
+    jellyfin_url: string;
+    jellyfin_api_key: string;
+    jellyfin_user_id?: string;
+  }): Promise<BasicResponseDto> {
+    try {
+      const settingsDb = await this.settingsRepo.findOne({ where: {} });
+
+      // TODO: Remove when merging to prod - revert to blocking on connection failure
+      // Test connection but don't block save on failure
+      const testResult = await this.testJellyfin(settings);
+      const connectionSuccessful = testResult.code === 1;
+
+      if (!connectionSuccessful) {
+        this.logger.warn(
+          `Jellyfin connection test failed: ${testResult.message}. Settings will be saved anyway.`,
+        );
+      }
+
+      await this.saveSettings({
+        ...settingsDb,
+        jellyfin_url: settings.jellyfin_url,
+        jellyfin_api_key: settings.jellyfin_api_key,
+        jellyfin_user_id: settings.jellyfin_user_id || null,
+        jellyfin_server_name: connectionSuccessful
+          ? testResult.serverName || null
+          : null,
+        media_server_type: 'jellyfin',
+      });
+
+      this.jellyfin_url = settings.jellyfin_url;
+      this.jellyfin_api_key = settings.jellyfin_api_key;
+      this.jellyfin_user_id = settings.jellyfin_user_id;
+      this.jellyfin_server_name = connectionSuccessful
+        ? testResult.serverName
+        : undefined;
+      this.media_server_type = 'jellyfin';
+
+      if (connectionSuccessful) {
+        this.logger.log('Jellyfin settings saved successfully');
+        return { status: 'OK', code: 1, message: 'Success' };
+      } else {
+        this.logger.log(
+          'Jellyfin settings saved (connection could not be verified)',
+        );
+        return {
+          status: 'OK',
+          code: 1,
+          message:
+            'Settings saved, but connection could not be verified. Please check your URL and API key.',
+        };
+      }
+    } catch (e) {
+      this.logger.error('Error while saving Jellyfin settings: ', e);
+      const message = e instanceof Error ? e.message : 'Failed to save settings';
+      return { status: 'NOK', code: 0, message };
+    }
+  }
+
+  /**
+   * Remove Jellyfin settings
+   */
+  public async removeJellyfinSettings(): Promise<BasicResponseDto> {
+    try {
+      const settingsDb = await this.settingsRepo.findOne({ where: {} });
+
+      await this.saveSettings({
+        ...settingsDb,
+        jellyfin_url: null,
+        jellyfin_api_key: null,
+        jellyfin_user_id: null,
+        jellyfin_server_name: null,
+      });
+
+      this.jellyfin_url = undefined;
+      this.jellyfin_api_key = undefined;
+      this.jellyfin_user_id = undefined;
+      this.jellyfin_server_name = undefined;
+
+      this.logger.log('Jellyfin settings cleared');
+      return { status: 'OK', code: 1, message: 'Success' };
+    } catch (e) {
+      this.logger.error('Error removing Jellyfin settings: ', e);
+      return { status: 'NOK', code: 0, message: 'Failed' };
+    }
+  }
+
   public async addSonarrSetting(
     settings: Omit<SonarrSettings, 'id' | 'collections'>,
   ): Promise<SonarrSettingResponseDto> {
@@ -783,10 +931,37 @@ export class SettingsService implements SettingDto {
     }
   }
 
-  // Test if all configured applications are reachable. Plex is required.
+  // Test if all configured applications are reachable. Media server is required.
   public async testConnections(): Promise<boolean> {
     try {
-      const plexState = (await this.testPlex()).status === 'OK';
+      // Test the configured media server
+      let mediaServerState: boolean;
+
+      // If no media server type is configured, connections cannot be tested
+      if (!this.media_server_type) {
+        return false;
+      }
+
+      if (this.media_server_type === 'jellyfin') {
+        // Test Jellyfin with current settings
+        if (this.jellyfin_url && this.jellyfin_api_key) {
+          mediaServerState =
+            (
+              await this.testJellyfin({
+                jellyfin_url: this.jellyfin_url,
+                jellyfin_api_key: this.jellyfin_api_key,
+                jellyfin_user_id: this.jellyfin_user_id,
+              })
+            ).status === 'OK';
+        } else {
+          mediaServerState = false;
+        }
+      } else if (this.media_server_type === 'plex') {
+        mediaServerState = (await this.testPlex()).status === 'OK';
+      } else {
+        mediaServerState = false;
+      }
+
       let radarrState = true;
       let sonarrState = true;
       let overseerrState = true;
@@ -820,7 +995,7 @@ export class SettingsService implements SettingDto {
       }
 
       if (
-        plexState &&
+        mediaServerState &&
         radarrState &&
         sonarrState &&
         overseerrState &&
@@ -852,13 +1027,27 @@ export class SettingsService implements SettingDto {
   // Test if all required settings are set.
   public async testSetup(): Promise<boolean> {
     try {
-      if (
-        this.plex_hostname &&
-        this.plex_name &&
-        this.plex_port &&
-        this.plex_auth_token
-      ) {
-        return true;
+      // If no media server type is selected, setup is not complete
+      if (!this.media_server_type) {
+        return false;
+      }
+
+      // Check based on configured media server type
+      if (this.media_server_type === 'jellyfin') {
+        // Jellyfin requires URL and API key (user ID is optional, can be auto-detected later)
+        if (this.jellyfin_url && this.jellyfin_api_key) {
+          return true;
+        }
+      } else if (this.media_server_type === 'plex') {
+        // Plex requires hostname, name, port, and auth token
+        if (
+          this.plex_hostname &&
+          this.plex_name &&
+          this.plex_port &&
+          this.plex_auth_token
+        ) {
+          return true;
+        }
       }
       return false;
     } catch (e) {

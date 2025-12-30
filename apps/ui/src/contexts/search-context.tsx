@@ -1,8 +1,6 @@
 import {
   createContext,
-  ReactElement,
   ReactNode,
-  ReactPortal,
   useState,
 } from 'react'
 
@@ -10,23 +8,19 @@ export interface ISearch {
   text: string
 }
 
-const SearchContext = createContext({
+interface SearchContextType {
+  search: ISearch
+  addText: (input: string) => void
+  removeText: () => void
+}
+
+const SearchContext = createContext<SearchContextType>({
   search: {} as ISearch,
-  addText: (input: string) => {},
+  addText: () => {},
   removeText: () => {},
 })
 
-export function SearchContextProvider(props: {
-  children:
-    | boolean
-    | ReactElement<any>
-    | number
-    | string
-    | Iterable<ReactNode>
-    | ReactPortal
-    | null
-    | undefined
-}) {
+export function SearchContextProvider(props: { children: ReactNode }) {
   const [searchText, setSearch] = useState<ISearch>({ text: '' } as ISearch)
 
   function addSearchHandler(input: string) {
@@ -40,11 +34,7 @@ export function SearchContextProvider(props: {
     })
   }
 
-  const context: {
-    search: ISearch
-    addText: (input: string) => void
-    removeText: () => void
-  } = {
+  const context: SearchContextType = {
     search: searchText,
     addText: addSearchHandler,
     removeText: removeSearchHandler,

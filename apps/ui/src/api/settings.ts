@@ -12,6 +12,8 @@ import GetApiHandler, {
   PostApiHandler,
 } from '../utils/ApiHandler'
 
+export type MediaServerType = 'plex' | 'jellyfin'
+
 interface ISettings {
   id: number
   clientId: string
@@ -20,11 +22,20 @@ interface ISettings {
   apikey: string
   overseerr_url: string
   locale: string
+  // Media server type - null when not yet selected
+  media_server_type?: MediaServerType | null
+  // Plex settings
   plex_name: string
   plex_hostname: string
   plex_port: number
   plex_ssl: number
   plex_auth_token: string | null
+  // Jellyfin settings
+  jellyfin_url?: string
+  jellyfin_api_key?: string
+  jellyfin_user_id?: string
+  jellyfin_server_name?: string
+  // Third-party integrations
   overseerr_api_key: string
   tautulli_url: string
   tautulli_api_key: string
@@ -32,6 +43,21 @@ interface ISettings {
   jellyseerr_api_key: string
   collection_handler_job_cron: string
   rules_handler_job_cron: string
+}
+
+// Jellyfin-specific types
+export interface JellyfinSettingsPayload {
+  jellyfin_url: string
+  jellyfin_api_key: string
+  jellyfin_user_id?: string
+}
+
+export interface JellyfinTestResult {
+  status: string
+  code: number
+  message: string
+  serverName?: string
+  version?: string
 }
 
 type UseSettingsQueryKey = ['settings']
@@ -130,3 +156,185 @@ export const useUpdatePlexAuth = (options?: UseUpdatePlexAuthOptions) => {
 }
 
 export type UseUpdatePlexAuthResult = ReturnType<typeof useUpdatePlexAuth>
+
+// ============================================================
+// JELLYFIN SETTINGS
+// ============================================================
+
+type UseTestJellyfinOptions = Omit<
+  UseMutationOptions<JellyfinTestResult, Error, JellyfinSettingsPayload>,
+  'mutationFn' | 'mutationKey'
+>
+
+export const useTestJellyfin = (options?: UseTestJellyfinOptions) => {
+  return useMutation<JellyfinTestResult, Error, JellyfinSettingsPayload>({
+    mutationKey: ['settings', 'testJellyfin'],
+    mutationFn: async (payload) => {
+      return await PostApiHandler<JellyfinTestResult>(
+        '/settings/jellyfin/test',
+        payload,
+      )
+    },
+    ...options,
+  })
+}
+
+export type UseTestJellyfinResult = ReturnType<typeof useTestJellyfin>
+
+type UseSaveJellyfinSettingsOptions = Omit<
+  UseMutationOptions<BasicResponseDto, Error, JellyfinSettingsPayload>,
+  'mutationFn' | 'mutationKey' | 'onSuccess'
+>
+
+export const useSaveJellyfinSettings = (
+  options?: UseSaveJellyfinSettingsOptions,
+) => {
+  const queryClient = useQueryClient()
+
+  return useMutation<BasicResponseDto, Error, JellyfinSettingsPayload>({
+    mutationKey: ['settings', 'saveJellyfin'],
+    mutationFn: async (payload) => {
+      return await PostApiHandler<BasicResponseDto>(
+        '/settings/jellyfin',
+        payload,
+      )
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['settings'] satisfies UseSettingsQueryKey,
+      })
+    },
+    ...options,
+  })
+}
+
+export type UseSaveJellyfinSettingsResult = ReturnType<
+  typeof useSaveJellyfinSettings
+>
+
+type UseDeleteJellyfinSettingsOptions = Omit<
+  UseMutationOptions<BasicResponseDto, Error, void>,
+  'mutationFn' | 'mutationKey' | 'onSuccess'
+>
+
+export const useDeleteJellyfinSettings = (
+  options?: UseDeleteJellyfinSettingsOptions,
+) => {
+  const queryClient = useQueryClient()
+
+  return useMutation<BasicResponseDto, Error, void>({
+    mutationKey: ['settings', 'deleteJellyfin'],
+    mutationFn: async () => {
+      return await DeleteApiHandler<BasicResponseDto>('/settings/jellyfin')
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['settings'] satisfies UseSettingsQueryKey,
+      })
+    },
+    ...options,
+  })
+}
+
+export type UseDeleteJellyfinSettingsResult = ReturnType<
+  typeof useDeleteJellyfinSettings
+>
+
+// ============================================================
+// MEDIA SERVER SWITCH
+// ============================================================
+
+export interface MediaServerSwitchPreview {
+  currentServerType: MediaServerType
+  targetServerType: MediaServerType
+  dataToBeCleared: {
+    collections: number
+    collectionMedia: number
+    exclusions: number
+    collectionLogs: number
+  }
+  dataToBeKept: {
+    generalSettings: boolean
+    radarrSettings: number
+    sonarrSettings: number
+    overseerrSettings: boolean
+    jellyseerrSettings: boolean
+    tautulliSettings: boolean
+    notificationSettings: boolean
+  }
+}
+
+export interface SwitchMediaServerRequest {
+  targetServerType: MediaServerType
+  confirmDataClear: boolean
+}
+
+export interface SwitchMediaServerResponse {
+  status: 'OK' | 'NOK'
+  code: number
+  message: string
+  clearedData?: {
+    collections: number
+    collectionMedia: number
+    exclusions: number
+    collectionLogs: number
+  }
+}
+
+type UsePreviewMediaServerSwitchOptions = Omit<
+  UseMutationOptions<MediaServerSwitchPreview, Error, MediaServerType>,
+  'mutationFn' | 'mutationKey'
+>
+
+export const usePreviewMediaServerSwitch = (
+  options?: UsePreviewMediaServerSwitchOptions,
+) => {
+  return useMutation<MediaServerSwitchPreview, Error, MediaServerType>({
+    mutationKey: ['settings', 'previewMediaServerSwitch'],
+    mutationFn: async (targetServerType) => {
+      return await GetApiHandler<MediaServerSwitchPreview>(
+        `/settings/media-server/switch/preview/${targetServerType}`,
+      )
+    },
+    ...options,
+  })
+}
+
+export type UsePreviewMediaServerSwitchResult = ReturnType<
+  typeof usePreviewMediaServerSwitch
+>
+
+type UseSwitchMediaServerOptions = Omit<
+  UseMutationOptions<SwitchMediaServerResponse, Error, SwitchMediaServerRequest>,
+  'mutationFn' | 'mutationKey' | 'onSuccess'
+>
+
+export const useSwitchMediaServer = (options?: UseSwitchMediaServerOptions) => {
+  const queryClient = useQueryClient()
+
+  return useMutation<
+    SwitchMediaServerResponse,
+    Error,
+    SwitchMediaServerRequest
+  >({
+    mutationKey: ['settings', 'switchMediaServer'],
+    mutationFn: async (payload) => {
+      return await PostApiHandler<SwitchMediaServerResponse>(
+        '/settings/media-server/switch',
+        payload,
+      )
+    },
+    onSuccess: () => {
+      // Invalidate all relevant queries after switching
+      queryClient.invalidateQueries({
+        queryKey: ['settings'] satisfies UseSettingsQueryKey,
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['collections'],
+      })
+    },
+    ...options,
+  })
+}
+
+export type UseSwitchMediaServerResult = ReturnType<typeof useSwitchMediaServer>

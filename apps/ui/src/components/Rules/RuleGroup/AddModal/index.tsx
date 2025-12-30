@@ -25,6 +25,7 @@ import {
   useUpdateRuleGroup,
 } from '../../../../api/rules'
 import { Application } from '../../../../contexts/constants-context'
+import { useMediaServerType } from '../../../../hooks/useMediaServerType'
 import { PostApiHandler } from '../../../../utils/ApiHandler'
 import { EPlexDataType } from '../../../../utils/PlexDataType-enum'
 import Alert from '../../../Common/Alert'
@@ -43,8 +44,6 @@ interface AddModal {
   onCancel: () => void
   onSuccess: () => void
 }
-
-const DEFAULT_MANUAL_COLLECTION_NAME = 'My custom collection'
 
 const numberOrUndefined = (value: unknown): number | undefined => {
   if (value === '' || value === null || value === undefined) {
@@ -181,8 +180,7 @@ const buildFormDefaults = (editData?: IRuleGroup): RuleGroupFormValues => ({
   forceOverseerr: editData?.collection?.forceOverseerr ?? false,
   manualCollection: editData?.collection?.manualCollection ?? false,
   manualCollectionName:
-    editData?.collection?.manualCollectionName ??
-    DEFAULT_MANUAL_COLLECTION_NAME,
+    editData?.collection?.manualCollectionName ?? '',
   sortTitle: editData?.collection?.sortTitle ?? '',
   active: editData?.isActive ?? true,
   useRules: editData?.useRules ?? true,
@@ -197,6 +195,11 @@ const buildFormDefaults = (editData?: IRuleGroup): RuleGroupFormValues => ({
 
 const AddModal = (props: AddModal) => {
   const navigate = useNavigate()
+  const { isPlex, isJellyfin } = useMediaServerType()
+  const mediaServerName = isPlex ? 'Plex' : isJellyfin ? 'Jellyfin' : 'your media server'
+  // Jellyfin calls collections "Box Sets"
+  const collectionTerm = isJellyfin ? 'box set' : 'collection'
+  const collectionTermCapitalized = isJellyfin ? 'Box set' : 'Collection'
   const {
     register,
     handleSubmit,
@@ -338,7 +341,7 @@ const AddModal = (props: AddModal) => {
 
   function updateLibraryId(value: string) {
     if (!plexLibraries) {
-      throw new Error('Plex libraries not loaded')
+      throw new Error('Libraries not loaded')
     }
 
     const lib = plexLibraries.find((el: ILibrary) => +el.key === +value)
@@ -498,7 +501,7 @@ const AddModal = (props: AddModal) => {
             : data.deleteAfterDays,
         manualCollection: data.manualCollection,
         manualCollectionName:
-          data.manualCollectionName ?? DEFAULT_MANUAL_COLLECTION_NAME,
+          data.manualCollectionName || `My custom ${collectionTerm}`,
         keepLogsForMonths: data.keepLogsForMonths,
         sortTitle: data.sortTitle?.trim() ? data.sortTitle : undefined,
       },
@@ -593,7 +596,7 @@ const AddModal = (props: AddModal) => {
                     <label htmlFor="name" className="text-label">
                       Name *
                       <p className="text-xs font-normal">
-                        Will also be the name of the collection in Plex.
+                        Will also be the name of the {collectionTerm} in {mediaServerName}.
                       </p>
                     </label>
                     <div className="form-input">
@@ -668,6 +671,7 @@ const AddModal = (props: AddModal) => {
                   {selectedLibraryType && selectedLibraryType === 'movie' && (
                     <ArrAction
                       type="Radarr"
+                      mediaServerName={mediaServerName}
                       accActionError={errors.arrAction?.message}
                       arrAction={arrActionValue}
                       settingIdError={errors.radarrSettingsId?.message}
@@ -754,6 +758,7 @@ const AddModal = (props: AddModal) => {
 
                       <ArrAction
                         type="Sonarr"
+                        mediaServerName={mediaServerName}
                         arrAction={arrActionValue}
                         settingId={sonarrSettingsId}
                         onUpdate={(e: number, settingId) => {
@@ -835,7 +840,7 @@ const AddModal = (props: AddModal) => {
                       >
                         Take action after days*
                         <p className="text-xs font-normal">
-                          Duration of days media remains in the collection
+                          Duration of days media remains in the {collectionTerm}
                           before deletion/unmonitor
                         </p>
                       </label>
@@ -886,50 +891,55 @@ const AddModal = (props: AddModal) => {
                       </div>
                     </div>
 
-                    <div className="flex flex-row items-center justify-between py-4">
-                      <label
-                        htmlFor="collection_visible_library"
-                        className="text-label"
-                      >
-                        Show on Plex library recommended
-                        <p className="text-xs font-normal">
-                          Show the collection on the Plex library recommended
-                          screen
-                        </p>
-                      </label>
-                      <div className="form-input">
-                        <div className="form-input-field">
-                          <input
-                            type="checkbox"
-                            id="collection_visible_library"
-                            className="border-zinc-600 hover:border-zinc-500 focus:border-zinc-500 focus:bg-opacity-100 focus:placeholder-zinc-400 focus:outline-none focus:ring-0"
-                            {...register('showRecommended')}
-                          />
+                    {/* Plex-only visibility options - Jellyfin doesn't support collection visibility settings */}
+                    {isPlex && (
+                      <>
+                        <div className="flex flex-row items-center justify-between py-4">
+                          <label
+                            htmlFor="collection_visible_library"
+                            className="text-label"
+                          >
+                            Show on {mediaServerName} library recommended
+                            <p className="text-xs font-normal">
+                              Show the {collectionTerm} on the {mediaServerName} library recommended
+                              screen
+                            </p>
+                          </label>
+                          <div className="form-input">
+                            <div className="form-input-field">
+                              <input
+                                type="checkbox"
+                                id="collection_visible_library"
+                                className="border-zinc-600 hover:border-zinc-500 focus:border-zinc-500 focus:bg-opacity-100 focus:placeholder-zinc-400 focus:outline-none focus:ring-0"
+                                {...register('showRecommended')}
+                              />
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="flex flex-row items-center justify-between py-4">
-                      <label
-                        htmlFor="collection_visible"
-                        className="text-label"
-                      >
-                        Show on Plex home
-                        <p className="text-xs font-normal">
-                          Show the collection on the Plex home screen
-                        </p>
-                      </label>
-                      <div className="form-input">
-                        <div className="form-input-field">
-                          <input
-                            type="checkbox"
-                            id="collection_visible"
-                            className="border-zinc-600 hover:border-zinc-500 focus:border-zinc-500 focus:bg-opacity-100 focus:placeholder-zinc-400 focus:outline-none focus:ring-0"
-                            {...register('showHome')}
-                          />
+                        <div className="flex flex-row items-center justify-between py-4">
+                          <label
+                            htmlFor="collection_visible"
+                            className="text-label"
+                          >
+                            Show on {mediaServerName} home
+                            <p className="text-xs font-normal">
+                              Show the {collectionTerm} on the {mediaServerName} home screen
+                            </p>
+                          </label>
+                          <div className="form-input">
+                            <div className="form-input-field">
+                              <input
+                                type="checkbox"
+                                id="collection_visible"
+                                className="border-zinc-600 hover:border-zinc-500 focus:border-zinc-500 focus:bg-opacity-100 focus:placeholder-zinc-400 focus:outline-none focus:ring-0"
+                                {...register('showHome')}
+                              />
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
+                      </>
+                    )}
 
                     {(radarrSettingsId != null ||
                       (sonarrSettingsId != null &&
@@ -1007,9 +1017,9 @@ const AddModal = (props: AddModal) => {
                     </div>
                     <div className="flex flex-row items-center justify-between py-4">
                       <label htmlFor="manual_collection" className="text-label">
-                        Custom collection
+                        Custom {collectionTerm}
                         <p className="text-xs font-normal">
-                          Toggle internal collection system
+                          Toggle internal {collectionTerm} system
                         </p>
                       </label>
                       <div className="form-input">
@@ -1030,9 +1040,9 @@ const AddModal = (props: AddModal) => {
                         htmlFor="manual_collection_name"
                         className="text-label"
                       >
-                        Custom collection name
+                        Custom {collectionTerm} name
                         <p className="text-xs font-normal">
-                          Collection must exist in Plex
+                          {collectionTermCapitalized} must exist in {mediaServerName}
                         </p>
                       </label>
 
@@ -1041,6 +1051,7 @@ const AddModal = (props: AddModal) => {
                           <input
                             type="text"
                             id="manual_collection_name"
+                            placeholder={`My custom ${collectionTerm}`}
                             {...register('manualCollectionName')}
                           />
                         </div>
@@ -1091,7 +1102,7 @@ const AddModal = (props: AddModal) => {
                       >
                         Keep logs for months*
                         <p className="text-xs font-normal">
-                          Duration for which collection logs should be retained,
+                          Duration for which {collectionTerm} logs should be retained,
                           measured in months (0 = forever)
                         </p>
                       </label>
@@ -1119,7 +1130,7 @@ const AddModal = (props: AddModal) => {
                       >
                         Sort title
                         <p className="text-xs font-normal">
-                          Custom sort title for the collection in Plex
+                          Custom sort title for the {collectionTerm} in {mediaServerName}
                         </p>
                       </label>
                       <div className="flex justify-end px-2 py-2">
@@ -1127,7 +1138,7 @@ const AddModal = (props: AddModal) => {
                           <input
                             type="text"
                             id="sort_title"
-                            placeholder="e.g., 001 My Collection"
+                            placeholder={`e.g., 001 My ${collectionTermCapitalized}`}
                             {...register('sortTitle')}
                           />
                         </div>
