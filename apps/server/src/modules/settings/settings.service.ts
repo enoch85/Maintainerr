@@ -1148,11 +1148,11 @@ export class SettingsService implements SettingDto {
       };
     }
 
-    const currentServerType =
-      (this.media_server_type as EMediaServerType) || EMediaServerType.PLEX;
+    // Get current server type - don't default to PLEX on fresh install
+    const currentServerType = this.media_server_type as EMediaServerType | null;
 
-    // Check if already on target server type
-    if (currentServerType === targetServerType) {
+    // Check if already on target server type (only if currentServerType is actually set)
+    if (currentServerType && currentServerType === targetServerType) {
       return {
         status: 'NOK',
         code: 0,
@@ -1162,7 +1162,9 @@ export class SettingsService implements SettingDto {
 
     try {
       this.logger.log(
-        `Switching media server from ${currentServerType} to ${targetServerType}${migrateRules ? ' (with rule migration)' : ''}`,
+        currentServerType
+          ? `Switching media server from ${currentServerType} to ${targetServerType}${migrateRules ? ' (with rule migration)' : ''}`
+          : `Setting initial media server to ${targetServerType}`,
       );
 
       // Count data before clearing (for response)
@@ -1274,9 +1276,11 @@ export class SettingsService implements SettingDto {
       const response: SwitchMediaServerResponseDto = {
         status: 'OK',
         code: 1,
-        message: migrateRules
-          ? `Successfully switched from ${currentServerType} to ${targetServerType}. ${ruleMigrationResult?.migratedRules || 0} rules migrated. Rule groups need library re-assignment.`
-          : `Successfully switched from ${currentServerType} to ${targetServerType}`,
+        message: currentServerType
+          ? migrateRules
+            ? `Successfully switched from ${currentServerType} to ${targetServerType}. ${ruleMigrationResult?.migratedRules || 0} rules migrated. Rule groups need library re-assignment.`
+            : `Successfully switched from ${currentServerType} to ${targetServerType}`
+          : `Successfully set ${targetServerType} as media server`,
         clearedData: {
           collections: collectionsCount,
           collectionMedia: collectionMediaCount,
