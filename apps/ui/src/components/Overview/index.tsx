@@ -1,6 +1,6 @@
 import { clone } from 'lodash'
 import { useContext, useEffect, useRef, useState } from 'react'
-import { usePlexLibraries } from '../../api/plex'
+import { useMediaServerLibraries } from '../../api/media-server'
 import SearchContext from '../../contexts/search-context'
 import GetApiHandler from '../../utils/ApiHandler'
 import LibrarySwitcher from '../Common/LibrarySwitcher'
@@ -25,7 +25,7 @@ const Overview = () => {
   const pageData = useRef<number>(0)
   const SearchCtx = useContext(SearchContext)
 
-  const { data: plexLibraries } = usePlexLibraries()
+  const { data: libraries } = useMediaServerLibraries()
 
   const fetchAmount = 30
 
@@ -34,7 +34,7 @@ const Overview = () => {
   }
 
   useEffect(() => {
-    if (!plexLibraries || plexLibraries.length === 0) return
+    if (!libraries || libraries.length === 0) return
 
     setTimeout(() => {
       if (
@@ -42,7 +42,7 @@ const Overview = () => {
         data.length === 0 &&
         SearchCtx.search.text === ''
       ) {
-        switchLib(selectedLibrary ? selectedLibrary : +plexLibraries[0].key)
+        switchLib(selectedLibrary ? selectedLibrary : +libraries[0].id)
       }
     }, 300)
 
@@ -53,13 +53,13 @@ const Overview = () => {
       totalSizeRef.current = 999
       pageData.current = 0
     }
-  }, [plexLibraries])
+  }, [libraries])
 
   useEffect(() => {
-    if (!plexLibraries || plexLibraries.length === 0) return
+    if (!libraries || libraries.length === 0) return
 
     if (SearchCtx.search.text !== '') {
-      GetApiHandler(`/plex/search/${SearchCtx.search.text}`).then(
+      GetApiHandler(`/media-server/search/${SearchCtx.search.text}`).then(
         (resp: IPlexMetadata[]) => {
           setSearchUsed(true)
           setTotalSize(resp.length)
@@ -68,7 +68,7 @@ const Overview = () => {
           setIsLoading(false)
         },
       )
-      setSelectedLibrary(+plexLibraries[0]?.key)
+      setSelectedLibrary(+libraries[0]?.id)
     } else {
       setSearchUsed(false)
       setData([])
@@ -114,9 +114,9 @@ const Overview = () => {
 
       const resp: { totalSize: number; items: IPlexMetadata[] } =
         await GetApiHandler(
-          `/plex/library/${selectedLibraryRef.current}/content/${
+          `/media-server/library/${selectedLibraryRef.current}/content?page=${
             pageData.current + 1
-          }?amount=${fetchAmount}`,
+          }&limit=${fetchAmount}`,
         )
 
       if (askedLib === selectedLibraryRef.current) {

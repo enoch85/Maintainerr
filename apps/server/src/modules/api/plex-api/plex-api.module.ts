@@ -1,12 +1,15 @@
 import { Module } from '@nestjs/common';
 import { SettingsModule } from '../../../modules/settings/settings.module';
-import { MediaServerModule } from '../media-server/media-server.module';
-import { PlexApiController } from './plex-api.controller';
 import { PlexApiService } from './plex-api.service';
 
+/**
+ * PlexApiModule
+ *
+ * Provides the PlexApiService for internal use by other modules.
+ * HTTP endpoints are handled by MediaServerController in MediaServerModule.
+ */
 @Module({
-  imports: [SettingsModule, MediaServerModule],
-  controllers: [PlexApiController],
+  imports: [SettingsModule],
   providers: [PlexApiService],
   exports: [PlexApiService],
 })

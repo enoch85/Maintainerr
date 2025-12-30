@@ -17,7 +17,10 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { z } from 'zod'
 import { IRuleGroup } from '..'
-import { ILibrary, usePlexLibraries } from '../../../../api/plex'
+import {
+  MediaLibrary,
+  useMediaServerLibraries,
+} from '../../../../api/media-server'
 import {
   RuleGroupCreatePayload,
   useCreateRuleGroup,
@@ -266,8 +269,8 @@ const AddModal = (props: AddModal) => {
   const [formIncomplete, setFormIncomplete] = useState<boolean>(false)
   const ruleCreatorVersion = useRef<number>(1)
 
-  const { data: plexLibraries, isLoading: plexLibrariesLoading } =
-    usePlexLibraries()
+  const { data: libraries, isLoading: librariesLoading } =
+    useMediaServerLibraries()
 
   const { data: constants, isLoading: constantsLoading } = useRuleConstants()
 
@@ -344,11 +347,11 @@ const AddModal = (props: AddModal) => {
     constants?.applications?.some((x) => x.id == Application.OVERSEERR) ?? false
 
   function updateLibraryId(value: string) {
-    if (!plexLibraries) {
+    if (!libraries) {
       throw new Error('Libraries not loaded')
     }
 
-    const lib = plexLibraries.find((el: ILibrary) => +el.key === +value)
+    const lib = libraries.find((el: MediaLibrary) => +el.id === +value)
 
     if (lib) {
       setValue(
@@ -536,7 +539,7 @@ const AddModal = (props: AddModal) => {
     }
   }
 
-  if (plexLibrariesLoading || constantsLoading) {
+  if (librariesLoading || constantsLoading) {
     return <LoadingSpinner />
   }
 
@@ -655,9 +658,9 @@ const AddModal = (props: AddModal) => {
                               {selectedLibraryId === '' && (
                                 <option value="" disabled></option>
                               )}
-                              {plexLibraries?.map((data: ILibrary) => {
+                              {libraries?.map((data: MediaLibrary) => {
                                 return (
-                                  <option key={data.key} value={data.key}>
+                                  <option key={data.id} value={data.id}>
                                     {data.title}
                                   </option>
                                 )
