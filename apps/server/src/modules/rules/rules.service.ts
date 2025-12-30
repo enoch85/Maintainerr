@@ -19,6 +19,7 @@ import { CollectionsService } from '../collections/collections.service';
 import { Collection } from '../collections/entities/collection.entities';
 import { CollectionMedia } from '../collections/entities/collection_media.entities';
 import { AddRemoveCollectionMedia } from '../collections/interfaces/collection-media.interface';
+import { ICollection } from '../collections/interfaces/collection.interface';
 import { MaintainerrLogger } from '../logging/logs.service';
 import { Notification } from '../notifications/entities/notification.entities';
 import { RadarrSettings } from '../settings/entities/radarr_settings.entities';
@@ -434,45 +435,61 @@ export class RulesService {
           await this.exclusionRepo.delete({ ruleGroupId: params.id });
         }
 
-        // update the collection
+        // update or create the collection
         const mediaServer = await this.getMediaServer();
         const lib = (await mediaServer.getLibraries()).find(
           (el) => +el.id === +params.libraryId,
         );
 
-        const collection = (
-          await this.collectionService.updateCollection({
-            id: group.collectionId ? group.collectionId : undefined,
-            libraryId: +params.libraryId,
-            type:
-              lib.type === 'movie'
-                ? EMediaDataType.MOVIES
-                : params.dataType !== undefined
-                  ? params.dataType
-                  : EMediaDataType.SHOWS,
-            title: params.name,
-            description: params.description,
-            arrAction: params.arrAction ? params.arrAction : 0,
-            isActive: params.isActive,
-            listExclusions: params.listExclusions
-              ? params.listExclusions
-              : false,
-            forceOverseerr: params.forceOverseerr
-              ? params.forceOverseerr
-              : false,
-            tautulliWatchedPercentOverride:
-              params.tautulliWatchedPercentOverride ?? null,
-            radarrSettingsId: params.radarrSettingsId ?? null,
-            sonarrSettingsId: params.sonarrSettingsId ?? null,
-            visibleOnRecommended: params.collection.visibleOnRecommended,
-            visibleOnHome: params.collection.visibleOnHome,
-            deleteAfterDays: params.collection.deleteAfterDays ?? null,
-            manualCollection: params.collection.manualCollection,
-            manualCollectionName: params.collection.manualCollectionName,
-            keepLogsForMonths: +params.collection.keepLogsForMonths,
-            sortTitle: params.collection?.sortTitle,
-          })
-        ).dbCollection;
+        const collectionData = {
+          libraryId: +params.libraryId,
+          type:
+            lib.type === 'movie'
+              ? EMediaDataType.MOVIES
+              : params.dataType !== undefined
+                ? params.dataType
+                : EMediaDataType.SHOWS,
+          title: params.name,
+          description: params.description,
+          arrAction: params.arrAction ? params.arrAction : 0,
+          isActive: params.isActive,
+          listExclusions: params.listExclusions ? params.listExclusions : false,
+          forceOverseerr: params.forceOverseerr ? params.forceOverseerr : false,
+          tautulliWatchedPercentOverride:
+            params.tautulliWatchedPercentOverride ?? null,
+          radarrSettingsId: params.radarrSettingsId ?? null,
+          sonarrSettingsId: params.sonarrSettingsId ?? null,
+          visibleOnRecommended: params.collection?.visibleOnRecommended,
+          visibleOnHome: params.collection?.visibleOnHome,
+          deleteAfterDays: params.collection?.deleteAfterDays ?? null,
+          manualCollection: params.collection?.manualCollection,
+          manualCollectionName: params.collection?.manualCollectionName,
+          keepLogsForMonths: +params.collection?.keepLogsForMonths,
+          sortTitle: params.collection?.sortTitle,
+        };
+
+        // If there's no existing collection (e.g., after rule migration), create a new one
+        // Otherwise, update the existing collection
+        let collection: ICollection;
+        if (group.collectionId) {
+          collection = (
+            await this.collectionService.updateCollection({
+              id: group.collectionId,
+              ...collectionData,
+            })
+          )?.dbCollection;
+        } else {
+          collection = (
+            await this.collectionService.createCollection(collectionData)
+          )?.dbCollection;
+        }
+
+        if (!collection) {
+          return this.createReturnStatus(
+            false,
+            'Failed to create/update collection',
+          );
+        }
 
         // update or create group
         const groupId = await this.createOrUpdateGroup(
