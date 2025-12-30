@@ -157,7 +157,7 @@ export class RulesService {
       const rulegroups = await this.connection
         .createQueryBuilder('rule_group', 'rg')
         .innerJoinAndSelect('rg.rules', 'r')
-        .innerJoinAndSelect('rg.collection', 'c')
+        .leftJoinAndSelect('rg.collection', 'c')
         .leftJoinAndSelect('rg.notifications', 'n')
         .where(
           activeOnly ? 'rg.isActive = true' : 'rg.isActive in (true, false)',
@@ -188,7 +188,7 @@ export class RulesService {
       const rulegroups = await this.connection
         .createQueryBuilder('rule_group', 'rg')
         .innerJoinAndSelect('rg.rules', 'r')
-        .innerJoinAndSelect('rg.collection', 'c')
+        .leftJoinAndSelect('rg.collection', 'c')
         .leftJoinAndSelect('rg.notifications', 'n')
         .where('rg.id IN (:...ids)', { ids })
         .orderBy('rg.id, r.id')
@@ -206,7 +206,7 @@ export class RulesService {
       const rulegroup = await this.connection
         .createQueryBuilder('rule_group', 'rg')
         .innerJoinAndSelect('rg.rules', 'r')
-        .innerJoinAndSelect('rg.collection', 'c')
+        .leftJoinAndSelect('rg.collection', 'c')
         .leftJoinAndSelect('rg.notifications', 'n')
         .andWhere(`rg.id = ${id}`)
         .orderBy('r.id')
