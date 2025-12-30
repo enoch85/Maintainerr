@@ -80,7 +80,9 @@ const calculateRuleAmountArr = (ruleAmount: [number, number[]]) => {
 
 const RuleCreator = (props: iRuleCreator) => {
   const initialSections =
-    props.editData && props.editData.rules.length > 0
+    props.editData &&
+    Array.isArray(props.editData.rules) &&
+    props.editData.rules.length > 0
       ? props.editData.rules[props.editData.rules.length - 1].section! + 1
       : undefined
   const initialRuleAmount: [number, number[]] = initialSections

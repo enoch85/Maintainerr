@@ -171,6 +171,12 @@ export class RulesService {
         )
         .orderBy('rg.id, r.id')
         .getMany();
+      // Ensure rules is always an array for each group
+      for (const group of rulegroups) {
+        if (!Array.isArray(group.rules)) {
+          group.rules = [];
+        }
+      }
       return rulegroups as RulesDto[];
     } catch (e) {
       this.logger.warn(`Rules - Action failed : ${e.message}`);
@@ -193,6 +199,12 @@ export class RulesService {
         .where('rg.id IN (:...ids)', { ids })
         .orderBy('rg.id, r.id')
         .getMany();
+      // Ensure rules is always an array for each group
+      for (const group of rulegroups) {
+        if (!Array.isArray(group.rules)) {
+          group.rules = [];
+        }
+      }
       return rulegroups as RulesDto[];
     } catch (e) {
       this.logger.warn(`Rules - Action failed : ${e.message}`);
@@ -211,6 +223,10 @@ export class RulesService {
         .andWhere(`rg.id = ${id}`)
         .orderBy('r.id')
         .getOne();
+      // Ensure rules is always an array
+      if (rulegroup && !Array.isArray(rulegroup.rules)) {
+        rulegroup.rules = [];
+      }
       return rulegroup as RulesDto;
     } catch (e) {
       this.logger.warn(`Rules - Action failed : ${e.message}`);

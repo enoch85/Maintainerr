@@ -259,7 +259,7 @@ const AddModal = (props: AddModal) => {
     props.editData?.notifications ? props.editData?.notifications : [],
   )
   const [rules, setRules] = useState<IRule[]>(
-    props.editData?.rules
+    props.editData?.rules && Array.isArray(props.editData.rules)
       ? props.editData.rules.map((r) => JSON.parse(r.ruleJson) as IRule)
       : [],
   )
@@ -281,7 +281,7 @@ const AddModal = (props: AddModal) => {
     reset(buildFormDefaults(props.editData))
     setConfiguredNotificationConfigurations(props.editData?.notifications ?? [])
     setRules(
-      props.editData?.rules
+      props.editData?.rules && Array.isArray(props.editData.rules)
         ? props.editData.rules.map((r) => JSON.parse(r.ruleJson) as IRule)
         : [],
     )

@@ -175,6 +175,10 @@ export class PlexApiService {
   }
 
   public async getUsers(): Promise<PlexUserAccount[]> {
+    if (!this.isPlexSetup()) {
+      return [];
+    }
+
     try {
       const response: PlexAccountsResponse = await this.plexClient.queryAll({
         uri: '/accounts',
@@ -190,6 +194,10 @@ export class PlexApiService {
   }
 
   public async getUser(id: number): Promise<PlexUserAccount> {
+    if (!this.isPlexSetup()) {
+      return undefined;
+    }
+
     try {
       const response: PlexAccountsResponse = await this.plexClient.queryAll({
         uri: `/accounts/${id}`,
@@ -205,6 +213,10 @@ export class PlexApiService {
   }
 
   public async getLibraries(): Promise<PlexLibrary[]> {
+    if (!this.isPlexSetup()) {
+      return [];
+    }
+
     try {
       const response = await this.plexClient.queryAll<PlexLibrariesResponse>({
         uri: '/library/sections',
