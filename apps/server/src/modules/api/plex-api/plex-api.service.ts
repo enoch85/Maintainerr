@@ -123,6 +123,9 @@ export class PlexApiService {
   }
 
   public async getStatus() {
+    if (!this.isPlexSetup()) {
+      return undefined;
+    }
     try {
       const response: PlexStatusResponse = await this.plexClient.query(
         '/',
@@ -139,6 +142,9 @@ export class PlexApiService {
   }
 
   public async searchContent(input: string) {
+    if (!this.isPlexSetup()) {
+      return undefined;
+    }
     try {
       const response: PlexMetadataResponse = await this.plexClient.query(
         `/search?query=${encodeURIComponent(input)}&includeGuids=1`,
