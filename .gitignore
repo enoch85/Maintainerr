@@ -9,5 +9,11 @@ node_modules
 !.yarn/versions
 .idea
 .turbo
+<<<<<<< HEAD
 # Development documentation (not committed)
 jellyfin-dev-documents/
+=======
+
+# Development documentation (not committed)
+jellyfin-dev-documents/
+>>>>>>> 7205abaa (chore: ignore jellyfin-dev-documents directory)
