@@ -403,18 +403,20 @@ export class RulesService {
           where: { id: params.id },
         });
 
-        const dbCollection = await this.collectionService.getCollection(
-          group.collectionId,
-        );
+        const dbCollection = group.collectionId
+          ? await this.collectionService.getCollection(group.collectionId)
+          : null;
 
         // if datatype or manual collection settings changed then remove the collection media and specific exclusions. The Plex collection will be removed later by updateCollection()
+        // Only check if there's an existing collection
         if (
-          group.dataType !== params.dataType ||
-          params.collection.manualCollection !==
-            dbCollection.manualCollection ||
-          params.collection.manualCollectionName !==
-            dbCollection.manualCollectionName ||
-          params.libraryId !== dbCollection.libraryId
+          dbCollection &&
+          (group.dataType !== params.dataType ||
+            params.collection.manualCollection !==
+              dbCollection.manualCollection ||
+            params.collection.manualCollectionName !==
+              dbCollection.manualCollectionName ||
+            params.libraryId !== dbCollection.libraryId)
         ) {
           this.logger.log(
             `A crucial setting of Rulegroup '${params.name}' was changed. Removed all media & specific exclusions`,
