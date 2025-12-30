@@ -42,20 +42,25 @@ services:
       context: .
       dockerfile: Dockerfile.dev
       args:
-        BRANCH: ${BRANCH:-jellyfin-phase-e}
+        BRANCH: ${BRANCH:-jellyfin-rule-migration}
         REPO: ${REPO:-https://github.com/enoch85/Maintainerr.git}
     container_name: maintainerr-test
+    # Run as node user (uid 1000) - same as Dockerfile
+    user: "1000:1000"
     ports:
       - "6246:6246"
     volumes:
-      # Persistent data directory
-      - ./maintainerr-data:/opt/data
+      # Persistent data directory - ensure it exists with correct permissions
+      - maintainerr-data:/opt/data
     environment:
       - TZ=UTC
       - DEBUG=true
     restart: unless-stopped
     depends_on:
-      - jellyfin
+      jellyfin:
+        condition: service_healthy
+      init-permissions:
+        condition: service_completed_successfully
     networks:
       - maintainerr-test
     healthcheck:
@@ -64,6 +69,24 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+
+  # ==========================================
+  # Init container to set permissions
+  # ==========================================
+  init-permissions:
+    image: alpine:latest
+    container_name: maintainerr-init
+    volumes:
+      - maintainerr-data:/opt/data
+    command: >
+      sh -c "
+        mkdir -p /opt/data/logs &&
+        chown -R 1000:1000 /opt/data &&
+        chmod -R 755 /opt/data &&
+        echo 'Permissions set for maintainerr-data'
+      "
+    networks:
+      - maintainerr-test
 
   # ==========================================
   # Jellyfin Media Server
@@ -154,3 +177,7 @@ services:
 networks:
   maintainerr-test:
     driver: bridge
+
+volumes:
+  maintainerr-data:
+    driver: local
