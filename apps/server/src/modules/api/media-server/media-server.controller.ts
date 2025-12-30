@@ -1,16 +1,17 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Post,
   Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
 import {
+  CollectionVisibilitySettings,
   CreateCollectionParams,
   EMediaDataType,
   MediaCollection,
@@ -19,6 +20,7 @@ import {
   MediaServerStatus,
   MediaUser,
   PagedResult,
+  UpdateCollectionParams,
   WatchRecord,
 } from '@maintainerr/contracts';
 import { MediaServerSetupGuard } from './guards';
@@ -203,5 +205,45 @@ export class MediaServerController {
   ): Promise<void> {
     const mediaServer = await this.mediaServerFactory.getService();
     return mediaServer.removeFromCollection(collectionId, itemId);
+  }
+
+  // ============================================================
+  // COLLECTION METADATA & VISIBILITY
+  // These operations may not be supported on all media servers
+  // ============================================================
+
+  /**
+   * Update a collection's metadata (title, summary, etc.)
+   * @remarks Currently only supported on Plex - throws error for Jellyfin
+   */
+  @Put('collection')
+  async updateCollection(
+    @Body() params: UpdateCollectionParams,
+  ): Promise<MediaCollection> {
+    const mediaServer = await this.mediaServerFactory.getService();
+    return mediaServer.updateCollection(params);
+  }
+
+  /**
+   * Update a collection's visibility/hub settings (recommended, home screen, etc.)
+   * @remarks Currently only supported on Plex - throws error for Jellyfin
+   */
+  @Put('collection/visibility')
+  async updateCollectionVisibility(
+    @Body() settings: CollectionVisibilitySettings,
+  ): Promise<void> {
+    if (
+      !settings.libraryId ||
+      !settings.collectionId ||
+      (settings.recommended === undefined &&
+        settings.ownHome === undefined &&
+        settings.sharedHome === undefined)
+    ) {
+      throw new BadRequestException(
+        'libraryId, collectionId, and at least one visibility setting are required.',
+      );
+    }
+    const mediaServer = await this.mediaServerFactory.getService();
+    return mediaServer.updateCollectionVisibility(settings);
   }
 }

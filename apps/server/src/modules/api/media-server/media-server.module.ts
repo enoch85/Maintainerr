@@ -6,7 +6,7 @@ import { MediaServerController } from './media-server.controller';
 import { MediaServerFactory } from './media-server.factory';
 import { PlexAdapterService } from './plex/plex-adapter.service';
 import { JellyfinModule } from './jellyfin/jellyfin.module';
-import { JellyfinService } from './jellyfin/jellyfin.service';
+import { JellyfinService } from './jellyfin/jellyfin-adapter.service';
 
 /**
  * Media Server Module

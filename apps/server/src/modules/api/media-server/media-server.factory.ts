@@ -4,7 +4,7 @@ import { SettingsService } from '../../settings/settings.service';
 import { Settings } from '../../settings/entities/settings.entities';
 import { IMediaServerService } from './media-server.interface';
 import { PlexAdapterService } from './plex/plex-adapter.service';
-import { JellyfinService } from './jellyfin/jellyfin.service';
+import { JellyfinService } from './jellyfin/jellyfin-adapter.service';
 
 /**
  * Type guard to check if settings response is a Settings object

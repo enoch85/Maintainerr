@@ -13,6 +13,7 @@ import {
   MediaUser,
   PagedResult,
   RecentlyAddedOptions,
+  UpdateCollectionParams,
   WatchRecord,
 } from '@maintainerr/contracts';
 
@@ -208,18 +209,23 @@ export interface IMediaServerService {
    */
   removeFromCollection(collectionId: string, itemId: string): Promise<void>;
 
-  // ============================================================
-  // OPTIONAL: PLEX-SPECIFIC FEATURES
-  // ============================================================
+  /**
+   * Update a collection's metadata (title, summary, etc.)
+   * @throws Error if not supported by media server
+   */
+  updateCollection(params: UpdateCollectionParams): Promise<MediaCollection>;
 
   /**
-   * Update collection visibility settings.
-   * Only available on Plex (uses supportsFeature check).
+   * Update collection visibility/hub settings.
+   * @throws Error if not supported by media server (Plex-only feature)
    */
-  updateCollectionVisibility?(
-    collectionId: string,
+  updateCollectionVisibility(
     settings: CollectionVisibilitySettings,
   ): Promise<void>;
+
+  // ============================================================
+  // OPTIONAL: SERVER-SPECIFIC FEATURES
+  // ============================================================
 
   /**
    * Get watchlist items for a user.

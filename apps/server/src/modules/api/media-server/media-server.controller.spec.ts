@@ -1,4 +1,5 @@
 import {
+  CollectionVisibilitySettings,
   EMediaDataType,
   EMediaServerType,
   MediaCollection,
@@ -7,6 +8,7 @@ import {
   MediaServerStatus,
   MediaUser,
   PagedResult,
+  UpdateCollectionParams,
   WatchRecord,
 } from '@maintainerr/contracts';
 import { MediaServerController } from './media-server.controller';
@@ -93,6 +95,8 @@ describe('MediaServerController', () => {
       getCollectionChildren: jest.fn().mockResolvedValue([mockMediaItem]),
       addToCollection: jest.fn().mockResolvedValue(undefined),
       removeFromCollection: jest.fn().mockResolvedValue(undefined),
+      updateCollection: jest.fn().mockResolvedValue(mockCollection),
+      updateCollectionVisibility: jest.fn().mockResolvedValue(undefined),
       getPlaylists: jest.fn().mockResolvedValue([]),
       deleteFromDisk: jest.fn().mockResolvedValue(undefined),
       resetMetadataCache: jest.fn(),
@@ -287,6 +291,89 @@ describe('MediaServerController', () => {
       const guards = Reflect.getMetadata('__guards__', MediaServerController);
       expect(guards).toBeDefined();
       expect(guards).toContain(MediaServerSetupGuard);
+    });
+  });
+
+  describe('Collection Update & Visibility', () => {
+    it('should update collection metadata', async () => {
+      const params = {
+        libraryId: '1',
+        collectionId: 'coll1',
+        title: 'Updated Collection',
+        summary: 'Updated summary',
+      };
+
+      const result = await controller.updateCollection(params);
+
+      expect(mockMediaServerService.updateCollection).toHaveBeenCalledWith(
+        params,
+      );
+      expect(result).toEqual(mockCollection);
+    });
+
+    it('should update collection visibility settings', async () => {
+      const settings = {
+        libraryId: '1',
+        collectionId: 'coll1',
+        recommended: true,
+        ownHome: true,
+        sharedHome: false,
+      };
+
+      await controller.updateCollectionVisibility(settings);
+
+      expect(
+        mockMediaServerService.updateCollectionVisibility,
+      ).toHaveBeenCalledWith(settings);
+    });
+
+    it('should reject visibility update with missing libraryId', async () => {
+      const settings = {
+        collectionId: 'coll1',
+        recommended: true,
+      } as any;
+
+      await expect(
+        controller.updateCollectionVisibility(settings),
+      ).rejects.toThrow('libraryId, collectionId, and at least one visibility');
+    });
+
+    it('should reject visibility update with missing collectionId', async () => {
+      const settings = {
+        libraryId: '1',
+        recommended: true,
+      } as any;
+
+      await expect(
+        controller.updateCollectionVisibility(settings),
+      ).rejects.toThrow('libraryId, collectionId, and at least one visibility');
+    });
+
+    it('should reject visibility update with no visibility settings', async () => {
+      const settings = {
+        libraryId: '1',
+        collectionId: 'coll1',
+      } as any;
+
+      await expect(
+        controller.updateCollectionVisibility(settings),
+      ).rejects.toThrow('libraryId, collectionId, and at least one visibility');
+    });
+
+    it('should throw error from service for unsupported media servers', async () => {
+      mockMediaServerService.updateCollection.mockRejectedValue(
+        new Error('Collection metadata update is not supported on Jellyfin'),
+      );
+
+      const params = {
+        libraryId: '1',
+        collectionId: 'coll1',
+        title: 'Updated Collection',
+      };
+
+      await expect(controller.updateCollection(params)).rejects.toThrow(
+        'not supported on Jellyfin',
+      );
     });
   });
 });

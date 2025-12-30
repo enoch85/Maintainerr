@@ -1,6 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { SettingsModule } from '../../../settings/settings.module';
-import { JellyfinService } from './jellyfin.service';
+import { JellyfinService } from './jellyfin-adapter.service';
 
 /**
  * Jellyfin Module

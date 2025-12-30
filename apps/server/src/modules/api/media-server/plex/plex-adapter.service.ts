@@ -13,10 +13,12 @@ import {
   MediaServerStatus,
   MediaUser,
   PagedResult,
+  UpdateCollectionParams,
   RecentlyAddedOptions,
   WatchRecord,
 } from '@maintainerr/contracts';
 import { PlexApiService } from '../../plex-api/plex-api.service';
+import { EPlexDataType } from '../../plex-api/enums/plex-data-type-enum';
 import { IMediaServerService } from '../media-server.interface';
 import { supportsFeature } from '../media-server.constants';
 import { PlexMapper } from './plex.mapper';
@@ -275,29 +277,34 @@ export class PlexAdapterService implements IMediaServerService {
   }
 
   // ============================================================
-  // PLEX-SPECIFIC: COLLECTION VISIBILITY
+  // PLEX-SPECIFIC: COLLECTION UPDATE & VISIBILITY
   // ============================================================
 
+  async updateCollection(
+    params: UpdateCollectionParams,
+  ): Promise<MediaCollection> {
+    const result = await this.plexApi.updateCollection({
+      libraryId: params.libraryId,
+      collectionId: params.collectionId,
+      type: EPlexDataType.MOVIES, // Type is required but not used for updates
+      title: params.title,
+      summary: params.summary,
+      sortTitle: params.sortTitle,
+    });
+
+    return PlexMapper.toMediaCollection(result);
+  }
+
   async updateCollectionVisibility(
-    collectionId: string,
     settings: CollectionVisibilitySettings,
   ): Promise<void> {
-    // Get current collection to get libraryId
-    const collection = await this.plexApi.getCollection(collectionId);
-    if (!collection) {
-      throw new Error(`Collection ${collectionId} not found`);
-    }
-
-    // Note: We need the libraryId but PlexCollection doesn't have it directly
-    // For now, we'll need to pass it through or look it up another way
-    // This is a limitation that may need addressing
-    // UpdateCollectionSettings expects libraryId which we don't have here
-
-    // TODO: This method needs access to libraryId to work properly
-    // For now, throw an error indicating the limitation
-    throw new Error(
-      'updateCollectionVisibility requires libraryId - use PlexApiService.UpdateCollectionSettings directly',
-    );
+    await this.plexApi.UpdateCollectionSettings({
+      libraryId: settings.libraryId,
+      collectionId: settings.collectionId,
+      recommended: settings.recommended ?? false,
+      ownHome: settings.ownHome ?? false,
+      sharedHome: settings.sharedHome ?? false,
+    });
   }
 
   // ============================================================

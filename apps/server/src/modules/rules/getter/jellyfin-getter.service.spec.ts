@@ -12,7 +12,7 @@ import {
 } from '../../../../test/utils/data';
 
 import { PlexLibraryItem } from '../../api/plex-api/interfaces/library.interfaces';
-import { JellyfinService } from '../../api/media-server/jellyfin/jellyfin.service';
+import { JellyfinService } from '../../api/media-server/jellyfin/jellyfin-adapter.service';
 import { MaintainerrLogger } from '../../logging/logs.service';
 import { JellyfinGetterService } from './jellyfin-getter.service';
 

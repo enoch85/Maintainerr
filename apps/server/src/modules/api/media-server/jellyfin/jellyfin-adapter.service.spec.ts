@@ -1,6 +1,6 @@
 import { Mocked, TestBed } from '@suites/unit';
 import { EMediaServerFeature, EMediaServerType } from '@maintainerr/contracts';
-import { JellyfinService } from './jellyfin.service';
+import { JellyfinService } from './jellyfin-adapter.service';
 import { SettingsService } from '../../../settings/settings.service';
 
 // Mock the @jellyfin/sdk module and its generated client

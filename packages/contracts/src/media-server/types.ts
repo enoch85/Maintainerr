@@ -303,8 +303,30 @@ export interface CreateCollectionParams {
  * Collection visibility settings (Plex-only)
  */
 export interface CollectionVisibilitySettings {
-  /** Visible on home screen */
-  homeVisibility?: boolean
+  /** Library ID where the collection exists */
+  libraryId: string
+  /** Collection ID to update */
+  collectionId: string
+  /** Visible on home screen for owner */
+  ownHome?: boolean
+  /** Visible on home screen for shared users */
+  sharedHome?: boolean
   /** Visible in recommendations */
-  recommendationsVisibility?: boolean
+  recommended?: boolean
+}
+
+/**
+ * Parameters for updating a collection's metadata
+ */
+export interface UpdateCollectionParams {
+  /** Library ID where the collection exists */
+  libraryId: string
+  /** Collection ID to update */
+  collectionId: string
+  /** New title for the collection */
+  title?: string
+  /** New summary/description for the collection */
+  summary?: string
+  /** Sort title for ordering */
+  sortTitle?: string
 }

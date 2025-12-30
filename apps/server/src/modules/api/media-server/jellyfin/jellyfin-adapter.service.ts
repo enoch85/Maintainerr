@@ -28,6 +28,7 @@ import {
   type MediaItem,
   type MediaLibrary,
   type MediaPlaylist,
+  type UpdateCollectionParams,
   type MediaServerStatus,
   type MediaUser,
   type PagedResult,
@@ -758,11 +759,30 @@ export class JellyfinService implements IMediaServerService {
   }
 
   // ============================================================
-  // OPTIONAL: PLEX-SPECIFIC FEATURES (Not supported)
+  // COLLECTION METADATA UPDATE (Not supported on Jellyfin)
   // ============================================================
 
-  // updateCollectionVisibility is not implemented for Jellyfin
-  // as it doesn't support collection visibility settings
+  async updateCollection(
+    _params: UpdateCollectionParams,
+  ): Promise<MediaCollection> {
+    throw new Error(
+      'Collection metadata update is not supported on Jellyfin. ' +
+        'Use the Jellyfin web interface to edit collection details.',
+    );
+  }
+
+  async updateCollectionVisibility(
+    _settings: CollectionVisibilitySettings,
+  ): Promise<void> {
+    throw new Error(
+      'Collection visibility settings are not supported on Jellyfin. ' +
+        'Jellyfin does not have hub/recommendation visibility features.',
+    );
+  }
+
+  // ============================================================
+  // OPTIONAL: SERVER-SPECIFIC FEATURES (Not supported)
+  // ============================================================
 
   // getWatchlistForUser is not implemented for Jellyfin
   // as it doesn't have a watchlist API

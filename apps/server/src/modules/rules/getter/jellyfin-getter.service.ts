@@ -1,7 +1,7 @@
 import { EMediaDataType, RuleValueType } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import cacheManager, { Cache } from '../../api/lib/cache';
-import { JellyfinService } from '../../api/media-server/jellyfin/jellyfin.service';
+import { JellyfinService } from '../../api/media-server/jellyfin/jellyfin-adapter.service';
 import { PlexLibraryItem } from '../../api/plex-api/interfaces/library.interfaces';
 import { MaintainerrLogger } from '../../logging/logs.service';
 import {
