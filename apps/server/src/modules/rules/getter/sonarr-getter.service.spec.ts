@@ -1,3 +1,4 @@
+import { MediaItemType } from '@maintainerr/contracts';
 import { Mocked, TestBed } from '@suites/unit';
 import {
   createCollectionMedia,
@@ -8,7 +9,6 @@ import {
   createSonarrEpisodeFile,
   createSonarrSeries,
 } from '../../../../test/utils/data';
-import { MediaItemType } from '@maintainerr/contracts';
 import { PlexLibraryItem } from '../../api/plex-api/interfaces/library.interfaces';
 import { PlexApiService } from '../../api/plex-api/plex-api.service';
 import { SonarrApi } from '../../api/servarr-api/helpers/sonarr.helper';
@@ -406,9 +406,7 @@ describe('SonarrGetterService', () => {
             type: 'show',
           }),
         );
-        const plexLibraryItem = createPlexLibraryItem(
-          type as MediaItemType,
-        );
+        const plexLibraryItem = createPlexLibraryItem(type as MediaItemType);
         const series = createSonarrSeries({
           qualityProfileId: 2,
         });

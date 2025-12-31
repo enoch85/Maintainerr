@@ -27,13 +27,13 @@ export class ConvertTypeToString1767200000000 implements MigrationInterface {
       `ALTER TABLE "collection" ADD COLUMN "type_new" varchar`,
     );
 
-    // Convert numeric values to strings
+    // Convert numeric values to strings (handle both integer and string representations)
     await queryRunner.query(`
       UPDATE "collection" SET "type_new" = CASE
-        WHEN "type" = 1 THEN 'movie'
-        WHEN "type" = 2 THEN 'show'
-        WHEN "type" = 3 THEN 'season'
-        WHEN "type" = 4 THEN 'episode'
+        WHEN "type" = 1 OR "type" = '1' THEN 'movie'
+        WHEN "type" = 2 OR "type" = '2' THEN 'show'
+        WHEN "type" = 3 OR "type" = '3' THEN 'season'
+        WHEN "type" = 4 OR "type" = '4' THEN 'episode'
         ELSE 'movie'
       END
     `);
@@ -101,13 +101,13 @@ export class ConvertTypeToString1767200000000 implements MigrationInterface {
       `ALTER TABLE "exclusion" ADD COLUMN "type_new" varchar`,
     );
 
-    // Convert numeric values to strings
+    // Convert numeric values to strings (handle both integer and string representations)
     await queryRunner.query(`
       UPDATE "exclusion" SET "type_new" = CASE
-        WHEN "type" = 1 THEN 'movie'
-        WHEN "type" = 2 THEN 'show'
-        WHEN "type" = 3 THEN 'season'
-        WHEN "type" = 4 THEN 'episode'
+        WHEN "type" = 1 OR "type" = '1' THEN 'movie'
+        WHEN "type" = 2 OR "type" = '2' THEN 'show'
+        WHEN "type" = 3 OR "type" = '3' THEN 'season'
+        WHEN "type" = 4 OR "type" = '4' THEN 'episode'
         ELSE NULL
       END
     `);
@@ -145,13 +145,13 @@ export class ConvertTypeToString1767200000000 implements MigrationInterface {
       `ALTER TABLE "rule_group" ADD COLUMN "dataType_new" varchar`,
     );
 
-    // Convert numeric values to strings
+    // Convert numeric values to strings (handle both integer and string representations)
     await queryRunner.query(`
       UPDATE "rule_group" SET "dataType_new" = CASE
-        WHEN "dataType" = 1 THEN 'movie'
-        WHEN "dataType" = 2 THEN 'show'
-        WHEN "dataType" = 3 THEN 'season'
-        WHEN "dataType" = 4 THEN 'episode'
+        WHEN "dataType" = 1 OR "dataType" = '1' THEN 'movie'
+        WHEN "dataType" = 2 OR "dataType" = '2' THEN 'show'
+        WHEN "dataType" = 3 OR "dataType" = '3' THEN 'season'
+        WHEN "dataType" = 4 OR "dataType" = '4' THEN 'episode'
         ELSE NULL
       END
     `);

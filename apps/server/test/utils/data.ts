@@ -6,7 +6,6 @@ import {
   MediaItemWithParent,
   MediaLibrary,
 } from '@maintainerr/contracts';
-import { EPlexDataType } from '../../src/modules/api/plex-api/enums/plex-data-type-enum';
 import {
   PlexLibrary,
   PlexLibraryItem,
