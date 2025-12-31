@@ -34,8 +34,16 @@ RUN echo "Cloning branch: ${BRANCH} from ${REPO}" && \
     git clone --depth 1 --branch ${BRANCH} ${REPO} . && \
     echo "Cloned commit: $(git rev-parse HEAD)"
 
-# Install dependencies
-RUN yarn install --network-timeout 99999999
+# Configure git for any postinstall scripts that might need it
+RUN git config --global --add safe.directory /app
+
+# Disable telemetry/analytics that can cause build failures
+ENV SCARF_ANALYTICS=false
+ENV DO_NOT_TRACK=1
+
+# Install dependencies (ignore optional postinstall script failures)
+RUN yarn install --network-timeout 99999999 || \
+    (echo "First install failed, retrying with immutable..." && yarn install --immutable --network-timeout 99999999)
 
 # Set base path for UI (empty for root)
 RUN echo "VITE_BASE_PATH=" >> ./apps/ui/.env
