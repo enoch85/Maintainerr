@@ -1,4 +1,4 @@
-import { EPlexDataType, type MediaItem } from '@maintainerr/contracts'
+import { type MediaItem, type MediaItemType } from '@maintainerr/contracts'
 import { SingleValue } from 'react-select'
 import AsyncSelect from 'react-select/async'
 import GetApiHandler from '../../../utils/ApiHandler'
@@ -6,12 +6,12 @@ import GetApiHandler from '../../../utils/ApiHandler'
 export interface IMediaOptions {
   id: string
   name: string
-  type: EPlexDataType
+  type: MediaItemType
 }
 
 interface ISearchMediaITem {
   onChange: (item: SingleValue<IMediaOptions>) => void
-  mediatype?: EPlexDataType
+  mediatype?: MediaItemType
   libraryId?: string
 }
 
@@ -25,14 +25,15 @@ const SearchMediaItem = (props: ISearchMediaITem) => {
       return []
     }
 
+    const searchType = props.mediatype === 'movie' ? 'movie' : 'show'
     const resp: MediaItem[] = await GetApiHandler(
-      `/media-server/library/${props.libraryId}/content/search/${query}?type=${props.mediatype == EPlexDataType.MOVIES ? EPlexDataType.MOVIES : EPlexDataType.SHOWS}`,
+      `/media-server/library/${props.libraryId}/content/search/${query}?type=${searchType}`,
     )
     const output = resp.map((el) => {
       return {
         id: el.id,
         name: el.title,
-        type: el.type === 'movie' ? EPlexDataType.MOVIES : EPlexDataType.SHOWS,
+        type: el.type,
       } as IMediaOptions
     })
 

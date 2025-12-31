@@ -1,5 +1,5 @@
 import { ClipboardCopyIcon } from '@heroicons/react/solid'
-import { EPlexDataType } from '@maintainerr/contracts'
+import { MediaItemType } from '@maintainerr/contracts'
 import { Editor } from '@monaco-editor/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
@@ -34,7 +34,7 @@ const emptyOption: IOptions = {
 const TestMediaItem = (props: ITestMediaItem) => {
   const [loading, setLoading] = useState(true)
   const [ruleGroup, setRuleGroup] = useState<{
-    dataType: EPlexDataType
+    dataType: MediaItemType
     libraryId: string
     id: string
   }>()
@@ -68,22 +68,22 @@ const TestMediaItem = (props: ITestMediaItem) => {
 
     // if movies or shows is selected
     if (
-      ruleGroup.dataType === EPlexDataType.MOVIES ||
-      ruleGroup.dataType === EPlexDataType.SHOWS
+      ruleGroup.dataType === 'movie' ||
+      ruleGroup.dataType === 'show'
     ) {
       return true
     }
 
     // if seasons & season is selected
     else if (
-      ruleGroup.dataType === EPlexDataType.SEASONS &&
+      ruleGroup.dataType === 'season' &&
       selectedSeasons !== -1
     ) {
       return true
     }
     // if episodes mediaitem, season & episode is selected
     else if (
-      ruleGroup.dataType === EPlexDataType.EPISODES &&
+      ruleGroup.dataType === 'episode' &&
       selectedSeasons !== -1 &&
       selectedEpisodes !== -1
     ) {
@@ -102,7 +102,7 @@ const TestMediaItem = (props: ITestMediaItem) => {
     updateSelectedSeasons(-1)
     setSeasonOptions([emptyOption])
 
-    if (item?.type == EPlexDataType.SHOWS) {
+    if (item?.type === 'show') {
       // get seasons
       GetApiHandler(`/media-server/meta/${item.id}/children`).then(
         (resp: { id: string; title: string }[]) => {
@@ -228,15 +228,15 @@ const TestMediaItem = (props: ITestMediaItem) => {
               <br />
               <br />
               {`The rule group is of type ${
-                ruleGroup.dataType === EPlexDataType.MOVIES
+                ruleGroup.dataType === 'movie'
                   ? 'movies'
-                  : ruleGroup.dataType === EPlexDataType.SEASONS
+                  : ruleGroup.dataType === 'season'
                     ? 'seasons'
-                    : ruleGroup.dataType === EPlexDataType.EPISODES
+                    : ruleGroup.dataType === 'episode'
                       ? 'episodes'
                       : 'series'
               }, as a result only media of type ${
-                ruleGroup.dataType === EPlexDataType.MOVIES
+                ruleGroup.dataType === 'movie'
                   ? 'movies'
                   : 'series'
               } will be displayed in the search bar.`}
@@ -254,8 +254,8 @@ const TestMediaItem = (props: ITestMediaItem) => {
 
           {/* seasons */}
           <div className="w-full">
-            {ruleGroup.dataType === EPlexDataType.SEASONS ||
-            ruleGroup.dataType === EPlexDataType.EPISODES ? (
+            {ruleGroup.dataType === 'season' ||
+            ruleGroup.dataType === 'episode' ? (
               <FormItem label="Season">
                 <select
                   name={`Seasons-field`}
@@ -276,7 +276,7 @@ const TestMediaItem = (props: ITestMediaItem) => {
               </FormItem>
             ) : undefined}
 
-            {ruleGroup.dataType === EPlexDataType.EPISODES ? (
+            {ruleGroup.dataType === 'episode' ? (
               // episodes
               <FormItem label="Episode">
                 <select
