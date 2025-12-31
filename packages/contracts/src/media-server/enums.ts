@@ -51,6 +51,31 @@ export function isValidMediaItemType(type: string): type is MediaItemType {
 }
 
 /**
+ * Convert EPlexDataType numeric enum to MediaItemType string.
+ * This is used when the frontend sends numeric enum values that need
+ * to be stored as string types in the database.
+ *
+ * @param plexType - The numeric EPlexDataType value (1=movie, 2=show, etc.)
+ * @returns The corresponding MediaItemType string
+ */
+export function plexDataTypeToMediaItemType(
+  plexType: number | undefined,
+): MediaItemType {
+  switch (plexType) {
+    case 1: // EPlexDataType.MOVIES
+      return 'movie'
+    case 2: // EPlexDataType.SHOWS
+      return 'show'
+    case 3: // EPlexDataType.SEASONS
+      return 'season'
+    case 4: // EPlexDataType.EPISODES
+      return 'episode'
+    default:
+      return 'movie'
+  }
+}
+
+/**
  * Feature flags for capability detection
  * Different media servers support different features
  */

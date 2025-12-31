@@ -1,6 +1,7 @@
 import {
   BasicResponseDto,
   EPlexDataType,
+  MediaItemType,
   RuleExecuteStatusDto,
 } from '@maintainerr/contracts'
 import {
@@ -43,7 +44,7 @@ export interface RuleGroupCreatePayload {
   sonarrSettingsId?: number
   collection: RuleGroupCollectionPayload
   rules: IRule[]
-  dataType: EPlexDataType
+  dataType: MediaItemType
   notifications: AgentConfiguration[]
   ruleHandlerCronSchedule: string | null
 }
