@@ -15,11 +15,11 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, LessThan, Repository } from 'typeorm';
 import { CollectionLog } from '../../modules/collections/entities/collection_log.entities';
-import { BasicResponseDto } from '../api/plex-api/dto/basic-response.dto';
-import { PlexApiService } from '../api/plex-api/plex-api.service';
 import { MediaServerFactory } from '../api/media-server/media-server.factory';
 import { IMediaServerService } from '../api/media-server/media-server.interface';
 import { PlexMapper } from '../api/media-server/plex/plex.mapper';
+import { BasicResponseDto } from '../api/plex-api/dto/basic-response.dto';
+import { PlexApiService } from '../api/plex-api/plex-api.service';
 import {
   TmdbMovieDetails,
   TmdbTvDetails,

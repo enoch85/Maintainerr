@@ -321,7 +321,9 @@ export class RuleExecutorService {
         // check media server collection link
         if (collMediaData.length > 0 && collection.mediaServerId) {
           collection =
-            await this.collectionService.checkAutomaticMediaServerLink(collection);
+            await this.collectionService.checkAutomaticMediaServerLink(
+              collection,
+            );
           // if collection was removed while it should be available.. resync current data
           if (!collection.mediaServerId) {
             collection = await this.collectionService.addToCollection(

@@ -12,9 +12,7 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * 3. Drop old tables
  * 4. Rename new tables
  */
-export class ConvertLibraryIdToString1767168270000
-  implements MigrationInterface
-{
+export class ConvertLibraryIdToString1767168270000 implements MigrationInterface {
   name = 'ConvertLibraryIdToString1767168270000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

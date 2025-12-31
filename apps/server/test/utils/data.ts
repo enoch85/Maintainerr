@@ -176,10 +176,10 @@ export const createMediaItem = (
     },
     index: faker.number.int(),
     parentIndex: type === 'episode' ? faker.number.int() : undefined,
-    childCount: type === 'show' || type === 'season' ? faker.number.int() : undefined,
-    watchedChildCount: type === 'show' || type === 'season'
-      ? faker.number.int()
-      : undefined,
+    childCount:
+      type === 'show' || type === 'season' ? faker.number.int() : undefined,
+    watchedChildCount:
+      type === 'show' || type === 'season' ? faker.number.int() : undefined,
     summary: faker.lorem.paragraph(),
     year: faker.number.int({ min: 1900, max: 2024 }),
     ...properties,

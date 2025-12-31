@@ -1,3 +1,4 @@
+import { EMediaServerType, MediaItemType } from '@maintainerr/contracts';
 import {
   Column,
   Entity,
@@ -7,7 +8,6 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { EMediaServerType, MediaItemType } from '@maintainerr/contracts';
 import { CollectionLog } from '../../collections/entities/collection_log.entities';
 import { RulesDto } from '../../rules/dtos/rules.dto';
 import { RuleGroup } from '../../rules/entities/rule-group.entities';

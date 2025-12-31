@@ -1,4 +1,4 @@
-import { MediaItemType, EMediaServerType } from '@maintainerr/contracts';
+import { EMediaServerType, MediaItemType } from '@maintainerr/contracts';
 import { CollectionMedia } from '../entities/collection_media.entities';
 
 export interface ICollection {

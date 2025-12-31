@@ -1,7 +1,4 @@
-import {
-  MediaItemType,
-  RuleExecuteStatusDto,
-} from '@maintainerr/contracts';
+import { MediaItemType, RuleExecuteStatusDto } from '@maintainerr/contracts';
 import {
   Body,
   ConflictException,
@@ -275,7 +272,10 @@ export class RulesController {
     @Body() body: { rules: string; mediaType: MediaItemType },
   ): Promise<ReturnStatus> {
     try {
-      return this.rulesService.encodeToYaml(JSON.parse(body.rules), body.mediaType);
+      return this.rulesService.encodeToYaml(
+        JSON.parse(body.rules),
+        body.mediaType,
+      );
     } catch (err) {
       return {
         code: 0,

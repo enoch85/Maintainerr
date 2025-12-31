@@ -1,3 +1,4 @@
+import { MediaItemType } from '@maintainerr/contracts';
 import {
   Column,
   Entity,
@@ -8,7 +9,6 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { MediaItemType } from '@maintainerr/contracts';
 import { Collection } from '../../collections/entities/collection.entities';
 import { ICollection } from '../../collections/interfaces/collection.interface';
 import { Notification } from '../../notifications/entities/notification.entities';

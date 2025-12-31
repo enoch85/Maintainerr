@@ -588,8 +588,7 @@ export class RulesService {
     } else {
       // get type from metadata
       const metaData = await this.plexApi.getMetadata(data.mediaId.toString());
-      const type: MediaItemType =
-        metaData.type === 'movie' ? 'movie' : 'show';
+      const type: MediaItemType = metaData.type === 'movie' ? 'movie' : 'show';
 
       // get media - Plex API returns { plexId: number }[], convert to { mediaServerId: string }[]
       const plexMedia = await this.plexApi.getAllIdsForContextAction(
@@ -1205,7 +1204,10 @@ export class RulesService {
       });
   }
 
-  public encodeToYaml(rules: RuleDto[], mediaType: MediaItemType): ReturnStatus {
+  public encodeToYaml(
+    rules: RuleDto[],
+    mediaType: MediaItemType,
+  ): ReturnStatus {
     return this.ruleYamlService.encode(rules, mediaType);
   }
 
