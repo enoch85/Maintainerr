@@ -44,13 +44,15 @@ ENV DO_NOT_TRACK=1
 # Disable all postinstall scripts, then manually run only the essential ones
 # This avoids issues with telemetry scripts and other optional postinstall hooks
 RUN yarn config set enableScripts false && \
-    yarn install --network-timeout 99999999 && \
-    yarn config set enableScripts true
+    yarn install --network-timeout 99999999
 
 # Manually build essential native modules
 RUN cd node_modules/esbuild && node install.js || true
 RUN cd node_modules/better-sqlite3 && npx --yes prebuild-install -r napi || \
     (cd node_modules/better-sqlite3 && npx --yes node-gyp rebuild --release) || true
+
+# Re-enable scripts for build phase
+RUN yarn config set enableScripts true
 
 # Set base path for UI (empty for root)
 RUN echo "VITE_BASE_PATH=" >> ./apps/ui/.env
