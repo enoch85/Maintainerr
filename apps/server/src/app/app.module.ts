@@ -10,8 +10,8 @@ import { ExternalApiModule } from '../modules/api/external-api/external-api.modu
 import { GitHubApiModule } from '../modules/api/github-api/github-api.module';
 import { JellyseerrApiModule } from '../modules/api/jellyseerr-api/jellyseerr-api.module';
 import { JellyseerrApiService } from '../modules/api/jellyseerr-api/jellyseerr-api.service';
-import { MediaServerModule } from '../modules/api/media-server/media-server.module';
 import { MediaServerFactory } from '../modules/api/media-server/media-server.factory';
+import { MediaServerModule } from '../modules/api/media-server/media-server.module';
 import { OverseerrApiModule } from '../modules/api/overseerr-api/overseerr-api.module';
 import { OverseerrApiService } from '../modules/api/overseerr-api/overseerr-api.service';
 import { PlexApiModule } from '../modules/api/plex-api/plex-api.module';
