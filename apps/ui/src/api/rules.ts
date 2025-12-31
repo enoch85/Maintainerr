@@ -1,4 +1,8 @@
-import { BasicResponseDto, RuleExecuteStatusDto } from '@maintainerr/contracts'
+import {
+  BasicResponseDto,
+  EPlexDataType,
+  RuleExecuteStatusDto,
+} from '@maintainerr/contracts'
 import {
   useMutation,
   UseMutationOptions,
@@ -14,7 +18,6 @@ import GetApiHandler, {
   PostApiHandler,
   PutApiHandler,
 } from '../utils/ApiHandler'
-import { EPlexDataType } from '@maintainerr/contracts'
 
 export interface RuleGroupCollectionPayload {
   visibleOnRecommended: boolean
