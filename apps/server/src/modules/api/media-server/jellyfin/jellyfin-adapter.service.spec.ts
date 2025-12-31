@@ -73,6 +73,7 @@ jest.mock('../../lib/cache', () => ({
   __esModule: true,
   default: {
     getCache: jest.fn().mockReturnValue({
+      flush: jest.fn(),
       data: {
         has: jest.fn().mockReturnValue(false),
         get: jest.fn(),

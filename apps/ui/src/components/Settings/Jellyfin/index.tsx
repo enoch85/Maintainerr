@@ -3,7 +3,6 @@ import {
   CheckIcon,
   ExclamationIcon,
   SaveIcon,
-  TrashIcon,
 } from '@heroicons/react/solid'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
@@ -26,6 +25,10 @@ const JellyfinSettings = () => {
   const [testResult, setTestResult] = useState<{
     status: boolean
     message: string
+  } | null>(null)
+  const [testedSettings, setTestedSettings] = useState<{
+    url: string
+    apiKey: string
   } | null>(null)
 
   const { settings } = useSettingsOutletContext()
@@ -85,14 +88,17 @@ const JellyfinSettings = () => {
             ? `Connected to ${result.serverName} (v${result.version})`
             : result.message,
         })
+        setTestedSettings({ url, apiKey })
         toast.success('Jellyfin connection successful!')
       } else {
         setTestResult({ status: false, message: result.message })
+        setTestedSettings(null)
         toast.error(`Connection failed: ${result.message}`)
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Connection failed'
       setTestResult({ status: false, message })
+      setTestedSettings(null)
       toast.error(message)
     }
   }
@@ -101,12 +107,42 @@ const JellyfinSettings = () => {
     e.preventDefault()
     setError(undefined)
 
-    const url = urlRef.current?.value?.trim()
-    const apiKey = apiKeyRef.current?.value?.trim()
+    const url = urlRef.current?.value?.trim() ?? ''
+    const apiKey = apiKeyRef.current?.value?.trim() ?? ''
 
+    // If both fields are empty, delete the settings (like Jellyseerr pattern)
+    const isRemovingSettings = url === '' && apiKey === ''
+
+    if (isRemovingSettings) {
+      try {
+        await deleteSettings()
+        setTestResult(null)
+        setTestedSettings(null)
+        toast.success('Jellyfin settings cleared')
+      } catch (err) {
+        toast.error('Failed to clear Jellyfin settings')
+      }
+      return
+    }
+
+    // Validate required fields for saving
     if (!url || !apiKey) {
       setError('Please fill in the Jellyfin URL and API key')
       toast.error('Please fill in the required fields')
+      return
+    }
+
+    // Check if settings have been tested
+    const currentSettingsAreSameAsSaved =
+      url === settings?.jellyfin_url && apiKey === settings?.jellyfin_api_key
+    const currentSettingsHaveBeenTested =
+      testedSettings?.url === url &&
+      testedSettings?.apiKey === apiKey &&
+      testResult?.status
+
+    if (!currentSettingsAreSameAsSaved && !currentSettingsHaveBeenTested) {
+      setError('Please test the connection before saving')
+      toast.error('Please test the connection before saving')
       return
     }
 
@@ -123,24 +159,6 @@ const JellyfinSettings = () => {
       toast.error(message)
     }
   }
-
-  const handleDelete = async () => {
-    try {
-      await deleteSettings()
-      // Clear form fields
-      if (urlRef.current) urlRef.current.value = ''
-      if (apiKeyRef.current) apiKeyRef.current.value = ''
-      if (userIdRef.current) userIdRef.current.value = ''
-      setTestResult(null)
-      toast.success('Jellyfin settings cleared')
-    } catch (err) {
-      toast.error('Failed to clear Jellyfin settings')
-    }
-  }
-
-  const isConfigured = Boolean(
-    settings?.jellyfin_url && settings?.jellyfin_api_key,
-  )
 
   return (
     <>
@@ -273,11 +291,13 @@ const JellyfinSettings = () => {
                     <Button
                       buttonType="primary"
                       type="submit"
-                      disabled={isSavePending}
+                      disabled={isSavePending || isDeletePending}
                     >
                       <SaveIcon className="h-5 w-5" />
                       <span className="ml-1">
-                        {isSavePending ? 'Saving...' : 'Save Changes'}
+                        {isSavePending || isDeletePending
+                          ? 'Saving...'
+                          : 'Save Changes'}
                       </span>
                     </Button>
                   </span>
@@ -287,24 +307,6 @@ const JellyfinSettings = () => {
                   <DocsButton page="using-maintainerr/settings/jellyfin" />
                 </span>
               </div>
-
-              {isConfigured && (
-                <div className="mt-4">
-                  <Button
-                    type="button"
-                    buttonType="danger"
-                    onClick={handleDelete}
-                    disabled={isDeletePending}
-                  >
-                    <TrashIcon className="h-5 w-5" />
-                    <span className="ml-1">
-                      {isDeletePending
-                        ? 'Clearing...'
-                        : 'Clear Jellyfin Settings'}
-                    </span>
-                  </Button>
-                </div>
-              )}
             </div>
           </form>
         </div>

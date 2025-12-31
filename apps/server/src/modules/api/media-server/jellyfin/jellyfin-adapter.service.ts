@@ -126,6 +126,8 @@ export class JellyfinService implements IMediaServerService {
     this.initialized = false;
     this.api = undefined;
     this.jellyfin = undefined;
+    // Clear the cache when uninitializing
+    this.cache.flush();
   }
 
   isSetup(): boolean {

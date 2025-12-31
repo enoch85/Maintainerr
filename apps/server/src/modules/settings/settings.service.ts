@@ -18,6 +18,7 @@ import { BasicResponseDto } from '../api/external-api/dto/basic-response.dto';
 import { InternalApiService } from '../api/internal-api/internal-api.service';
 import { JellyseerrApiService } from '../api/jellyseerr-api/jellyseerr-api.service';
 import { OverseerrApiService } from '../api/overseerr-api/overseerr-api.service';
+import { JellyfinService } from '../api/media-server/jellyfin/jellyfin-adapter.service';
 import { PlexApiService } from '../api/plex-api/plex-api.service';
 import { ServarrService } from '../api/servarr-api/servarr.service';
 import { TautulliApiService } from '../api/tautulli-api/tautulli-api.service';
@@ -97,6 +98,8 @@ export class SettingsService implements SettingDto {
   constructor(
     @Inject(forwardRef(() => PlexApiService))
     private readonly plexApi: PlexApiService,
+    @Inject(forwardRef(() => JellyfinService))
+    private readonly jellyfinService: JellyfinService,
     @Inject(forwardRef(() => ServarrService))
     private readonly servarr: ServarrService,
     @Inject(forwardRef(() => OverseerrApiService))
@@ -465,15 +468,14 @@ export class SettingsService implements SettingDto {
     try {
       const settingsDb = await this.settingsRepo.findOne({ where: {} });
 
-      // TODO: Remove when merging to prod - revert to blocking on connection failure
-      // Test connection but don't block save on failure
+      // Test connection - block save on failure
       const testResult = await this.testJellyfin(settings);
-      const connectionSuccessful = testResult.code === 1;
-
-      if (!connectionSuccessful) {
-        this.logger.warn(
-          `Jellyfin connection test failed: ${testResult.message}. Settings will be saved anyway.`,
-        );
+      if (testResult.code !== 1) {
+        return {
+          status: 'NOK',
+          code: 0,
+          message: testResult.message || 'Connection test failed',
+        };
       }
 
       await this.saveSettings({
@@ -481,34 +483,21 @@ export class SettingsService implements SettingDto {
         jellyfin_url: settings.jellyfin_url,
         jellyfin_api_key: settings.jellyfin_api_key,
         jellyfin_user_id: settings.jellyfin_user_id || null,
-        jellyfin_server_name: connectionSuccessful
-          ? testResult.serverName || null
-          : null,
+        jellyfin_server_name: testResult.serverName || null,
         media_server_type: 'jellyfin',
       });
+
+      // Uninitialize service so it reinitializes with new credentials on next use
+      this.jellyfinService.uninitialize();
 
       this.jellyfin_url = settings.jellyfin_url;
       this.jellyfin_api_key = settings.jellyfin_api_key;
       this.jellyfin_user_id = settings.jellyfin_user_id;
-      this.jellyfin_server_name = connectionSuccessful
-        ? testResult.serverName
-        : undefined;
+      this.jellyfin_server_name = testResult.serverName;
       this.media_server_type = 'jellyfin';
 
-      if (connectionSuccessful) {
-        this.logger.log('Jellyfin settings saved successfully');
-        return { status: 'OK', code: 1, message: 'Success' };
-      } else {
-        this.logger.log(
-          'Jellyfin settings saved (connection could not be verified)',
-        );
-        return {
-          status: 'OK',
-          code: 1,
-          message:
-            'Settings saved, but connection could not be verified. Please check your URL and API key.',
-        };
-      }
+      this.logger.log('Jellyfin settings saved successfully');
+      return { status: 'OK', code: 1, message: 'Success' };
     } catch (e) {
       this.logger.error('Error while saving Jellyfin settings: ', e);
       const message =
@@ -531,6 +520,9 @@ export class SettingsService implements SettingDto {
         jellyfin_user_id: null,
         jellyfin_server_name: null,
       });
+
+      // Uninitialize service to clear credentials
+      this.jellyfinService.uninitialize();
 
       this.jellyfin_url = undefined;
       this.jellyfin_api_key = undefined;

@@ -8,6 +8,7 @@ import { ServarrApiModule } from '../api/servarr-api/servarr-api.module';
 import { OverseerrApiModule } from '../api/overseerr-api/overseerr-api.module';
 import { InternalApiModule } from '../api/internal-api/internal-api.module';
 import { TautulliApiModule } from '../api/tautulli-api/tautulli-api.module';
+import { MediaServerModule } from '../api/media-server/media-server.module';
 import { RadarrSettings } from './entities/radarr_settings.entities';
 import { SonarrSettings } from './entities/sonarr_settings.entities';
 import { JellyseerrApiModule } from '../api/jellyseerr-api/jellyseerr-api.module';
@@ -23,6 +24,7 @@ import { RuleMigrationService } from './rule-migration.service';
 @Module({
   imports: [
     forwardRef(() => PlexApiModule),
+    forwardRef(() => MediaServerModule),
     forwardRef(() => ServarrApiModule),
     forwardRef(() => OverseerrApiModule),
     forwardRef(() => JellyseerrApiModule),
