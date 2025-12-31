@@ -2,7 +2,7 @@ import { EPlexDataType, type MediaItem } from '@maintainerr/contracts'
 
 export interface ICollection {
   id?: number
-  plexId?: number
+  mediaServerId?: string
   libraryId: string
   title: string
   description?: string
@@ -30,7 +30,7 @@ export interface ICollection {
 export interface ICollectionMedia {
   id: number
   collectionId: number
-  plexId: number
+  mediaServerId: string
   tmdbId: number
   tvdbid: number
   addDate: Date

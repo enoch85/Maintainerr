@@ -547,7 +547,7 @@ export class PlexApiService {
 
       return collection;
     } catch (err) {
-      this.logger.error(
+      this.logger.debug(
         `Couldn't find collection with id ${+collectionId}`,
         err,
       );

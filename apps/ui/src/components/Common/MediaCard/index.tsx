@@ -313,7 +313,7 @@ const MediaCard: React.FC<IMediaCard> = ({
                     </div>
                   ) : (
                     <RemoveFromCollectionBtn
-                      plexId={id}
+                      mediaServerId={id}
                       popup={exclusionType && exclusionType === 'global'}
                       onRemove={() => onRemove(id.toString())}
                       collectionId={collectionId}

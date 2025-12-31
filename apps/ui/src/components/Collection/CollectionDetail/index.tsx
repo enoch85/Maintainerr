@@ -184,7 +184,7 @@ const CollectionDetail: React.FC<ICollectionDetail> = (
             onRemove={(id: string) =>
               setTimeout(() => {
                 setData(dataRef.current.filter((el) => el.id !== id))
-                setMedia(mediaRef.current.filter((el) => String(el.plexId) !== id))
+                setMedia(mediaRef.current.filter((el) => el.mediaServerId !== id))
               }, 500)
             }
             collectionInfo={media.map((el) => {

@@ -203,9 +203,9 @@ export class CollectionsService {
       const queryBuilder = this.exclusionRepo.createQueryBuilder('exclusion');
 
       queryBuilder
-        .where(`exclusion.ruleGroupId = ${groupId}`)
-        .orWhere(`exclusion.ruleGroupId is null`)
-        .andWhere(`exclusion.type = ${rulegroup.dataType}`)
+        .where('exclusion.ruleGroupId = :groupId', { groupId })
+        .orWhere('exclusion.ruleGroupId is null')
+        .andWhere('exclusion.type = :dataType', { dataType: rulegroup.dataType })
         .orderBy('id', 'DESC')
         .skip(offset)
         .take(size);
@@ -751,7 +751,9 @@ export class CollectionsService {
       });
 
       if (!collection) {
-        this.logger.warn(`Collection with id ${collectionDbId} not found.`);
+        this.logger.warn(
+          `Collection with id ${collectionDbId} not found, skipping removal`,
+        );
         return undefined;
       }
 
@@ -1222,16 +1224,20 @@ export class CollectionsService {
       this.CollectionLogRepo.createQueryBuilder('collection_log');
 
     queryBuilder
-      .where(`collection_log.collectionId = ${id}`)
+      .where('collection_log.collectionId = :id', { id })
       .orderBy('id', sort)
       .skip(offset)
       .take(size);
 
     if (search !== undefined) {
-      queryBuilder.andWhere(`collection_log.message like '%${search}%'`);
+      queryBuilder.andWhere('collection_log.message like :search', {
+        search: `%${search}%`,
+      });
     }
     if (filter !== undefined) {
-      queryBuilder.andWhere(`collection_log.type like '%${filter}%'`);
+      queryBuilder.andWhere('collection_log.type like :filter', {
+        filter: `%${filter}%`,
+      });
     }
 
     const itemCount = await queryBuilder.getCount();

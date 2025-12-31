@@ -115,7 +115,7 @@ const CollectionMediaPage = () => {
       onRemove={(id: string) =>
         setTimeout(() => {
           setData((prevData) => prevData.filter((el) => el.id !== id))
-          setMedia((prevMedia) => prevMedia.filter((el) => String(el.plexId) !== id))
+          setMedia((prevMedia) => prevMedia.filter((el) => el.mediaServerId !== id))
         }, 500)
       }
       collectionInfo={media.map((el) => {

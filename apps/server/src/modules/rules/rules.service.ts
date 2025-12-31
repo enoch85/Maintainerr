@@ -154,23 +154,24 @@ export class RulesService {
     typeId?: number,
   ): Promise<RulesDto[]> {
     try {
-      const rulegroups = await this.connection
+      const queryBuilder = this.connection
         .createQueryBuilder('rule_group', 'rg')
         .innerJoinAndSelect('rg.rules', 'r')
         .leftJoinAndSelect('rg.collection', 'c')
         .leftJoinAndSelect('rg.notifications', 'n')
         .where(
           activeOnly ? 'rg.isActive = true' : 'rg.isActive in (true, false)',
-        )
-        .andWhere(
-          libraryId !== undefined
-            ? `rg.libraryId = '${libraryId}'`
-            : typeId !== undefined
-              ? `c.type = ${typeId}`
-              : `rg.libraryId != '-1'`,
-        )
-        .orderBy('rg.id, r.id')
-        .getMany();
+        );
+
+      if (libraryId !== undefined) {
+        queryBuilder.andWhere('rg.libraryId = :libraryId', { libraryId });
+      } else if (typeId !== undefined) {
+        queryBuilder.andWhere('c.type = :typeId', { typeId });
+      } else {
+        queryBuilder.andWhere("rg.libraryId != '-1'");
+      }
+
+      const rulegroups = await queryBuilder.orderBy('rg.id, r.id').getMany();
       // Ensure rules is always an array for each group
       for (const group of rulegroups) {
         if (!Array.isArray(group.rules)) {
@@ -220,7 +221,7 @@ export class RulesService {
         .innerJoinAndSelect('rg.rules', 'r')
         .leftJoinAndSelect('rg.collection', 'c')
         .leftJoinAndSelect('rg.notifications', 'n')
-        .andWhere(`rg.id = ${id}`)
+        .andWhere('rg.id = :id', { id })
         .orderBy('r.id')
         .getOne();
       // Ensure rules is always an array

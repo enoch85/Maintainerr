@@ -79,7 +79,7 @@ const OverviewContent = (props: IOverviewContent) => {
   const getDaysLeft = (mediaId: string) => {
     if (props.collectionInfo) {
       const collectionData = props.collectionInfo.find(
-        (colEl) => String(colEl.plexId) === mediaId,
+        (colEl) => colEl.mediaServerId === mediaId,
       )
       if (collectionData && collectionData.collection) {
         if (collectionData.collection.deleteAfterDays == null) {
@@ -171,7 +171,7 @@ const OverviewContent = (props: IOverviewContent) => {
                 ? {
                     daysLeft: getDaysLeft(el.id),
                     collectionId: props.collectionInfo.find(
-                      (colEl) => String(colEl.plexId) === el.id,
+                      (colEl) => colEl.mediaServerId === el.id,
                     )?.collectionId,
                   }
                 : undefined)}

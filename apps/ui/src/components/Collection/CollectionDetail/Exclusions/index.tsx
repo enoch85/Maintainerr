@@ -12,7 +12,7 @@ interface ICollectionExclusions {
 
 export interface IExclusionMedia {
   id: number
-  plexId: number
+  mediaServerId: string
   ruleGroupId: number
   parent: number
   type: number
