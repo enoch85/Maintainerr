@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useMediaServerLibraries } from '../../../api/media-server'
 
 interface ILibrarySwitcher {
-  onLibraryChange: (libraryId: number) => void
+  onLibraryChange: (libraryId: string) => void
   shouldShowAllOption?: boolean
 }
 
@@ -13,10 +13,10 @@ const LibrarySwitcher = (props: ILibrarySwitcher) => {
     error: librariesError,
     isLoading: librariesLoading,
   } = useMediaServerLibraries()
-  const lastAutoSelectedLibraryId = useRef<number | null>(null)
+  const lastAutoSelectedLibraryId = useRef<string | null>(null)
 
   const onSwitchLibrary = (event: { target: { value: string } }) => {
-    onLibraryChange(+event.target.value)
+    onLibraryChange(event.target.value)
   }
 
   useEffect(() => {
@@ -25,12 +25,9 @@ const LibrarySwitcher = (props: ILibrarySwitcher) => {
     }
 
     if (shouldShowAllOption === false) {
-      const firstId = Number(libraries[0].id)
+      const firstId = libraries[0].id
 
-      if (
-        !Number.isNaN(firstId) &&
-        lastAutoSelectedLibraryId.current !== firstId
-      ) {
+      if (firstId && lastAutoSelectedLibraryId.current !== firstId) {
         lastAutoSelectedLibraryId.current = firstId
         onLibraryChange(firstId)
       }
@@ -59,7 +56,7 @@ const LibrarySwitcher = (props: ILibrarySwitcher) => {
               <>
                 {(props.shouldShowAllOption === undefined ||
                   props.shouldShowAllOption) && (
-                  <option value={9999}>All</option>
+                  <option value="all">All</option>
                 )}
 
                 {libraries?.map((lib) => {

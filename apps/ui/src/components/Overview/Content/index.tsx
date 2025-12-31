@@ -13,7 +13,7 @@ interface IOverviewContent {
   extrasLoading?: boolean
   fetchData: () => void
   onRemove?: (id: string) => void
-  libraryId: number
+  libraryId: string
   collectionPage?: boolean
   collectionInfo?: ICollectionMedia[]
   collectionId?: number

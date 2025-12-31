@@ -26,7 +26,7 @@ export interface IRuleGroup {
   id: number
   name: string
   description: string
-  libraryId: number
+  libraryId: string
   isActive: boolean
   collectionId: number
   rules: IRuleJson[]
@@ -153,7 +153,7 @@ const RuleGroup = (props: {
             </div>
             <div className="flex justify-center text-amber-500">
               {`${
-                libraries?.find((lib) => +lib.id === +props.group.libraryId)
+                libraries?.find((lib) => lib.id === props.group.libraryId)
                   ?.title ?? ''
               }`}
             </div>

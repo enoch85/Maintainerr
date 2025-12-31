@@ -10,7 +10,7 @@ import CollectionExcludions from './Exclusions'
 import TestMediaItem from './TestMediaItem'
 
 interface ICollectionDetail {
-  libraryId: number
+  libraryId: string
   collection: ICollection
   title: string
   onBack: () => void

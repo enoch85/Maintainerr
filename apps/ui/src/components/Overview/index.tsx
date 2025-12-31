@@ -18,8 +18,8 @@ const Overview = () => {
   const [totalSize, setTotalSize] = useState<number>(999)
   const totalSizeRef = useRef<number>(999)
 
-  const [selectedLibrary, setSelectedLibrary] = useState<number>()
-  const selectedLibraryRef = useRef<number>(undefined)
+  const [selectedLibrary, setSelectedLibrary] = useState<string>()
+  const selectedLibraryRef = useRef<string | undefined>(undefined)
   const [searchUsed, setSearchUsed] = useState<boolean>(false)
 
   const pageData = useRef<number>(0)
@@ -64,7 +64,7 @@ const Overview = () => {
           '[DEBUG] Overview: Switching to library',
           selectedLibrary || libraries[0].id,
         )
-        switchLib(selectedLibrary ? selectedLibrary : +libraries[0].id)
+        switchLib(selectedLibrary ? selectedLibrary : libraries[0].id)
       }
     }, 300)
 
@@ -90,7 +90,7 @@ const Overview = () => {
           setIsLoading(false)
         },
       )
-      setSelectedLibrary(+libraries[0]?.id)
+      setSelectedLibrary(libraries[0]?.id)
     } else {
       setSearchUsed(false)
       setData([])
@@ -114,7 +114,7 @@ const Overview = () => {
     totalSizeRef.current = totalSize
   }, [totalSize])
 
-  const switchLib = (libraryId: number) => {
+  const switchLib = (libraryId: string) => {
     console.log(
       '[DEBUG] Overview.switchLib() called with libraryId =',
       libraryId,
@@ -196,7 +196,7 @@ const Overview = () => {
               totalSizeRef.current >= pageData.current * fetchAmount
             }
             data={data}
-            libraryId={selectedLibrary}
+            libraryId={selectedLibrary!}
           />
         ) : undefined}
       </div>

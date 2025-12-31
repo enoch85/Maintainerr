@@ -29,7 +29,7 @@ export interface RuleGroupCollectionPayload {
 export interface RuleGroupCreatePayload {
   name: string
   description: string
-  libraryId: number
+  libraryId: string
   arrAction: number
   isActive: boolean
   useRules: boolean

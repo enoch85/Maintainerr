@@ -18,7 +18,7 @@ interface IMediaCard {
   userScore: number
   inProgress?: boolean
   tmdbid?: string
-  libraryId?: number
+  libraryId?: string
   type?: 1 | 2 | 3 | 4
   collectionPage: boolean
   daysLeft?: number

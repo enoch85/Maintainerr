@@ -3,7 +3,7 @@ import { MediaItemType } from '@maintainerr/contracts'
 export interface IAddModal {
   onCancel: () => void
   onSubmit: () => void
-  libraryId?: number
+  libraryId?: string
   type?: number
   plexId: number
   modalType: 'add' | 'exclude'
@@ -13,7 +13,7 @@ export interface ICollectionMedia {
   media?: []
   id: number
   plexId?: number
-  libraryId?: number
+  libraryId?: string
   title: string
   description?: string
   isActive?: boolean

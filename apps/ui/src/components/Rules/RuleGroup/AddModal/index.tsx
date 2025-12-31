@@ -233,18 +233,6 @@ const AddModal = (props: AddModal) => {
 
   const selectedLibraryId = watch('libraryId') ?? ''
   const selectedType = watch('dataType') ?? ''
-  // Debug logging for library type selection
-  const selectedLib = libraries?.find(
-    (el: MediaLibrary) => el.id === selectedLibraryId,
-  )
-  console.log(
-    '[DEBUG] AddModal: selectedLibraryId =',
-    selectedLibraryId,
-    'selectedLib =',
-    selectedLib,
-    'dataType =',
-    selectedType,
-  )
   const selectedLibraryType: undefined | 'movie' | 'show' = selectedType
     ? +selectedType === EPlexDataType.MOVIES
       ? 'movie'
@@ -370,7 +358,7 @@ const AddModal = (props: AddModal) => {
       throw new Error('Libraries not loaded')
     }
 
-    const lib = libraries.find((el: MediaLibrary) => +el.id === +value)
+    const lib = libraries.find((el: MediaLibrary) => el.id === value)
     console.log('[DEBUG] updateLibraryId: found lib =', lib)
 
     if (lib) {
@@ -514,7 +502,7 @@ const AddModal = (props: AddModal) => {
     const creationObj: RuleGroupCreatePayload = {
       name: data.name,
       description: data.description ?? '',
-      libraryId: +data.libraryId,
+      libraryId: data.libraryId,
       arrAction: data.arrAction ?? 0,
       dataType: +data.dataType as EPlexDataType,
       isActive: data.active,

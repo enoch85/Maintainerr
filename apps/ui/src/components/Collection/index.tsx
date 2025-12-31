@@ -4,7 +4,7 @@ import { IPlexMetadata } from '../Overview/Content'
 export interface ICollection {
   id?: number
   plexId?: number
-  libraryId: number
+  libraryId: string
   title: string
   description?: string
   isActive: boolean

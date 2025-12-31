@@ -14,7 +14,7 @@ interface ModalContentProps {
   canExpand?: boolean
   inProgress?: boolean
   tmdbid?: string
-  libraryId?: number
+  libraryId?: string
   type?: 1 | 2 | 3 | 4
   daysLeft?: number
   exclusionId?: number

@@ -6,7 +6,7 @@ import OverviewContent, { IPlexMetadata } from '../../../Overview/Content'
 
 interface ICollectionExclusions {
   collection: ICollection
-  libraryId: number
+  libraryId: string
 }
 
 export interface IExclusionMedia {
