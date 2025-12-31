@@ -672,51 +672,64 @@ export class CollectionsService {
 
       if (collection) {
         collection = await this.checkAutomaticMediaServerLink(collection);
-        if (media.length > 0) {
-          if (!collection.mediaServerId) {
-            let newColl: MediaCollection | undefined = undefined;
-            if (collection.manualCollection) {
-              newColl = await this.findMediaServerCollection(
-                collection.manualCollectionName,
-                collection.libraryId,
-              );
-            } else {
-              newColl = await mediaServer.createCollection({
+
+        // Ensure media server collection exists if we have items (new or existing)
+        if (!collection.mediaServerId && (media.length > 0 || collectionMedia.length > 0)) {
+          let newColl: MediaCollection | undefined = undefined;
+          if (collection.manualCollection) {
+            newColl = await this.findMediaServerCollection(
+              collection.manualCollectionName,
+              collection.libraryId,
+            );
+          } else {
+            newColl = await mediaServer.createCollection({
+              libraryId: collection.libraryId,
+              title: collection.title,
+              summary: collection.description,
+              sortTitle: collection.sortTitle,
+              type: collection.type,
+            });
+          }
+          if (newColl) {
+            collection = await this.collectionRepo.save({
+              ...collection,
+              mediaServerId: newColl.id,
+            });
+            // Handle visibility settings (Plex-only feature)
+            if (
+              mediaServer.supportsFeature(
+                EMediaServerFeature.COLLECTION_VISIBILITY,
+              )
+            ) {
+              await this.plexApi.UpdateCollectionSettings({
                 libraryId: collection.libraryId,
-                title: collection.title,
-                summary: collection.description,
-                sortTitle: collection.sortTitle,
-                type: collection.type,
+                collectionId: collection.mediaServerId,
+                recommended: collection.visibleOnRecommended,
+                ownHome: collection.visibleOnHome,
+                sharedHome: collection.visibleOnHome,
               });
             }
-            if (newColl) {
-              collection = await this.collectionRepo.save({
-                ...collection,
-                mediaServerId: newColl.id,
-              });
-              // Handle visibility settings (Plex-only feature)
-              if (
-                mediaServer.supportsFeature(
-                  EMediaServerFeature.COLLECTION_VISIBILITY,
-                )
-              ) {
-                await this.plexApi.UpdateCollectionSettings({
-                  libraryId: collection.libraryId,
-                  collectionId: collection.mediaServerId,
-                  recommended: collection.visibleOnRecommended,
-                  ownHome: collection.visibleOnHome,
-                  sharedHome: collection.visibleOnHome,
-                });
-              }
-            } else {
-              if (collection.manualCollection) {
-                this.logger.warn(
-                  `Manual Collection '${collection.manualCollectionName}' doesn't exist in media server..`,
+
+            // If we just created the collection, add existing items from DB to media server
+            if (collectionMedia.length > 0 && media.length === 0) {
+              for (const existingMedia of collectionMedia) {
+                await mediaServer.addToCollection(
+                  collection.mediaServerId,
+                  existingMedia.mediaServerId,
                 );
               }
             }
+          } else {
+            if (collection.manualCollection) {
+              this.logger.warn(
+                `Manual Collection '${collection.manualCollectionName}' doesn't exist in media server..`,
+              );
+            }
           }
-          // add children to collection
+        }
+
+        // add NEW children to collection
+        if (media.length > 0) {
           for (const childMedia of media) {
             await this.addChildToCollection(
               { mediaServerId: collection.mediaServerId, dbId: collection.id },

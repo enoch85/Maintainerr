@@ -318,13 +318,16 @@ export class RuleExecutorService {
           collection.id,
         );
 
-        // check media server collection link
-        if (collMediaData.length > 0 && collection.mediaServerId) {
-          collection =
-            await this.collectionService.checkAutomaticMediaServerLink(
-              collection,
-            );
-          // if collection was removed while it should be available.. resync current data
+        // check media server collection link - ensure Plex collection exists if we have media
+        if (collMediaData.length > 0) {
+          if (collection.mediaServerId) {
+            // If we have a mediaServerId, verify it still exists
+            collection =
+              await this.collectionService.checkAutomaticMediaServerLink(
+                collection,
+              );
+          }
+          // if collection doesn't exist in media server but should.. resync current data
           if (!collection.mediaServerId) {
             collection = await this.collectionService.addToCollection(
               collection.id,
