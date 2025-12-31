@@ -1,6 +1,6 @@
-import { MediaItemType } from '@maintainerr/contracts'
 import { Transition } from '@headlessui/react'
 import { DocumentAddIcon, DocumentRemoveIcon } from '@heroicons/react/solid'
+import { MediaItemType } from '@maintainerr/contracts'
 import React, { memo, useEffect, useState } from 'react'
 import { useIsTouch } from '../../../hooks/useIsTouch'
 import GetApiHandler from '../../../utils/ApiHandler'

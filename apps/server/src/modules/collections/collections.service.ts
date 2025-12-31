@@ -562,14 +562,25 @@ export class CollectionsService {
     if (!collection.manualCollection) {
       let serverColl: MediaCollection | undefined = undefined;
 
+      this.logger.debug(
+        `[checkAutomaticMediaServerLink] Collection "${collection.title}" (DB id: ${collection.id}, mediaServerId: ${collection.mediaServerId})`,
+      );
+
       if (collection.mediaServerId) {
         serverColl = await mediaServer.getCollection(collection.mediaServerId);
+        this.logger.debug(
+          `[checkAutomaticMediaServerLink] getCollection(${collection.mediaServerId}) returned: ${serverColl ? `id=${serverColl.id}, childCount=${serverColl.childCount}` : 'undefined'}`,
+        );
       }
 
       if (!serverColl) {
         const foundColl = await this.findMediaServerCollection(
           collection.title,
           collection.libraryId,
+        );
+
+        this.logger.debug(
+          `[checkAutomaticMediaServerLink] findMediaServerCollection("${collection.title}") returned: ${foundColl ? `id=${foundColl.id}, childCount=${foundColl.childCount}` : 'undefined'}`,
         );
 
         if (foundColl) {
@@ -585,11 +596,17 @@ export class CollectionsService {
         collection.mediaServerId !== null &&
         serverColl.childCount <= 0
       ) {
+        this.logger.debug(
+          `[checkAutomaticMediaServerLink] Deleting empty collection ${serverColl.id} (childCount=${serverColl.childCount})`,
+        );
         await mediaServer.deleteCollection(serverColl.id);
         serverColl = undefined;
       }
 
       if (!serverColl) {
+        this.logger.debug(
+          `[checkAutomaticMediaServerLink] Setting mediaServerId to null`,
+        );
         collection.mediaServerId = null;
         collection = await this.saveCollection(collection);
       }

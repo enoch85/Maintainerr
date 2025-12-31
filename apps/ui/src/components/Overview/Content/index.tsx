@@ -1,4 +1,7 @@
-import { type MediaItem, type MediaItemWithParent } from '@maintainerr/contracts'
+import {
+  type MediaItem,
+  type MediaItemWithParent,
+} from '@maintainerr/contracts'
 import { debounce } from 'lodash-es'
 import { useEffect } from 'react'
 import { ICollectionMedia } from '../../Collection'
@@ -24,7 +27,9 @@ interface IOverviewContent {
  * Extract TMDB ID from a MediaItem.
  * For episodes/seasons, checks parent item's providerIds.
  */
-function extractTmdbId(item: MediaItem | MediaItemWithParent): string | undefined {
+function extractTmdbId(
+  item: MediaItem | MediaItemWithParent,
+): string | undefined {
   if (item.providerIds?.tmdb) {
     return item.providerIds.tmdb
   }
