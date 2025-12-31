@@ -191,12 +191,6 @@ const JellyfinSettings = () => {
           />
         )}
 
-        <Alert type="info" title="Getting your API Key">
-          In Jellyfin, go to <strong>Dashboard → API Keys</strong> and create a
-          new API key named &quot;Maintainerr&quot;. Copy the generated key and
-          paste it below.
-        </Alert>
-
         <div className="section">
           <form onSubmit={handleSave}>
             <div className="form-row">
@@ -232,6 +226,10 @@ const JellyfinSettings = () => {
                     defaultValue={settings?.jellyfin_api_key || ''}
                   />
                 </div>
+                <p className="mt-2 text-sm text-zinc-400">
+                  In Jellyfin, go to <strong>Dashboard → API Keys</strong> and
+                  create a new API key named &quot;Maintainerr&quot;.
+                </p>
               </div>
             </div>
 
