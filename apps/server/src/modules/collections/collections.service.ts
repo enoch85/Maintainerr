@@ -749,6 +749,12 @@ export class CollectionsService {
       let collection = await this.collectionRepo.findOne({
         where: { id: collectionDbId },
       });
+
+      if (!collection) {
+        this.logger.warn(`Collection with id ${collectionDbId} not found.`);
+        return undefined;
+      }
+
       collection = await this.checkAutomaticMediaServerLink(collection);
       let collectionMedia = await this.CollectionMediaRepo.find({
         where: {

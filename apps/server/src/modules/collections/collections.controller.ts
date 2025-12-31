@@ -133,12 +133,13 @@ export class CollectionsController {
     @Query('mediaId') mediaId: number,
     @Query('collectionId') collectionId: number,
   ) {
-    if (!collectionId) {
+    const collId = Number(collectionId);
+    if (!collId) {
       return this.collectionService.removeFromAllCollections([
         { mediaServerId: mediaId.toString() },
       ]);
     } else {
-      return this.collectionService.removeFromCollection(collectionId, [
+      return this.collectionService.removeFromCollection(collId, [
         {
           mediaServerId: mediaId.toString(),
         },
