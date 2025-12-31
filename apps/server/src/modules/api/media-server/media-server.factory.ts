@@ -1,10 +1,10 @@
-import { forwardRef, Inject, Injectable, Optional } from '@nestjs/common';
 import { EMediaServerType } from '@maintainerr/contracts';
-import { SettingsService } from '../../settings/settings.service';
+import { forwardRef, Inject, Injectable, Optional } from '@nestjs/common';
 import { Settings } from '../../settings/entities/settings.entities';
+import { SettingsService } from '../../settings/settings.service';
+import { JellyfinService } from './jellyfin/jellyfin-adapter.service';
 import { IMediaServerService } from './media-server.interface';
 import { PlexAdapterService } from './plex/plex-adapter.service';
-import { JellyfinService } from './jellyfin/jellyfin-adapter.service';
 
 /**
  * Type guard to check if settings response is a Settings object
@@ -55,7 +55,9 @@ export class MediaServerFactory {
    * Useful for testing or when the type is known.
    * Ensures the service is initialized before returning.
    */
-  async getServiceByType(serverType: EMediaServerType): Promise<IMediaServerService> {
+  async getServiceByType(
+    serverType: EMediaServerType,
+  ): Promise<IMediaServerService> {
     switch (serverType) {
       case EMediaServerType.JELLYFIN:
         if (!this.jellyfinService) {
