@@ -78,10 +78,10 @@ const CollectionMediaPage = () => {
     setData((prevData) => [
       ...prevData,
       ...resp.items.map((el) => {
-        if (el.plexData) {
-          el.plexData.maintainerrIsManual = el.isManual ? el.isManual : false
+        if (el.mediaData) {
+          el.mediaData.maintainerrIsManual = el.isManual ? el.isManual : false
         }
-        return el.plexData ? el.plexData : ({} as MediaItem)
+        return el.mediaData ? el.mediaData : ({} as MediaItem)
       }),
     ])
     setIsLoading(false)

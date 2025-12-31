@@ -16,8 +16,8 @@ export interface IExclusionMedia {
   ruleGroupId: number
   parent: number
   type: number
-  /** Media metadata from the media server */
-  plexData?: MediaItem
+  /** Server-agnostic media metadata */
+  mediaData?: MediaItem
 }
 
 const CollectionExcludions = (props: ICollectionExclusions) => {
@@ -85,13 +85,13 @@ const CollectionExcludions = (props: ICollectionExclusions) => {
     setData([
       ...dataRef.current,
       ...resp.items.map((el) => {
-        if (el.plexData) {
-          el.plexData.maintainerrExclusionId = el.id
-          el.plexData.maintainerrExclusionType = el.ruleGroupId
+        if (el.mediaData) {
+          el.mediaData.maintainerrExclusionId = el.id
+          el.mediaData.maintainerrExclusionType = el.ruleGroupId
             ? 'specific'
             : 'global'
         }
-        return el.plexData ? el.plexData : ({} as MediaItem)
+        return el.mediaData ? el.mediaData : ({} as MediaItem)
       }),
     ])
     loadingRef.current = false

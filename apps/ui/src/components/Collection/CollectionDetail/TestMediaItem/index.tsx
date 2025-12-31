@@ -17,7 +17,7 @@ interface ITestMediaItem {
 }
 
 interface IOptions {
-  id: number
+  id: number | string
   title: string
 }
 
@@ -35,13 +35,13 @@ const TestMediaItem = (props: ITestMediaItem) => {
   const [loading, setLoading] = useState(true)
   const [ruleGroup, setRuleGroup] = useState<{
     dataType: EPlexDataType
-    libraryId: number
+    libraryId: string
     id: string
   }>()
 
   const [mediaItem, setMediaItem] = useState<IMediaOptions>()
-  const [selectedSeasons, setSelectedSeasons] = useState<number>(-1)
-  const [selectedEpisodes, setSelectedEpisodes] = useState<number>(-1)
+  const [selectedSeasons, setSelectedSeasons] = useState<number | string>(-1)
+  const [selectedEpisodes, setSelectedEpisodes] = useState<number | string>(-1)
   const [seasonOptions, setSeasonOptions] = useState<IOptions[]>([emptyOption])
   const [episodeOptions, setEpisodeOptions] = useState<IOptions[]>([
     emptyOption,
@@ -98,14 +98,14 @@ const TestMediaItem = (props: ITestMediaItem) => {
     if (item?.type == EPlexDataType.SHOWS) {
       // get seasons
       GetApiHandler(`/media-server/meta/${item.id}/children`).then(
-        (resp: [{ ratingKey: number; title: string }]) => {
+        (resp: { id: string; title: string }[]) => {
           setSeasonOptions([
             emptyOption,
             ...resp.map((el) => {
               return {
-                id: el.ratingKey,
+                id: el.id,
                 title: el.title,
-              }
+              } as IOptions
             }),
           ])
         },
@@ -113,7 +113,7 @@ const TestMediaItem = (props: ITestMediaItem) => {
     }
   }
 
-  const updateSelectedSeasons = (seasons: number) => {
+  const updateSelectedSeasons = (seasons: number | string) => {
     setSelectedSeasons(seasons)
     setSelectedEpisodes(-1)
     setEpisodeOptions([emptyOption])
@@ -121,14 +121,14 @@ const TestMediaItem = (props: ITestMediaItem) => {
     if (seasons !== -1) {
       // get episodes
       GetApiHandler(`/media-server/meta/${seasons}/children`).then(
-        (resp: [{ ratingKey: number; index: number }]) => {
+        (resp: { id: string; index: number }[]) => {
           setEpisodeOptions([
             emptyOption,
             ...resp.map((el) => {
               return {
-                id: el.ratingKey,
+                id: el.id,
                 title: `Episode ${el.index}`,
-              }
+              } as IOptions
             }),
           ])
         },

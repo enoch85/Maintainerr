@@ -7,14 +7,16 @@ import Modal from '../Common/Modal'
 import { IAddModal, IAlterableMediaDto, ICollectionMedia } from './interfaces'
 
 const AddModal = (props: IAddModal) => {
-  const [selectedCollection, setSelectedCollection] = useState<number>()
+  const [selectedCollection, setSelectedCollection] = useState<
+    number | string
+  >()
   const [loading, setLoading] = useState(true)
   const [alert, setAlert] = useState(false)
   const [forceRemovalcheck, setForceRemovalCheck] = useState(false)
   const [selectedAction, setSelectedAction] = useState<number>(0)
   // For show only
-  const [selectedSeasons, setSelectedSeasons] = useState<number>(-1)
-  const [selectedEpisodes, setSelectedEpisodes] = useState<number>(-1)
+  const [selectedSeasons, setSelectedSeasons] = useState<number | string>(-1)
+  const [selectedEpisodes, setSelectedEpisodes] = useState<number | string>(-1)
 
   const [collectionOptions, setCollectionOptions] = useState<
     ICollectionMedia[]
@@ -117,7 +119,7 @@ const AddModal = (props: IAddModal) => {
     if (props.type && props.type === 2) {
       // get seasons
       GetApiHandler(`/media-server/meta/${props.plexId}/children`).then(
-        (resp: [{ ratingKey: number; title: string }]) => {
+        (resp: { id: string; title: string }[]) => {
           setSeasonOptions([
             {
               id: -1,
@@ -125,9 +127,9 @@ const AddModal = (props: IAddModal) => {
             },
             ...resp.map((el) => {
               return {
-                id: el.ratingKey,
+                id: el.id,
                 title: el.title,
-              }
+              } as ICollectionMedia
             }),
           ])
           setLoading(false)
@@ -146,7 +148,7 @@ const AddModal = (props: IAddModal) => {
 
       // get episodes
       GetApiHandler(`/media-server/meta/${selectedSeasons}/children`).then(
-        (resp: [{ ratingKey: number; index: number }]) => {
+        (resp: { id: string; index: number }[]) => {
           setEpisodeOptions([
             {
               id: -1,
@@ -154,9 +156,9 @@ const AddModal = (props: IAddModal) => {
             },
             ...resp.map((el) => {
               return {
-                id: el.ratingKey,
+                id: el.id,
                 title: `Episode ${el.index}`,
-              }
+              } as ICollectionMedia
             }),
           ])
           setLoading(false)

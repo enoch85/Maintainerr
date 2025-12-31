@@ -12,7 +12,7 @@ export interface IMediaOptions {
 interface ISearchMediaITem {
   onChange: (item: SingleValue<IMediaOptions>) => void
   mediatype?: EPlexDataType
-  libraryId?: number
+  libraryId?: string
 }
 
 const SearchMediaItem = (props: ISearchMediaITem) => {

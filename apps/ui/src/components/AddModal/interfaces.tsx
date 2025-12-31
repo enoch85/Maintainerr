@@ -11,8 +11,8 @@ export interface IAddModal {
 
 export interface ICollectionMedia {
   media?: []
-  id: number
-  plexId?: number
+  id: number | string
+  plexId?: number | string
   libraryId?: string
   title: string
   description?: string
@@ -26,7 +26,7 @@ export interface ICollectionMedia {
 }
 
 export interface IAlterableMediaDto {
-  id: number
+  id: number | string
   index?: number
   parenIndex?: number
   type: MediaItemType

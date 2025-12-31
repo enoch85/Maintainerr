@@ -37,6 +37,6 @@ export interface ICollectionMedia {
   image_path: string
   isManual: boolean
   collection: ICollection
-  /** Media metadata from the media server */
-  plexData?: MediaItem
+  /** Server-agnostic media metadata */
+  mediaData?: MediaItem
 }
