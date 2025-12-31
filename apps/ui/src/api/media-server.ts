@@ -113,8 +113,7 @@ export const mediaServerKeys = {
     [...mediaServerKeys.all, 'collection', id] as const,
   collectionChildren: (id: string) =>
     [...mediaServerKeys.collection(id), 'children'] as const,
-  search: (query: string) =>
-    [...mediaServerKeys.all, 'search', query] as const,
+  search: (query: string) => [...mediaServerKeys.all, 'search', query] as const,
 }
 
 // ============================================================
@@ -149,8 +148,12 @@ export const useMediaServerLibraries = (
   >({
     queryKey: mediaServerKeys.libraries(),
     queryFn: async () => {
-      console.log('[DEBUG] useMediaServerLibraries - fetching /media-server/libraries')
-      const result = await GetApiHandler<MediaLibrary[]>('/media-server/libraries')
+      console.log(
+        '[DEBUG] useMediaServerLibraries - fetching /media-server/libraries',
+      )
+      const result = await GetApiHandler<MediaLibrary[]>(
+        '/media-server/libraries',
+      )
       console.log('[DEBUG] useMediaServerLibraries - response:', result)
       return result
     },
@@ -279,7 +282,9 @@ export const useMediaServerCollections = (
   })
 }
 
-type UseMediaServerMetadataQueryKey = ReturnType<typeof mediaServerKeys.metadata>
+type UseMediaServerMetadataQueryKey = ReturnType<
+  typeof mediaServerKeys.metadata
+>
 type UseMediaServerMetadataOptions = Omit<
   UseQueryOptions<
     MediaItem | undefined,

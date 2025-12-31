@@ -1,17 +1,4 @@
 import {
-  BadRequestException,
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Logger,
-  Param,
-  Post,
-  Put,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
-import {
   CollectionVisibilitySettings,
   CreateCollectionParams,
   MediaCollection,
@@ -24,6 +11,19 @@ import {
   UpdateCollectionParams,
   WatchRecord,
 } from '@maintainerr/contracts';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Logger,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { MediaServerSetupGuard } from './guards';
 import { MediaServerFactory } from './media-server.factory';
 

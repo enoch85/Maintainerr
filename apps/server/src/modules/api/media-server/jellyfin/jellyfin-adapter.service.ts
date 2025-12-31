@@ -234,18 +234,26 @@ export class JellyfinService implements IMediaServerService {
       `[DEBUG] JellyfinService.getLibraries() called, api=${!!this.api}, initialized=${this.initialized}`,
     );
     if (!this.api) {
-      this.logger.warn('[DEBUG] getLibraries() - API not initialized, returning []');
+      this.logger.warn(
+        '[DEBUG] getLibraries() - API not initialized, returning []',
+      );
       return [];
     }
 
     try {
       if (this.cache.data.has(JELLYFIN_CACHE_KEYS.LIBRARIES)) {
-        const cached = this.cache.data.get<MediaLibrary[]>(JELLYFIN_CACHE_KEYS.LIBRARIES) || [];
-        this.logger.debug(`[DEBUG] getLibraries() - returning ${cached.length} cached libraries`);
+        const cached =
+          this.cache.data.get<MediaLibrary[]>(JELLYFIN_CACHE_KEYS.LIBRARIES) ||
+          [];
+        this.logger.debug(
+          `[DEBUG] getLibraries() - returning ${cached.length} cached libraries`,
+        );
         return cached;
       }
 
-      this.logger.debug('[DEBUG] getLibraries() - calling getMediaFolders()...');
+      this.logger.debug(
+        '[DEBUG] getLibraries() - calling getMediaFolders()...',
+      );
       const response = await getLibraryApi(this.api).getMediaFolders();
       this.logger.debug(
         `[DEBUG] getMediaFolders() returned ${response.data.Items?.length || 0} items: ${JSON.stringify(response.data.Items?.map((i) => ({ name: i.Name, type: i.CollectionType })))}`,
@@ -283,7 +291,9 @@ export class JellyfinService implements IMediaServerService {
       `[DEBUG] JellyfinService.getLibraryContents(${libraryId}) called, api=${!!this.api}`,
     );
     if (!this.api) {
-      this.logger.warn('[DEBUG] getLibraryContents() - API not initialized, returning empty');
+      this.logger.warn(
+        '[DEBUG] getLibraryContents() - API not initialized, returning empty',
+      );
       return { items: [], totalSize: 0, offset: 0, limit: 50 };
     }
 

@@ -1,5 +1,11 @@
 import { EMediaServerType } from '@maintainerr/contracts';
-import { forwardRef, Inject, Injectable, Logger, Optional } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  Logger,
+  Optional,
+} from '@nestjs/common';
 import { Settings } from '../../settings/entities/settings.entities';
 import { SettingsService } from '../../settings/settings.service';
 import { JellyfinService } from './jellyfin/jellyfin-adapter.service';
@@ -43,7 +49,9 @@ export class MediaServerFactory {
 
     // Handle case where getSettings returns error response
     if (!isSettings(settings)) {
-      this.logger.debug('[DEBUG] getService() - settings not valid, falling back to Plex');
+      this.logger.debug(
+        '[DEBUG] getService() - settings not valid, falling back to Plex',
+      );
       // Fall back to Plex if settings unavailable
       return this.plexAdapter;
     }

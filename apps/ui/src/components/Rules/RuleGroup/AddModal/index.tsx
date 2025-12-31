@@ -10,6 +10,7 @@ import {
   UploadIcon,
 } from '@heroicons/react/solid'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { EPlexDataType } from '@maintainerr/contracts'
 import { isValidCron } from 'cron-validator'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -30,7 +31,6 @@ import {
 import { Application } from '../../../../contexts/constants-context'
 import { useMediaServerType } from '../../../../hooks/useMediaServerType'
 import { PostApiHandler } from '../../../../utils/ApiHandler'
-import { EPlexDataType } from '@maintainerr/contracts'
 import Alert from '../../../Common/Alert'
 import Button from '../../../Common/Button'
 import CommunityRuleModal from '../../../Common/CommunityRuleModal'
@@ -234,14 +234,28 @@ const AddModal = (props: AddModal) => {
   const selectedLibraryId = watch('libraryId') ?? ''
   const selectedType = watch('dataType') ?? ''
   // Debug logging for library type selection
-  const selectedLib = libraries?.find((el: MediaLibrary) => el.id === selectedLibraryId)
-  console.log('[DEBUG] AddModal: selectedLibraryId =', selectedLibraryId, 'selectedLib =', selectedLib, 'dataType =', selectedType)
+  const selectedLib = libraries?.find(
+    (el: MediaLibrary) => el.id === selectedLibraryId,
+  )
+  console.log(
+    '[DEBUG] AddModal: selectedLibraryId =',
+    selectedLibraryId,
+    'selectedLib =',
+    selectedLib,
+    'dataType =',
+    selectedType,
+  )
   const selectedLibraryType: undefined | 'movie' | 'show' = selectedType
     ? +selectedType === EPlexDataType.MOVIES
       ? 'movie'
       : 'show'
     : undefined
-  console.log('[DEBUG] AddModal: selectedLibraryType =', selectedLibraryType, 'EPlexDataType.MOVIES =', EPlexDataType.MOVIES)
+  console.log(
+    '[DEBUG] AddModal: selectedLibraryType =',
+    selectedLibraryType,
+    'EPlexDataType.MOVIES =',
+    EPlexDataType.MOVIES,
+  )
   const manualCollectionEnabled = watch('manualCollection')
   const useRulesEnabled = watch('useRules')
   const arrActionValue = watch('arrAction') as number | undefined
@@ -360,14 +374,17 @@ const AddModal = (props: AddModal) => {
     console.log('[DEBUG] updateLibraryId: found lib =', lib)
 
     if (lib) {
-      const newDataType = lib.type === 'movie'
-        ? EPlexDataType.MOVIES.toString()
-        : EPlexDataType.SHOWS.toString()
-      console.log('[DEBUG] updateLibraryId: lib.type =', lib.type, 'setting dataType to', newDataType)
-      setValue(
-        'dataType',
+      const newDataType =
+        lib.type === 'movie'
+          ? EPlexDataType.MOVIES.toString()
+          : EPlexDataType.SHOWS.toString()
+      console.log(
+        '[DEBUG] updateLibraryId: lib.type =',
+        lib.type,
+        'setting dataType to',
         newDataType,
       )
+      setValue('dataType', newDataType)
     }
 
     setValue('radarrSettingsId', undefined)

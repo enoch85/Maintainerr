@@ -414,9 +414,8 @@ export class SettingsService implements SettingDto {
     try {
       // Import Jellyfin SDK dynamically to avoid circular dependencies
       const { Jellyfin } = await import('@jellyfin/sdk');
-      const { getSystemApi, getUserApi } = await import(
-        '@jellyfin/sdk/lib/utils/api'
-      );
+      const { getSystemApi, getUserApi } =
+        await import('@jellyfin/sdk/lib/utils/api');
 
       const jellyfin = new Jellyfin({
         clientInfo: { name: 'Maintainerr', version: '2.0.0' },
