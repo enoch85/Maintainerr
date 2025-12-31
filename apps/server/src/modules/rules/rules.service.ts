@@ -295,6 +295,9 @@ export class RulesService {
 
   async setRules(params: RulesDto) {
     try {
+      this.logger.log(
+        `[DEBUG setRules] params.libraryId = "${params.libraryId}" (type: ${typeof params.libraryId})`,
+      );
       let state: ReturnStatus = this.createReturnStatus(true, 'Success');
       params.rules.forEach((rule) => {
         if (state.code === 1) {

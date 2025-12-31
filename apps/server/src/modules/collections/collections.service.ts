@@ -1050,6 +1050,9 @@ export class CollectionsService {
   ): Promise<addCollectionDbResponse> {
     try {
       const mediaServerType = await this.getMediaServerType();
+      this.logger.log(
+        `[DEBUG addCollectionToDB] collection.libraryId = "${collection.libraryId}" (type: ${typeof collection.libraryId})`,
+      );
       this.infoLogger(`Adding collection to the Database..`);
       try {
         const dbCol = (
