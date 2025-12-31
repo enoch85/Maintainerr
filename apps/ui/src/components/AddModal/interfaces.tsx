@@ -4,7 +4,7 @@ export interface IAddModal {
   onCancel: () => void
   onSubmit: () => void
   libraryId?: string
-  type?: number
+  type?: MediaItemType
   plexId: number | string
   modalType: 'add' | 'exclude'
 }

@@ -1,3 +1,4 @@
+import { MediaItemType } from '@maintainerr/contracts'
 import { Transition } from '@headlessui/react'
 import { DocumentAddIcon, DocumentRemoveIcon } from '@heroicons/react/solid'
 import React, { memo, useEffect, useState } from 'react'
@@ -19,7 +20,7 @@ interface IMediaCard {
   inProgress?: boolean
   tmdbid?: string
   libraryId?: string
-  type?: 1 | 2 | 3 | 4
+  type?: MediaItemType
   collectionPage: boolean
   daysLeft?: number
   exclusionId?: number

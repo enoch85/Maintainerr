@@ -122,15 +122,7 @@ const OverviewContent = (props: IOverviewContent) => {
             <MediaCard
               id={el.id}
               libraryId={props.libraryId}
-              type={
-                el.type === 'movie'
-                  ? 1
-                  : el.type === 'show'
-                    ? 2
-                    : el.type === 'season'
-                      ? 3
-                      : 4
-              }
+              type={el.type}
               image={''}
               summary={
                 el.type === 'movie' || el.type === 'show'
@@ -148,15 +140,7 @@ const OverviewContent = (props: IOverviewContent) => {
                     ? getParentYear(el)?.toString()
                     : el.year?.toString()
               }
-              mediaType={
-                el.type === 'movie'
-                  ? 'movie'
-                  : el.type === 'show'
-                    ? 'show'
-                    : el.type === 'season'
-                      ? 'season'
-                      : 'episode'
-              }
+              mediaType={el.type}
               title={
                 el.grandparentTitle
                   ? el.grandparentTitle
