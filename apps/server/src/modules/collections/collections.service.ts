@@ -1055,44 +1055,55 @@ export class CollectionsService {
       );
       this.infoLogger(`Adding collection to the Database..`);
       try {
-        const dbCol = (
-          await this.connection
-            .createQueryBuilder()
-            .insert()
-            .into(Collection)
-            .values([
-              {
-                title: collection.title,
-                description: collection.description,
-                mediaServerId: mediaServerId,
-                mediaServerType: mediaServerType,
-                type: collection.type,
-                libraryId: collection.libraryId,
-                arrAction: collection.arrAction ? collection.arrAction : 0,
-                isActive: collection.isActive,
-                visibleOnRecommended: collection.visibleOnRecommended,
-                visibleOnHome: collection.visibleOnHome,
-                deleteAfterDays: collection.deleteAfterDays,
-                listExclusions: collection.listExclusions,
-                forceOverseerr: collection.forceOverseerr,
-                keepLogsForMonths: collection.keepLogsForMonths,
-                tautulliWatchedPercentOverride:
-                  collection.tautulliWatchedPercentOverride ?? null,
-                manualCollection:
-                  collection.manualCollection !== undefined
-                    ? collection.manualCollection
-                    : false,
-                manualCollectionName:
-                  collection.manualCollectionName !== undefined
-                    ? collection.manualCollectionName
-                    : '',
-                sonarrSettingsId: collection.sonarrSettingsId,
-                radarrSettingsId: collection.radarrSettingsId,
-                sortTitle: collection.sortTitle,
-              },
-            ])
-            .execute()
-        ).generatedMaps[0] as addCollectionDbResponse;
+        const insertResult = await this.connection
+          .createQueryBuilder()
+          .insert()
+          .into(Collection)
+          .values([
+            {
+              title: collection.title,
+              description: collection.description,
+              mediaServerId: mediaServerId,
+              mediaServerType: mediaServerType,
+              type: collection.type,
+              libraryId: collection.libraryId,
+              arrAction: collection.arrAction ? collection.arrAction : 0,
+              isActive: collection.isActive,
+              visibleOnRecommended: collection.visibleOnRecommended,
+              visibleOnHome: collection.visibleOnHome,
+              deleteAfterDays: collection.deleteAfterDays,
+              listExclusions: collection.listExclusions,
+              forceOverseerr: collection.forceOverseerr,
+              keepLogsForMonths: collection.keepLogsForMonths,
+              tautulliWatchedPercentOverride:
+                collection.tautulliWatchedPercentOverride ?? null,
+              manualCollection:
+                collection.manualCollection !== undefined
+                  ? collection.manualCollection
+                  : false,
+              manualCollectionName:
+                collection.manualCollectionName !== undefined
+                  ? collection.manualCollectionName
+                  : '',
+              sonarrSettingsId: collection.sonarrSettingsId,
+              radarrSettingsId: collection.radarrSettingsId,
+              sortTitle: collection.sortTitle,
+            },
+          ])
+          .execute();
+
+        // generatedMaps only returns auto-generated columns (like id), not the full row
+        // We need to include mediaServerId since it was passed as a parameter
+        const generatedId = insertResult.generatedMaps[0] as { id: number };
+        const dbCol: addCollectionDbResponse = {
+          id: generatedId.id,
+          mediaServerId: mediaServerId,
+          isActive: collection.isActive,
+          visibleOnRecommended: collection.visibleOnRecommended,
+          visibleOnHome: collection.visibleOnHome,
+          deleteAfterDays: collection.deleteAfterDays,
+          manualCollection: collection.manualCollection ?? false,
+        };
 
         await this.addLogRecord(
           dbCol as Collection,
