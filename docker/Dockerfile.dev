@@ -57,8 +57,11 @@ RUN yarn config set enableScripts true
 # Set base path for UI (empty for root)
 RUN echo "VITE_BASE_PATH=" >> ./apps/ui/.env
 
-# Build all packages
-RUN yarn turbo build
+# Build all packages (without turbo to avoid crashes in LXC/container environments)
+# Build order matters: contracts first, then server and ui
+RUN yarn workspace @maintainerr/contracts build && \
+    yarn workspace @maintainerr/server build && \
+    yarn workspace @maintainerr/ui build
 
 # Only install production dependencies to reduce image size
 RUN yarn workspaces focus --all --production
