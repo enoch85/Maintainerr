@@ -29,18 +29,20 @@ RUN apk add --no-cache git python3 make g++ libc6-compat
 # Install turbo globally
 RUN yarn global add turbo@^2
 
-# Clone the specific branch
+# Clone the specific branch (full clone needed for postinstall scripts that use git rev-parse)
 RUN echo "Cloning branch: ${BRANCH} from ${REPO}" && \
-    git clone --depth 1 --branch ${BRANCH} ${REPO} . && \
+    git clone --branch ${BRANCH} ${REPO} . && \
     echo "Cloned commit: $(git rev-parse HEAD)"
 
 # Configure git for any postinstall scripts that might need it
 RUN git config --global --add safe.directory /app
 
-# Install dependencies with scripts disabled first, then rebuild native modules
-# This avoids issues with failing postinstall telemetry scripts
-RUN SCARF_ANALYTICS=false DO_NOT_TRACK=1 yarn install --network-timeout 99999999 --mode=skip-build && \
-    yarn rebuild better-sqlite3 esbuild
+# Set env vars to disable telemetry in postinstall scripts
+ENV SCARF_ANALYTICS=false
+ENV DO_NOT_TRACK=1
+
+# Install dependencies
+RUN yarn install --network-timeout 99999999
 
 # Set base path for UI (empty for root)
 RUN echo "VITE_BASE_PATH=" >> ./apps/ui/.env
