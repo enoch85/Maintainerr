@@ -28,9 +28,10 @@ export class ExclusionTypeCorrectorService implements OnModuleInit {
   @Timeout(5000)
   private async execute() {
     try {
-      const appStatus = await this.settings.testPlex();
+      // Check if any media server is configured (Plex or Jellyfin)
+      const isSetup = await this.settings.testSetup();
 
-      if (appStatus) {
+      if (isSetup) {
         // remove media exclusions that are no longer available
         await this.correctExclusionTypes();
       }

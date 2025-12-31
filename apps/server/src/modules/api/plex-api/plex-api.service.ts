@@ -124,6 +124,10 @@ export class PlexApiService {
 
   public async getStatus() {
     try {
+      if (!this.isPlexSetup()) {
+        this.logger.debug('Plex client not initialized, skipping getStatus');
+        return undefined;
+      }
       const response: PlexStatusResponse = await this.plexClient.query(
         '/',
         false,
