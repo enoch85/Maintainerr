@@ -10,7 +10,7 @@ import {
   UploadIcon,
 } from '@heroicons/react/solid'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { EPlexDataType, MediaItemType } from '@maintainerr/contracts'
+import { MediaItemType } from '@maintainerr/contracts'
 import { isValidCron } from 'cron-validator'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -1325,19 +1325,7 @@ const AddModal = (props: AddModal) => {
                         : 2
                       : 0
                   }
-                  dataType={
-                    // Convert MediaItemType string to EPlexDataType for RuleCreator
-                    // TODO: Migrate RuleCreator to use MediaItemType
-                    selectedType === 'movie'
-                      ? EPlexDataType.MOVIES
-                      : selectedType === 'show'
-                        ? EPlexDataType.SHOWS
-                        : selectedType === 'season'
-                          ? EPlexDataType.SEASONS
-                          : selectedType === 'episode'
-                            ? EPlexDataType.EPISODES
-                            : EPlexDataType.MOVIES
-                  }
+                  dataType={selectedType as MediaItemType || undefined}
                   editData={{ rules: rules }}
                   radarrSettingsId={radarrSettingsId}
                   sonarrSettingsId={sonarrSettingsId}

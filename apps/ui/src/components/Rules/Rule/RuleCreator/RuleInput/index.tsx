@@ -10,7 +10,7 @@ import {
   RulePossibility,
   RulePossibilityTranslations,
 } from '../../../../../contexts/constants-context'
-import { EPlexDataType } from '@maintainerr/contracts'
+import { type MediaItemType } from '@maintainerr/contracts'
 import LoadingSpinner from '../../../../Common/LoadingSpinner'
 
 enum RuleType {
@@ -38,7 +38,7 @@ interface IRuleInput {
   id?: number
   tagId?: number
   mediaType?: MediaType
-  dataType?: EPlexDataType
+  dataType?: MediaItemType
   section?: number
   newlyAdded?: number[]
   editData?: { rule: IRule }

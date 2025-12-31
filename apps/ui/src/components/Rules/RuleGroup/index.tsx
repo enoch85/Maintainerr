@@ -4,7 +4,7 @@ import {
   StopIcon,
   TrashIcon,
 } from '@heroicons/react/solid'
-import { EPlexDataType } from '@maintainerr/contracts'
+import { type MediaItemType } from '@maintainerr/contracts'
 import { isAxiosError } from 'axios'
 import clsx from 'clsx'
 import { useState } from 'react'
@@ -31,7 +31,7 @@ export interface IRuleGroup {
   collectionId: number
   rules: IRuleJson[]
   useRules: boolean
-  dataType: EPlexDataType
+  dataType: MediaItemType
   notifications?: AgentConfiguration[]
   collection?: ICollection
   ruleHandlerCronSchedule?: string | null

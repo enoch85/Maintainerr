@@ -1,4 +1,4 @@
-import { EPlexDataType, type MediaItem } from '@maintainerr/contracts'
+import { type MediaItem, type MediaItemType } from '@maintainerr/contracts'
 
 export interface ICollection {
   id?: number
@@ -12,7 +12,7 @@ export interface ICollection {
   deleteAfterDays?: number
   listExclusions?: boolean
   forceOverseerr?: boolean
-  type: EPlexDataType
+  type: MediaItemType
   arrAction: number
   media: ICollectionMedia[]
   manualCollection: boolean

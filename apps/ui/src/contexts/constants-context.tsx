@@ -1,4 +1,4 @@
-import { EPlexDataType, MediaType } from '@maintainerr/contracts'
+import { type MediaItemType, MediaType } from '@maintainerr/contracts'
 
 // Re-export MediaType for backward compatibility with existing imports
 export { MediaType }
@@ -18,7 +18,7 @@ export interface IProperty {
   humanName: string
   mediaType: MediaType
   type: IPropertyType
-  showType?: EPlexDataType[]
+  showType?: MediaItemType[]
 }
 
 interface IPropertyType {
