@@ -10,7 +10,10 @@ import {
   UploadIcon,
 } from '@heroicons/react/solid'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { EPlexDataType, plexDataTypeToMediaItemType } from '@maintainerr/contracts'
+import {
+  EPlexDataType,
+  plexDataTypeToMediaItemType,
+} from '@maintainerr/contracts'
 import { isValidCron } from 'cron-validator'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'

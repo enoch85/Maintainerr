@@ -1,6 +1,5 @@
 import {
   BasicResponseDto,
-  EPlexDataType,
   MediaItemType,
   RuleExecuteStatusDto,
 } from '@maintainerr/contracts'
