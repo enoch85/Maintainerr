@@ -1,4 +1,4 @@
-import { EMediaDataType } from '@maintainerr/contracts';
+import { MediaItemType } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import _ from 'lodash';
 import { PlexLibraryItem } from '../../../modules/api/plex-api/interfaces/library.interfaces';
@@ -41,7 +41,7 @@ export class SonarrGetterService {
   async get(
     id: number,
     libItem: PlexLibraryItem,
-    dataType?: EMediaDataType,
+    dataType?: MediaItemType,
     ruleGroup?: RulesDto,
   ) {
     if (!ruleGroup.collection?.sonarrSettingsId) {
@@ -56,10 +56,7 @@ export class SonarrGetterService {
       let origLibItem: PlexLibraryItem = undefined;
       let seasonRatingKey: number | undefined = undefined;
 
-      if (
-        dataType === EMediaDataType.SEASONS ||
-        dataType === EMediaDataType.EPISODES
-      ) {
+      if (dataType === 'season' || dataType === 'episode') {
         origLibItem = _.cloneDeep(libItem);
         seasonRatingKey = libItem.grandparentRatingKey
           ? libItem.parentIndex
@@ -99,9 +96,7 @@ export class SonarrGetterService {
       // Lazy-load episode / episodeFile only if a property actually needs them.
       let episodePromise: Promise<SonarrEpisode | undefined> | undefined;
       const getEpisode = async (): Promise<SonarrEpisode | undefined> => {
-        if (
-          ![EMediaDataType.SEASONS, EMediaDataType.EPISODES].includes(dataType)
-        ) {
+        if (dataType !== 'season' && dataType !== 'episode') {
           return undefined;
         }
 
@@ -140,7 +135,7 @@ export class SonarrGetterService {
       const getEpisodeFile = async (): Promise<
         SonarrEpisodeFile | undefined
       > => {
-        if (dataType !== EMediaDataType.EPISODES) {
+        if (dataType !== 'episode') {
           return undefined;
         }
 
@@ -164,10 +159,8 @@ export class SonarrGetterService {
             : null;
         }
         case 'diskSizeEntireShow': {
-          if (
-            [EMediaDataType.SEASONS, EMediaDataType.EPISODES].includes(dataType)
-          ) {
-            if (dataType === EMediaDataType.EPISODES) {
+          if (dataType === 'season' || dataType === 'episode') {
+            if (dataType === 'episode') {
               const episodeFile = await getEpisodeFile();
               return episodeFile?.size ? +episodeFile.size / 1048576 : null;
             } else {
@@ -200,16 +193,14 @@ export class SonarrGetterService {
         }
         case 'qualityProfileId': {
           const episodeFile = await getEpisodeFile();
-          if ([EMediaDataType.EPISODES].includes(dataType) && episodeFile) {
+          if (dataType === 'episode' && episodeFile) {
             return episodeFile.quality.quality.id;
           } else {
             return showResponse.qualityProfileId;
           }
         }
         case 'firstAirDate': {
-          if (
-            [EMediaDataType.SEASONS, EMediaDataType.EPISODES].includes(dataType)
-          ) {
+          if (dataType === 'season' || dataType === 'episode') {
             const episode = await getEpisode();
             return episode?.airDate ? new Date(episode.airDate) : null;
           } else {
@@ -219,9 +210,7 @@ export class SonarrGetterService {
           }
         }
         case 'seasons': {
-          if (
-            [EMediaDataType.SEASONS, EMediaDataType.EPISODES].includes(dataType)
-          ) {
+          if (dataType === 'season' || dataType === 'episode') {
             return season?.statistics?.totalEpisodeCount
               ? +season.statistics.totalEpisodeCount
               : null;
@@ -242,7 +231,7 @@ export class SonarrGetterService {
             : null;
         }
         case 'monitored': {
-          if (dataType === EMediaDataType.SEASONS) {
+          if (dataType === 'season') {
             return showResponse.added !== '0001-01-01T00:00:00Z' && season
               ? season.monitored
                 ? 1
@@ -250,7 +239,7 @@ export class SonarrGetterService {
               : null;
           }
 
-          if (dataType === EMediaDataType.EPISODES) {
+          if (dataType === 'episode') {
             const episode = await getEpisode();
             return showResponse.added !== '0001-01-01T00:00:00Z' && episode
               ? episode.monitored
@@ -268,7 +257,7 @@ export class SonarrGetterService {
         case 'unaired_episodes': {
           // returns true if a season with unaired episodes is found in monitored seasons
           const data: SonarrSeason[] = [];
-          if (dataType === EMediaDataType.SEASONS) {
+          if (dataType === 'season') {
             data.push(season);
           } else {
             data.push(...showResponse.seasons.filter((el) => el.monitored));
@@ -286,9 +275,7 @@ export class SonarrGetterService {
         }
         case 'seasons_monitored': {
           // returns the number of monitored seasons / episodes
-          if (
-            [EMediaDataType.SEASONS, EMediaDataType.EPISODES].includes(dataType)
-          ) {
+          if (dataType === 'season' || dataType === 'episode') {
             return season?.statistics?.episodeCount
               ? +season.statistics.episodeCount
               : null;
@@ -298,9 +285,7 @@ export class SonarrGetterService {
         }
         case 'part_of_latest_season': {
           // returns the true when this is the latest season or the episode is part of the latest season
-          if (
-            [EMediaDataType.SEASONS, EMediaDataType.EPISODES].includes(dataType)
-          ) {
+          if (dataType === 'season' || dataType === 'episode') {
             return season.seasonNumber && showResponse.seasons
               ? +season.seasonNumber ===
                   (
@@ -335,7 +320,7 @@ export class SonarrGetterService {
         case 'seriesFinale': {
           const episodes = await sonarrApiClient.getEpisodes(
             showResponse.id,
-            dataType === EMediaDataType.SEASONS ? origLibItem.index : undefined,
+            dataType === 'season' ? origLibItem.index : undefined,
           );
 
           if (!episodes) {

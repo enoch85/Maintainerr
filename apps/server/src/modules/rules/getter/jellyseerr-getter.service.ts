@@ -1,4 +1,4 @@
-import { EMediaDataType } from '@maintainerr/contracts';
+import { MediaItemType } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import _ from 'lodash';
 import {
@@ -48,7 +48,7 @@ export class JellyseerrGetterService {
     return this.mediaServerFactory.getService();
   }
 
-  async get(id: number, libItem: PlexLibraryItem, dataType?: EMediaDataType) {
+  async get(id: number, libItem: PlexLibraryItem, dataType?: MediaItemType) {
     try {
       let origLibItem = undefined;
       let seasonMediaResponse: JellyseerrSeasonResponse = undefined;
@@ -56,14 +56,11 @@ export class JellyseerrGetterService {
       let movieMediaResponse: JellyseerrMovieResponse = undefined;
 
       // get original show in case of season / episode
-      if (
-        dataType === EMediaDataType.SEASONS ||
-        dataType === EMediaDataType.EPISODES
-      ) {
+      if (dataType === 'season' || dataType === 'episode') {
         origLibItem = _.cloneDeep(libItem);
         const mediaServer = await this.getMediaServer();
         libItem = (await mediaServer.getMetadata(
-          dataType === EMediaDataType.SEASONS
+          dataType === 'season'
             ? libItem.parentRatingKey
             : libItem.grandparentRatingKey,
         )) as unknown as PlexLibraryItem;
@@ -82,20 +79,17 @@ export class JellyseerrGetterService {
           tvMediaResponse = await this.jellyseerrApi.getShow(
             tmdb.id.toString(),
           );
-          if (
-            dataType === EMediaDataType.SEASONS ||
-            dataType === EMediaDataType.EPISODES
-          ) {
+          if (dataType === 'season' || dataType === 'episode') {
             seasonMediaResponse = await this.jellyseerrApi.getSeason(
               tmdb.id.toString(),
-              dataType === EMediaDataType.SEASONS
+              dataType === 'season'
                 ? origLibItem.index
                 : origLibItem.parentIndex,
             );
             if (!seasonMediaResponse) {
               this.logger.debug(
                 `Couldn't fetch season data for '${libItem.title}' season ${
-                  dataType === EMediaDataType.SEASONS
+                  dataType === 'season'
                     ? origLibItem.index
                     : origLibItem.parentIndex
                 } from Jellyseerr. As a result, unreliable results are expected.`,
@@ -122,13 +116,12 @@ export class JellyseerrGetterService {
                 for (const request of mediaResponse.mediaInfo.requests) {
                   // for seasons, only add if user requested the correct season
                   if (
-                    (dataType === EMediaDataType.SEASONS ||
-                      dataType === EMediaDataType.EPISODES) &&
+                    (dataType === 'season' || dataType === 'episode') &&
                     request.type === 'tv'
                   ) {
                     const includesSeason = this.includesSeason(
                       request.seasons,
-                      dataType === EMediaDataType.SEASONS
+                      dataType === 'season'
                         ? origLibItem.index
                         : origLibItem.parentIndex,
                     );
@@ -179,18 +172,12 @@ export class JellyseerrGetterService {
             }
           }
           case 'amountRequested': {
-            return [EMediaDataType.SEASONS, EMediaDataType.EPISODES].includes(
-              dataType,
-            )
+            return (dataType === 'season' || dataType === 'episode')
               ? this.getSeasonRequests(origLibItem, tvMediaResponse).length
               : mediaResponse?.mediaInfo.requests.length;
           }
           case 'requestDate': {
-            if (
-              [EMediaDataType.SEASONS, EMediaDataType.EPISODES].includes(
-                dataType,
-              )
-            ) {
+            if (dataType === 'season' || dataType === 'episode') {
               const createdAt = this.getSeasonRequests(
                 origLibItem,
                 tvMediaResponse,
@@ -208,12 +195,12 @@ export class JellyseerrGetterService {
                 ? new Date(movieMediaResponse?.releaseDate)
                 : null;
             } else {
-              if (EMediaDataType.EPISODES === dataType) {
+              if (dataType === 'episode') {
                 const ep = seasonMediaResponse.episodes?.find(
                   (el) => el.episodeNumber === origLibItem.index,
                 );
                 return ep?.airDate ? new Date(ep.airDate) : null;
-              } else if (EMediaDataType.SEASONS === dataType) {
+              } else if (dataType === 'season') {
                 return seasonMediaResponse?.airDate
                   ? new Date(seasonMediaResponse.airDate)
                   : null;
@@ -225,11 +212,7 @@ export class JellyseerrGetterService {
             }
           }
           case 'approvalDate': {
-            if (
-              [EMediaDataType.SEASONS, EMediaDataType.EPISODES].includes(
-                dataType,
-              )
-            ) {
+            if (dataType === 'season' || dataType === 'episode') {
               const season = this.getSeasonRequests(
                 origLibItem,
                 tvMediaResponse,
@@ -251,11 +234,7 @@ export class JellyseerrGetterService {
             }
           }
           case 'mediaAddedAt': {
-            if (
-              [EMediaDataType.SEASONS, EMediaDataType.EPISODES].includes(
-                dataType,
-              )
-            ) {
+            if (dataType === 'season' || dataType === 'episode') {
               const season = this.getSeasonRequests(
                 origLibItem,
                 tvMediaResponse,
@@ -278,11 +257,7 @@ export class JellyseerrGetterService {
           }
           case 'isRequested': {
             try {
-              if (
-                [EMediaDataType.SEASONS, EMediaDataType.EPISODES].includes(
-                  dataType,
-                )
-              ) {
+              if (dataType === 'season' || dataType === 'episode') {
                 return this.getSeasonRequests(origLibItem, tvMediaResponse)
                   .length > 0
                   ? 1

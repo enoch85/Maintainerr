@@ -1,4 +1,3 @@
-import { EMediaDataType } from '@maintainerr/contracts';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Timeout } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -56,18 +55,8 @@ export class ExclusionTypeCorrectorService implements OnModuleInit {
         // remove record if not in media server
         await this.rulesService.removeExclusion(el.id);
       } else {
-        // Map EMediaDataType to the numeric values stored in the database
-        el.type = metaData?.type
-          ? metaData.type === EMediaDataType.MOVIES
-            ? 1
-            : metaData.type === EMediaDataType.SHOWS
-              ? 2
-              : metaData.type === EMediaDataType.SEASONS
-                ? 3
-                : metaData.type === EMediaDataType.EPISODES
-                  ? 4
-                  : undefined
-          : undefined;
+        // Assign MediaItemType string directly
+        el.type = metaData?.type;
       }
     }
 

@@ -1,4 +1,7 @@
-import { EPlexDataType } from '../utils/PlexDataType-enum'
+import { EPlexDataType, MediaType } from '@maintainerr/contracts'
+
+// Re-export MediaType for backward compatibility with existing imports
+export { MediaType }
 
 export interface IConstants {
   applications: IApplication[] | null
@@ -63,12 +66,6 @@ export const RulePossibilityTranslations = {
   [RulePossibility.COUNT_NOT_EQUALS]: 'Count Does Not Equal',
   [RulePossibility.COUNT_BIGGER]: 'Count Is Bigger Than',
   [RulePossibility.COUNT_SMALLER]: 'Count Is Smaller Than',
-}
-
-export const enum MediaType {
-  BOTH,
-  MOVIE,
-  SHOW,
 }
 
 export const enum Application {

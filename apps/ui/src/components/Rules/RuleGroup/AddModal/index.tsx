@@ -30,7 +30,7 @@ import {
 import { Application } from '../../../../contexts/constants-context'
 import { useMediaServerType } from '../../../../hooks/useMediaServerType'
 import { PostApiHandler } from '../../../../utils/ApiHandler'
-import { EPlexDataType } from '../../../../utils/PlexDataType-enum'
+import { EPlexDataType } from '@maintainerr/contracts'
 import Alert from '../../../Common/Alert'
 import Button from '../../../Common/Button'
 import CommunityRuleModal from '../../../Common/CommunityRuleModal'

@@ -1,9 +1,9 @@
 import {
-  EMediaDataType,
   MediaActor,
   MediaCollection,
   MediaGenre,
   MediaItem,
+  MediaItemType,
   MediaLibrary,
   MediaPlaylist,
   MediaProviderIds,
@@ -23,7 +23,6 @@ import {
   PlexGenre,
   PlexLibrary,
   PlexLibraryItem,
-  PlexRating,
   PlexSeenBy,
   PlexUserAccount,
 } from '../../plex-api/interfaces/library.interfaces';
@@ -47,41 +46,42 @@ export class PlexMapper {
   // ============================================================
 
   /**
-   * Convert Plex type string to EMediaDataType enum.
+   * Convert Plex type string to MediaItemType string.
+   * This is what the API returns to the frontend.
    */
-  static toMediaDataType(
+  static toMediaItemType(
     plexType: 'movie' | 'show' | 'season' | 'episode' | 'collection',
-  ): EMediaDataType {
+  ): MediaItemType {
     switch (plexType) {
       case 'movie':
-        return EMediaDataType.MOVIES;
+        return 'movie';
       case 'show':
-        return EMediaDataType.SHOWS;
+        return 'show';
       case 'season':
-        return EMediaDataType.SEASONS;
+        return 'season';
       case 'episode':
-        return EMediaDataType.EPISODES;
+        return 'episode';
       case 'collection':
-        // Collections aren't really a media type, but map to MOVIE for compatibility
-        return EMediaDataType.MOVIES;
+        // Collections aren't really a media type, but map to movie for compatibility
+        return 'movie';
       default:
-        return EMediaDataType.MOVIES;
+        return 'movie';
     }
   }
 
   /**
-   * Convert EMediaDataType to EPlexDataType.
+   * Convert MediaItemType to EPlexDataType.
    * Used when calling Plex API methods that require the Plex-specific enum.
    */
-  static toPlexDataType(type: EMediaDataType): EPlexDataType {
+  static toPlexDataType(type: MediaItemType): EPlexDataType {
     switch (type) {
-      case EMediaDataType.MOVIES:
+      case 'movie':
         return EPlexDataType.MOVIES;
-      case EMediaDataType.SHOWS:
+      case 'show':
         return EPlexDataType.SHOWS;
-      case EMediaDataType.SEASONS:
+      case 'season':
         return EPlexDataType.SEASONS;
-      case EMediaDataType.EPISODES:
+      case 'episode':
         return EPlexDataType.EPISODES;
       default:
         return EPlexDataType.MOVIES;
@@ -89,20 +89,20 @@ export class PlexMapper {
   }
 
   /**
-   * Convert EPlexDataType to EMediaDataType.
+   * Convert EPlexDataType enum to MediaItemType string.
    */
-  static fromPlexDataType(plexType: EPlexDataType): EMediaDataType {
+  static plexDataTypeToMediaItemType(plexType: EPlexDataType): MediaItemType {
     switch (plexType) {
       case EPlexDataType.MOVIES:
-        return EMediaDataType.MOVIES;
+        return 'movie';
       case EPlexDataType.SHOWS:
-        return EMediaDataType.SHOWS;
+        return 'show';
       case EPlexDataType.SEASONS:
-        return EMediaDataType.SEASONS;
+        return 'season';
       case EPlexDataType.EPISODES:
-        return EMediaDataType.EPISODES;
+        return 'episode';
       default:
-        return EMediaDataType.MOVIES;
+        return 'movie';
     }
   }
 
@@ -171,7 +171,7 @@ export class PlexMapper {
       guid: plex.guid,
       parentGuid: plex.parentGuid,
       grandparentGuid: plex.grandparentGuid,
-      type: PlexMapper.toMediaDataType(plex.type),
+      type: PlexMapper.toMediaItemType(plex.type),
       addedAt: new Date(plex.addedAt * 1000),
       updatedAt: plex.updatedAt ? new Date(plex.updatedAt * 1000) : undefined,
       providerIds: PlexMapper.extractProviderIds(plex.Guid),
@@ -219,7 +219,7 @@ export class PlexMapper {
       guid: plex.guid,
       parentGuid: undefined,
       grandparentGuid: undefined,
-      type: PlexMapper.toMediaDataType(plex.type),
+      type: PlexMapper.toMediaItemType(plex.type),
       addedAt: new Date(plex.addedAt * 1000),
       updatedAt: plex.updatedAt ? new Date(plex.updatedAt * 1000) : undefined,
       providerIds: PlexMapper.extractProviderIds(plex.Guid),

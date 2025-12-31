@@ -1,9 +1,9 @@
-import { EMediaDataType, EMediaServerType } from '@maintainerr/contracts';
+import { MediaItemType, EMediaServerType } from '@maintainerr/contracts';
 import { CollectionMedia } from '../entities/collection_media.entities';
 
 export interface ICollection {
   id?: number;
-  type: EMediaDataType;
+  type: MediaItemType;
   /** Media server collection ID (Plex ratingKey or Jellyfin GUID) */
   mediaServerId?: string;
   /** Which media server this collection belongs to */

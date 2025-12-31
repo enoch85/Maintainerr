@@ -161,7 +161,7 @@ export class RadarrGetterService {
         }
       } else {
         this.logger.debug(
-          `Couldn't fetch Radarr metadate for media '${libItem.title}' with id '${libItem.ratingKey}'. As a result, no Radarr query could be made.`,
+          `Couldn't fetch Radarr metadata for media '${libItem.title}' with id '${libItem.ratingKey}'. As a result, no Radarr query could be made.`,
         );
         return null;
       }

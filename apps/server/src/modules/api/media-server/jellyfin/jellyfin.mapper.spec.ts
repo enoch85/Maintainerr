@@ -3,78 +3,77 @@ import {
   type BaseItemDto,
   type UserDto,
 } from '@jellyfin/sdk/lib/generated-client/models';
-import { EMediaDataType } from '@maintainerr/contracts';
 import { JellyfinMapper } from './jellyfin.mapper';
 
 describe('JellyfinMapper', () => {
-  describe('toMediaDataType', () => {
+  describe('toMediaItemType', () => {
     it('should map Movie type correctly', () => {
-      expect(JellyfinMapper.toMediaDataType(BaseItemKind.Movie)).toBe(
-        EMediaDataType.MOVIES,
+      expect(JellyfinMapper.toMediaItemType(BaseItemKind.Movie)).toBe(
+        'movie',
       );
     });
 
     it('should map Movie string correctly', () => {
-      expect(JellyfinMapper.toMediaDataType('Movie')).toBe(
-        EMediaDataType.MOVIES,
+      expect(JellyfinMapper.toMediaItemType('Movie')).toBe(
+        'movie',
       );
     });
 
     it('should map Series type correctly', () => {
-      expect(JellyfinMapper.toMediaDataType(BaseItemKind.Series)).toBe(
-        EMediaDataType.SHOWS,
+      expect(JellyfinMapper.toMediaItemType(BaseItemKind.Series)).toBe(
+        'show',
       );
     });
 
     it('should map Series string correctly', () => {
-      expect(JellyfinMapper.toMediaDataType('Series')).toBe(
-        EMediaDataType.SHOWS,
+      expect(JellyfinMapper.toMediaItemType('Series')).toBe(
+        'show',
       );
     });
 
     it('should map Season type correctly', () => {
-      expect(JellyfinMapper.toMediaDataType(BaseItemKind.Season)).toBe(
-        EMediaDataType.SEASONS,
+      expect(JellyfinMapper.toMediaItemType(BaseItemKind.Season)).toBe(
+        'season',
       );
     });
 
     it('should map Episode type correctly', () => {
-      expect(JellyfinMapper.toMediaDataType(BaseItemKind.Episode)).toBe(
-        EMediaDataType.EPISODES,
+      expect(JellyfinMapper.toMediaItemType(BaseItemKind.Episode)).toBe(
+        'episode',
       );
     });
 
     it('should default to MOVIE for unknown types', () => {
-      expect(JellyfinMapper.toMediaDataType(undefined)).toBe(
-        EMediaDataType.MOVIES,
+      expect(JellyfinMapper.toMediaItemType(undefined)).toBe(
+        'movie',
       );
-      expect(JellyfinMapper.toMediaDataType('Unknown')).toBe(
-        EMediaDataType.MOVIES,
+      expect(JellyfinMapper.toMediaItemType('Unknown')).toBe(
+        'movie',
       );
     });
   });
 
   describe('toBaseItemKind', () => {
     it('should map MOVIE to Movie', () => {
-      expect(JellyfinMapper.toBaseItemKind(EMediaDataType.MOVIES)).toBe(
+      expect(JellyfinMapper.toBaseItemKind('movie')).toBe(
         BaseItemKind.Movie,
       );
     });
 
     it('should map SHOW to Series', () => {
-      expect(JellyfinMapper.toBaseItemKind(EMediaDataType.SHOWS)).toBe(
+      expect(JellyfinMapper.toBaseItemKind('show')).toBe(
         BaseItemKind.Series,
       );
     });
 
     it('should map SEASON to Season', () => {
-      expect(JellyfinMapper.toBaseItemKind(EMediaDataType.SEASONS)).toBe(
+      expect(JellyfinMapper.toBaseItemKind('season')).toBe(
         BaseItemKind.Season,
       );
     });
 
     it('should map EPISODE to Episode', () => {
-      expect(JellyfinMapper.toBaseItemKind(EMediaDataType.EPISODES)).toBe(
+      expect(JellyfinMapper.toBaseItemKind('episode')).toBe(
         BaseItemKind.Episode,
       );
     });
@@ -95,8 +94,8 @@ describe('JellyfinMapper', () => {
 
     it('should map multiple types correctly', () => {
       const result = JellyfinMapper.toBaseItemKinds([
-        EMediaDataType.MOVIES,
-        EMediaDataType.SHOWS,
+        'movie',
+        'show',
       ]);
       expect(result).toEqual([BaseItemKind.Movie, BaseItemKind.Series]);
     });
@@ -223,7 +222,7 @@ describe('JellyfinMapper', () => {
       expect(result.parentTitle).toBe('Season 1');
       expect(result.grandparentTitle).toBe('Test Series');
       expect(result.guid).toBe('abc123');
-      expect(result.type).toBe(EMediaDataType.MOVIES);
+      expect(result.type).toBe('movie');
     });
 
     it('should convert timestamps to Date objects', () => {

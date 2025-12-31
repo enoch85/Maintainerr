@@ -1,4 +1,4 @@
-import { EPlexDataType } from '../../utils/PlexDataType-enum'
+import { EPlexDataType } from '@maintainerr/contracts'
 import { IPlexMetadata } from '../Overview/Content'
 
 export interface ICollection {

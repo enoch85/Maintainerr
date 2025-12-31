@@ -2,12 +2,12 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
   CollectionVisibilitySettings,
   CreateCollectionParams,
-  EMediaDataType,
   EMediaServerFeature,
   EMediaServerType,
   LibraryQueryOptions,
   MediaCollection,
   MediaItem,
+  MediaItemType,
   MediaLibrary,
   MediaPlaylist,
   MediaServerStatus,
@@ -133,7 +133,7 @@ export class PlexAdapterService implements IMediaServerService {
 
   async getLibraryContentCount(
     libraryId: string,
-    type?: EMediaDataType,
+    type?: MediaItemType,
   ): Promise<number> {
     const plexType = type ? PlexMapper.toPlexDataType(type) : undefined;
     const count = await this.plexApi.getLibraryContentCount(
@@ -146,7 +146,7 @@ export class PlexAdapterService implements IMediaServerService {
   async searchLibraryContents(
     libraryId: string,
     query: string,
-    type?: EMediaDataType,
+    type?: MediaItemType,
   ): Promise<MediaItem[]> {
     const plexType = type ? PlexMapper.toPlexDataType(type) : undefined;
     const results = await this.plexApi.searchLibraryContents(

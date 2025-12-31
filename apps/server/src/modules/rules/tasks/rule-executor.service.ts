@@ -1,5 +1,4 @@
 import {
-  EMediaDataType,
   IComparisonStatistics,
   MaintainerrEvent,
   RuleHandlerFinishedEventDto,
@@ -31,7 +30,12 @@ import { RuleComparatorServiceFactory } from '../helpers/rule.comparator.service
 import { RulesService } from '../rules.service';
 import { RuleExecutorProgressService } from './rule-executor-progress.service';
 
-interface PlexData {
+/**
+ * Paginated media data for rule processing.
+ * Note: Uses PlexLibraryItem[] for now - see Phase C (PHASE_C_RULES_ENGINE.md section C.10)
+ * for planned migration to MediaItem[].
+ */
+interface MediaDataPage {
   page: number;
   finished: boolean;
   data: PlexLibraryItem[];
@@ -41,8 +45,8 @@ interface PlexData {
 export class RuleExecutorService {
   ruleConstants: RuleConstants;
   userId: string;
-  plexData: PlexData;
-  plexDataType: EPlexDataType;
+  mediaData: MediaDataPage;
+  mediaDataType: EPlexDataType;
   workerData: PlexLibraryItem[];
   resultData: PlexLibraryItem[];
   statisticsData: IComparisonStatistics[];
@@ -64,7 +68,7 @@ export class RuleExecutorService {
   ) {
     logger.setContext(RuleExecutorService.name);
     this.ruleConstants = new RuleConstants();
-    this.plexData = { page: 1, finished: false, data: [] };
+    this.mediaData = { page: 1, finished: false, data: [] };
   }
 
   private async getMediaServer(): Promise<IMediaServerService> {
@@ -134,22 +138,22 @@ export class RuleExecutorService {
           this.workerData = [];
           this.resultData = [];
           this.statisticsData = [];
-          this.plexData = { page: 0, finished: false, data: [] };
+          this.mediaData = { page: 0, finished: false, data: [] };
 
-          this.plexDataType = ruleGroup.dataType
+          this.mediaDataType = ruleGroup.dataType
             ? PlexMapper.toPlexDataType(ruleGroup.dataType)
             : undefined;
 
           // Run rules data chunks of 50
-          while (!this.plexData.finished) {
-            await this.getPlexData(ruleGroup.libraryId);
+          while (!this.mediaData.finished) {
+            await this.getMediaData(ruleGroup.libraryId);
 
             const ruleResult = await comparator.executeRulesWithData(
               ruleGroup,
-              this.plexData.data,
+              this.mediaData.data,
               () => {
                 this.progressManager.incrementProcessed(
-                  this.plexData.data.length,
+                  this.mediaData.data.length,
                 );
               },
               abortSignal,
@@ -317,7 +321,7 @@ export class RuleExecutorService {
         // check media server collection link
         if (collMediaData.length > 0 && collection.mediaServerId) {
           collection =
-            await this.collectionService.checkAutomaticPlexLink(collection);
+            await this.collectionService.checkAutomaticMediaServerLink(collection);
           // if collection was removed while it should be available.. resync current data
           if (!collection.mediaServerId) {
             collection = await this.collectionService.addToCollection(
@@ -499,26 +503,26 @@ export class RuleExecutorService {
     await this.collectionService.saveCollection(collection);
   }
 
-  private async getPlexData(libraryId: number): Promise<void> {
+  private async getMediaData(libraryId: number): Promise<void> {
     const size = 50;
     const response = await this.plexApi.getLibraryContents(
       libraryId.toString(),
       {
-        offset: +this.plexData.page * size,
+        offset: +this.mediaData.page * size,
         size: size,
       },
-      this.plexDataType,
+      this.mediaDataType,
       false, // avoid caching hundreds of paged responses during bulk scans
     );
     if (response) {
-      this.plexData.data = response.items ? response.items : [];
+      this.mediaData.data = response.items ? response.items : [];
 
-      if ((+this.plexData.page + 1) * size >= response.totalSize) {
-        this.plexData.finished = true;
+      if ((+this.mediaData.page + 1) * size >= response.totalSize) {
+        this.mediaData.finished = true;
       }
     } else {
-      this.plexData.finished = true;
+      this.mediaData.finished = true;
     }
-    this.plexData.page++;
+    this.mediaData.page++;
   }
 }

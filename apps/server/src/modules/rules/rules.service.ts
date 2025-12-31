@@ -1,7 +1,7 @@
 import {
   ECollectionLogType,
-  EMediaDataType,
   MaintainerrEvent,
+  MediaItemType,
 } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -323,10 +323,10 @@ export class RulesService {
           libraryId: +params.libraryId,
           type:
             lib.type === 'movie'
-              ? EMediaDataType.MOVIES
+              ? 'movie'
               : params.dataType !== undefined
                 ? params.dataType
-                : EMediaDataType.SHOWS,
+                : 'show',
           title: params.name,
           description: params.description,
           arrAction: params.arrAction ? params.arrAction : 0,
@@ -460,10 +460,10 @@ export class RulesService {
           libraryId: +params.libraryId,
           type:
             lib.type === 'movie'
-              ? EMediaDataType.MOVIES
+              ? 'movie'
               : params.dataType !== undefined
                 ? params.dataType
-                : EMediaDataType.SHOWS,
+                : 'show',
           title: params.name,
           description: params.description,
           arrAction: params.arrAction ? params.arrAction : 0,
@@ -588,10 +588,8 @@ export class RulesService {
     } else {
       // get type from metadata
       const metaData = await this.plexApi.getMetadata(data.mediaId.toString());
-      const type =
-        metaData.type === 'movie'
-          ? EMediaDataType.MOVIES
-          : EMediaDataType.SHOWS;
+      const type: MediaItemType =
+        metaData.type === 'movie' ? 'movie' : 'show';
 
       // get media - Plex API returns { plexId: number }[], convert to { mediaServerId: string }[]
       const plexMedia = await this.plexApi.getAllIdsForContextAction(
@@ -635,13 +633,13 @@ export class RulesService {
             // set media type
             type:
               metaData.type === 'movie'
-                ? 1
+                ? 'movie'
                 : metaData.type === 'show'
-                  ? 2
+                  ? 'show'
                   : metaData.type === 'season'
-                    ? 3
+                    ? 'season'
                     : metaData.type === 'episode'
-                      ? 4
+                      ? 'episode'
                       : undefined,
           },
         ]);
@@ -795,8 +793,7 @@ export class RulesService {
     let handleMedia: AddRemoveCollectionMedia[] = [];
 
     const metaData = await this.plexApi.getMetadata(mediaServerId);
-    const type =
-      metaData.type === 'movie' ? EMediaDataType.MOVIES : EMediaDataType.SHOWS;
+    const type: MediaItemType = metaData.type === 'movie' ? 'movie' : 'show';
 
     // Plex API returns { plexId: number }[], convert to { mediaServerId: string }[]
     const plexMedia = await this.plexApi.getAllIdsForContextAction(
@@ -1208,11 +1205,11 @@ export class RulesService {
       });
   }
 
-  public encodeToYaml(rules: RuleDto[], mediaType: number): ReturnStatus {
+  public encodeToYaml(rules: RuleDto[], mediaType: MediaItemType): ReturnStatus {
     return this.ruleYamlService.encode(rules, mediaType);
   }
 
-  public decodeFromYaml(yaml: string, mediaType: number): ReturnStatus {
+  public decodeFromYaml(yaml: string, mediaType: MediaItemType): ReturnStatus {
     return this.ruleYamlService.decode(yaml, mediaType);
   }
 

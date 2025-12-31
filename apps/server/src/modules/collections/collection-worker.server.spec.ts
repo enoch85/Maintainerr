@@ -1,4 +1,3 @@
-import { EMediaDataType } from '@maintainerr/contracts';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Mocked, TestBed } from '@suites/unit';
 import { Repository } from 'typeorm';
@@ -93,7 +92,7 @@ describe('CollectionWorkerService', () => {
 
     const collection = createCollection({
       arrAction: ServarrAction.DELETE,
-      type: EMediaDataType.SHOWS,
+      type: 'show',
     });
     const collectionMedia = createCollectionMedia(collection);
 

@@ -1,7 +1,7 @@
 import { ClipboardListIcon, DocumentAddIcon } from '@heroicons/react/solid'
 import { useRef, useState } from 'react'
 import { MediaType } from '../../../../contexts/constants-context'
-import { EPlexDataType } from '../../../../utils/PlexDataType-enum'
+import { EPlexDataType } from '@maintainerr/contracts'
 import Alert from '../../../Common/Alert'
 import SectionHeading from '../../../Common/SectionHeading'
 import RuleInput from './RuleInput'

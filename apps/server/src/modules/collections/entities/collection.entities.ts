@@ -7,7 +7,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { EMediaDataType, EMediaServerType } from '@maintainerr/contracts';
+import { EMediaServerType, MediaItemType } from '@maintainerr/contracts';
 import { CollectionLog } from '../../collections/entities/collection_log.entities';
 import { RulesDto } from '../../rules/dtos/rules.dto';
 import { RuleGroup } from '../../rules/entities/rule-group.entities';
@@ -64,8 +64,8 @@ export class Collection {
   @Column({ nullable: false, default: false })
   forceOverseerr: boolean;
 
-  @Column({ nullable: false, default: 1 })
-  type: EMediaDataType;
+  @Column({ nullable: false, default: 'movie' })
+  type: MediaItemType;
 
   @Column({ nullable: false, default: 6 })
   keepLogsForMonths: number;

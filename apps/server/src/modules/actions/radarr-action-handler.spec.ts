@@ -5,7 +5,6 @@ import {
   createCollectionMedia,
   createRadarrMovie,
 } from '../../../test/utils/data';
-import { EMediaDataType } from '@maintainerr/contracts';
 import { MediaServerFactory } from '../api/media-server/media-server.factory';
 import { IMediaServerService } from '../api/media-server/media-server.interface';
 import { RadarrApi } from '../api/servarr-api/helpers/radarr.helper';
@@ -46,7 +45,7 @@ describe('RadarrActionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.DELETE,
       radarrSettingsId: 1,
-      type: EMediaDataType.MOVIES,
+      type: 'movie',
     });
     const collectionMedia = createCollectionMedia(collection, {
       tmdbId: undefined,
@@ -66,7 +65,7 @@ describe('RadarrActionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.UNMONITOR,
       radarrSettingsId: 1,
-      type: EMediaDataType.MOVIES,
+      type: 'movie',
     });
     const collectionMedia = createCollectionMedia(collection, {
       tmdbId: 1,
@@ -96,7 +95,7 @@ describe('RadarrActionHandler', () => {
       const collection = createCollection({
         arrAction: action,
         radarrSettingsId: 1,
-        type: EMediaDataType.MOVIES,
+        type: 'movie',
       });
       const collectionMedia = createCollectionMedia(collection, {
         tmdbId: 1,
@@ -124,7 +123,7 @@ describe('RadarrActionHandler', () => {
       const collection = createCollection({
         arrAction: ServarrAction.UNMONITOR,
         radarrSettingsId: 1,
-        type: EMediaDataType.MOVIES,
+        type: 'movie',
         listExclusions,
       });
       const collectionMedia = createCollectionMedia(collection, {
@@ -152,7 +151,7 @@ describe('RadarrActionHandler', () => {
       const collection = createCollection({
         arrAction: ServarrAction.UNMONITOR_DELETE_ALL,
         radarrSettingsId: 1,
-        type: EMediaDataType.MOVIES,
+        type: 'movie',
         listExclusions,
       });
       const collectionMedia = createCollectionMedia(collection, {

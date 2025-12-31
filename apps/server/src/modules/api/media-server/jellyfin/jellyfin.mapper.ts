@@ -14,15 +14,15 @@
 import {
   type BaseItemDto,
   BaseItemKind,
-  type UserDto,
   type MediaSourceInfo,
+  type UserDto,
 } from '@jellyfin/sdk/lib/generated-client/models';
 import {
-  EMediaDataType,
   type MediaActor,
   type MediaCollection,
   type MediaGenre,
   type MediaItem,
+  type MediaItemType,
   type MediaLibrary,
   type MediaPlaylist,
   type MediaProviderIds,
@@ -43,39 +43,40 @@ export class JellyfinMapper {
   // ============================================================
 
   /**
-   * Convert Jellyfin BaseItemKind to EMediaDataType enum.
+   * Convert Jellyfin BaseItemKind to MediaItemType string.
+   * This is what the API returns to the frontend.
    */
-  static toMediaDataType(kind?: BaseItemKind | string): EMediaDataType {
+  static toMediaItemType(kind?: BaseItemKind | string): MediaItemType {
     switch (kind) {
       case BaseItemKind.Movie:
       case 'Movie':
-        return EMediaDataType.MOVIES;
+        return 'movie';
       case BaseItemKind.Series:
       case 'Series':
-        return EMediaDataType.SHOWS;
+        return 'show';
       case BaseItemKind.Season:
       case 'Season':
-        return EMediaDataType.SEASONS;
+        return 'season';
       case BaseItemKind.Episode:
       case 'Episode':
-        return EMediaDataType.EPISODES;
+        return 'episode';
       default:
-        return EMediaDataType.MOVIES;
+        return 'movie';
     }
   }
 
   /**
-   * Convert EMediaDataType to Jellyfin BaseItemKind.
+   * Convert MediaItemType to Jellyfin BaseItemKind.
    */
-  static toBaseItemKind(type: EMediaDataType): BaseItemKind {
+  static toBaseItemKind(type: MediaItemType): BaseItemKind {
     switch (type) {
-      case EMediaDataType.MOVIES:
+      case 'movie':
         return BaseItemKind.Movie;
-      case EMediaDataType.SHOWS:
+      case 'show':
         return BaseItemKind.Series;
-      case EMediaDataType.SEASONS:
+      case 'season':
         return BaseItemKind.Season;
-      case EMediaDataType.EPISODES:
+      case 'episode':
         return BaseItemKind.Episode;
       default:
         return BaseItemKind.Movie;
@@ -83,9 +84,9 @@ export class JellyfinMapper {
   }
 
   /**
-   * Convert multiple EMediaDataType values to BaseItemKind array.
+   * Convert multiple MediaItemType values to BaseItemKind array.
    */
-  static toBaseItemKinds(types?: EMediaDataType[]): BaseItemKind[] {
+  static toBaseItemKinds(types?: MediaItemType[]): BaseItemKind[] {
     if (!types?.length) {
       return [BaseItemKind.Movie, BaseItemKind.Series];
     }
@@ -145,7 +146,7 @@ export class JellyfinMapper {
       guid: item.Id || '', // Jellyfin uses Id as guid
       parentGuid: item.ParentId || undefined,
       grandparentGuid: item.SeriesId || undefined,
-      type: JellyfinMapper.toMediaDataType(item.Type),
+      type: JellyfinMapper.toMediaItemType(item.Type),
       addedAt: item.DateCreated ? new Date(item.DateCreated) : new Date(),
       updatedAt: (item as { DateLastSaved?: string }).DateLastSaved
         ? new Date((item as { DateLastSaved?: string }).DateLastSaved!)

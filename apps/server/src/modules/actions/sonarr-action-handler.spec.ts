@@ -5,7 +5,7 @@ import {
   createCollectionMediaWithMetadata,
   createSonarrSeries,
 } from '../../../test/utils/data';
-import { EMediaDataType, MediaItem } from '@maintainerr/contracts';
+import { MediaItem, MediaItemType } from '@maintainerr/contracts';
 import { MediaServerFactory } from '../api/media-server/media-server.factory';
 import { IMediaServerService } from '../api/media-server/media-server.interface';
 import { SonarrApi } from '../api/servarr-api/helpers/sonarr.helper';
@@ -47,22 +47,22 @@ describe('SonarrActionHandler', () => {
   };
 
   it.each([
-    { type: EMediaDataType.SEASONS, title: 'SEASONS' },
+    { type: 'season', title: 'SEASONS' },
     {
-      type: EMediaDataType.SHOWS,
+      type: 'show',
       title: 'SHOWS',
     },
     {
-      type: EMediaDataType.EPISODES,
+      type: 'episode',
       title: 'EPISODES',
     },
   ])(
     'should do nothing for $title when Show tmdbid failed lookup',
-    async ({ type }: { type: EMediaDataType }) => {
+    async ({ type }: { type: string }) => {
       const collection = createCollection({
         arrAction: ServarrAction.DELETE,
         sonarrSettingsId: 1,
-        type,
+        type: type as MediaItemType,
       });
       const collectionMedia = createCollectionMediaWithMetadata(collection, {
         tmdbId: 1,
@@ -85,22 +85,22 @@ describe('SonarrActionHandler', () => {
   );
 
   it.each([
-    { type: EMediaDataType.SEASONS, title: 'SEASONS' },
+    { type: 'season', title: 'SEASONS' },
     {
-      type: EMediaDataType.SHOWS,
+      type: 'show',
       title: 'SHOWS',
     },
     {
-      type: EMediaDataType.EPISODES,
+      type: 'episode',
       title: 'EPISODES',
     },
   ])(
     'should do nothing for $title if not found in Sonarr and action is UNMONITOR',
-    async ({ type }: { type: EMediaDataType }) => {
+    async ({ type }: { type: string }) => {
       const collection = createCollection({
         arrAction: ServarrAction.UNMONITOR,
         sonarrSettingsId: 1,
-        type,
+        type: type as MediaItemType,
       });
       const collectionMedia = createCollectionMediaWithMetadata(collection, {
         tmdbId: 1,
@@ -126,47 +126,47 @@ describe('SonarrActionHandler', () => {
 
   it.each([
     {
-      type: EMediaDataType.SEASONS,
+      type: 'season',
       title: 'SEASONS',
       action: ServarrAction.DELETE,
     },
     {
-      type: EMediaDataType.SEASONS,
+      type: 'season',
       title: 'SEASONS',
       action: ServarrAction.UNMONITOR_DELETE_ALL,
     },
     {
-      type: EMediaDataType.SEASONS,
+      type: 'season',
       title: 'SEASONS',
       action: ServarrAction.UNMONITOR_DELETE_EXISTING,
     },
     {
-      type: EMediaDataType.SHOWS,
+      type: 'show',
       title: 'SHOWS',
       action: ServarrAction.DELETE,
     },
     {
-      type: EMediaDataType.SHOWS,
+      type: 'show',
       title: 'SHOWS',
       action: ServarrAction.UNMONITOR_DELETE_ALL,
     },
     {
-      type: EMediaDataType.SHOWS,
+      type: 'show',
       title: 'SHOWS',
       action: ServarrAction.UNMONITOR_DELETE_EXISTING,
     },
     {
-      type: EMediaDataType.EPISODES,
+      type: 'episode',
       title: 'EPISODES',
       action: ServarrAction.DELETE,
     },
     {
-      type: EMediaDataType.EPISODES,
+      type: 'episode',
       title: 'EPISODES',
       action: ServarrAction.UNMONITOR_DELETE_ALL,
     },
     {
-      type: EMediaDataType.EPISODES,
+      type: 'episode',
       title: 'EPISODES',
       action: ServarrAction.UNMONITOR_DELETE_EXISTING,
     },
@@ -176,13 +176,13 @@ describe('SonarrActionHandler', () => {
       type,
       action,
     }: {
-      type: EMediaDataType;
+      type: string;
       action: ServarrAction;
     }) => {
       const collection = createCollection({
         arrAction: action,
         sonarrSettingsId: 1,
-        type,
+        type: type as MediaItemType,
       });
       const collectionMedia = createCollectionMediaWithMetadata(collection, {
         tmdbId: 1,
@@ -210,7 +210,7 @@ describe('SonarrActionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.DELETE,
       sonarrSettingsId: 1,
-      type: EMediaDataType.SEASONS,
+      type: 'season',
     });
     const collectionMedia = createCollectionMediaWithMetadata(collection, {
       tmdbId: 1,
@@ -245,7 +245,7 @@ describe('SonarrActionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.DELETE,
       sonarrSettingsId: 1,
-      type: EMediaDataType.EPISODES,
+      type: 'episode',
     });
     const collectionMedia = createCollectionMediaWithMetadata(collection, {
       tmdbId: 1,
@@ -280,7 +280,7 @@ describe('SonarrActionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.DELETE,
       sonarrSettingsId: 1,
-      type: EMediaDataType.SHOWS,
+      type: 'show',
     });
     const collectionMedia = createCollectionMediaWithMetadata(collection, {
       tmdbId: 1,
@@ -314,7 +314,7 @@ describe('SonarrActionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.UNMONITOR,
       sonarrSettingsId: 1,
-      type: EMediaDataType.SEASONS,
+      type: 'season',
     });
     const collectionMedia = createCollectionMediaWithMetadata(collection, {
       tmdbId: 1,
@@ -349,7 +349,7 @@ describe('SonarrActionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.UNMONITOR,
       sonarrSettingsId: 1,
-      type: EMediaDataType.EPISODES,
+      type: 'episode',
     });
     const collectionMedia = createCollectionMediaWithMetadata(collection, {
       tmdbId: 1,
@@ -384,7 +384,7 @@ describe('SonarrActionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.UNMONITOR,
       sonarrSettingsId: 1,
-      type: EMediaDataType.SHOWS,
+      type: 'show',
     });
     const collectionMedia = createCollectionMediaWithMetadata(collection, {
       tmdbId: 1,
@@ -424,7 +424,7 @@ describe('SonarrActionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.UNMONITOR_DELETE_ALL,
       sonarrSettingsId: 1,
-      type: EMediaDataType.SEASONS,
+      type: 'season',
     });
     const collectionMedia = createCollectionMediaWithMetadata(collection, {
       tmdbId: 1,
@@ -451,7 +451,7 @@ describe('SonarrActionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.UNMONITOR_DELETE_ALL,
       sonarrSettingsId: 1,
-      type: EMediaDataType.EPISODES,
+      type: 'episode',
     });
     const collectionMedia = createCollectionMediaWithMetadata(collection, {
       tmdbId: 1,
@@ -478,7 +478,7 @@ describe('SonarrActionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.UNMONITOR_DELETE_ALL,
       sonarrSettingsId: 1,
-      type: EMediaDataType.SHOWS,
+      type: 'show',
     });
     const collectionMedia = createCollectionMediaWithMetadata(collection, {
       tmdbId: 1,
@@ -518,7 +518,7 @@ describe('SonarrActionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.UNMONITOR_DELETE_EXISTING,
       sonarrSettingsId: 1,
-      type: EMediaDataType.SEASONS,
+      type: 'season',
     });
     const collectionMedia = createCollectionMediaWithMetadata(collection, {
       tmdbId: 1,
@@ -554,7 +554,7 @@ describe('SonarrActionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.UNMONITOR_DELETE_EXISTING,
       sonarrSettingsId: 1,
-      type: EMediaDataType.EPISODES,
+      type: 'episode',
     });
     const collectionMedia = createCollectionMediaWithMetadata(collection, {
       tmdbId: 1,
@@ -581,7 +581,7 @@ describe('SonarrActionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.UNMONITOR_DELETE_EXISTING,
       sonarrSettingsId: 1,
-      type: EMediaDataType.SHOWS,
+      type: 'show',
     });
     const collectionMedia = createCollectionMediaWithMetadata(collection, {
       tmdbId: 1,

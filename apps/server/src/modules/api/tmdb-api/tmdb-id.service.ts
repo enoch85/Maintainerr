@@ -1,4 +1,7 @@
-import { EMediaDataType, MediaItem } from '@maintainerr/contracts';
+import {
+  MediaItem,
+  MediaItemType,
+} from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import { MediaServerFactory } from '../media-server/media-server.factory';
 import { PlexMetadata } from '../../../modules/api/plex-api/interfaces/media.interface';
@@ -87,11 +90,7 @@ export class TmdbIdService {
         }
       }
       return {
-        type: [
-          EMediaDataType.SHOWS,
-          EMediaDataType.SEASONS,
-          EMediaDataType.EPISODES,
-        ].includes(item.type)
+        type: ['show', 'season', 'episode'].includes(item.type)
           ? 'tv'
           : 'movie',
         id: id,

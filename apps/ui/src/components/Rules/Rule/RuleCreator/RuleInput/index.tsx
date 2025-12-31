@@ -10,7 +10,7 @@ import {
   RulePossibility,
   RulePossibilityTranslations,
 } from '../../../../../contexts/constants-context'
-import { EPlexDataType } from '../../../../../utils/PlexDataType-enum'
+import { EPlexDataType } from '@maintainerr/contracts'
 import LoadingSpinner from '../../../../Common/LoadingSpinner'
 
 enum RuleType {

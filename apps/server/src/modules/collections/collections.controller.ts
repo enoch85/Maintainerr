@@ -1,4 +1,4 @@
-import { ECollectionLogType } from '@maintainerr/contracts';
+import { ECollectionLogType, MediaItemType } from '@maintainerr/contracts';
 import {
   Body,
   Controller,
@@ -94,7 +94,7 @@ export class CollectionsController {
   @Get()
   getCollections(
     @Query('libraryId') libraryId: number,
-    @Query('typeId') typeId: 1 | 2 | 3 | 4,
+    @Query('typeId') typeId: MediaItemType,
   ) {
     if (libraryId) {
       return this.collectionService.getCollections(libraryId, undefined);

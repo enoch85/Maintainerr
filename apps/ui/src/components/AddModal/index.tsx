@@ -1,4 +1,4 @@
-import { EMediaDataType } from '@maintainerr/contracts'
+import { MediaItemType } from '@maintainerr/contracts'
 import { useEffect, useMemo, useState } from 'react'
 import GetApiHandler, { PostApiHandler } from '../../utils/ApiHandler'
 import Alert from '../Common/Alert'
@@ -53,14 +53,14 @@ const AddModal = (props: IAddModal) => {
         : selectedSeasons
   }, [selectedSeasons, selectedEpisodes])
 
-  const selectedContext = useMemo(() => {
+  const selectedContext = useMemo((): MediaItemType => {
     return props.type === 2
       ? selectedEpisodes !== -1
-        ? EMediaDataType.EPISODES
+        ? 'episode'
         : selectedSeasons !== -1
-          ? EMediaDataType.SEASONS
-          : EMediaDataType.SHOWS
-      : EMediaDataType.MOVIES
+          ? 'season'
+          : 'show'
+      : 'movie'
   }, [selectedSeasons, selectedEpisodes])
 
   const handleCancel = () => {

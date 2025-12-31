@@ -1,4 +1,8 @@
-import { EMediaDataType, RuleValueType } from '@maintainerr/contracts';
+import {
+  MediaItemType,
+  isMediaType,
+  RuleValueType,
+} from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import cacheManager, { Cache } from '../../api/lib/cache';
 import { JellyfinService } from '../../api/media-server/jellyfin/jellyfin-adapter.service';
@@ -44,7 +48,7 @@ export class JellyfinGetterService {
   async get(
     id: number,
     libItem: PlexLibraryItem,
-    dataType?: EMediaDataType,
+    dataType?: MediaItemType,
     ruleGroup?: RulesDto,
   ): Promise<RuleValueType> {
     try {
@@ -176,11 +180,11 @@ export class JellyfinGetterService {
 
         case 'genre': {
           // For episodes/seasons, get genres from the show
-          if (metadata.type === EMediaDataType.EPISODES) {
+          if (isMediaType(metadata.type, 'episode')) {
             const grandparent = await getGrandparent();
             return grandparent?.genres?.map((g) => g.name) ?? [];
           }
-          if (metadata.type === EMediaDataType.SEASONS) {
+          if (isMediaType(metadata.type, 'season')) {
             const parent = await getParent();
             return parent?.genres?.map((g) => g.name) ?? [];
           }
@@ -400,9 +404,9 @@ export class JellyfinGetterService {
 
   private async getEpisodeCount(
     itemId: string,
-    type: EMediaDataType,
+    type: MediaItemType,
   ): Promise<number> {
-    if (type === EMediaDataType.SEASONS) {
+    if (type === 'season') {
       const episodes = await this.jellyfinService.getChildrenMetadata(itemId);
       return episodes.length;
     }
@@ -421,10 +425,10 @@ export class JellyfinGetterService {
 
   private async getViewedEpisodeCount(
     itemId: string,
-    type: EMediaDataType,
+    type: MediaItemType,
   ): Promise<number> {
     const seasons =
-      type === EMediaDataType.SEASONS
+      type === 'season'
         ? [{ id: itemId }]
         : await this.jellyfinService.getChildrenMetadata(itemId);
 
@@ -443,10 +447,10 @@ export class JellyfinGetterService {
 
   private async getLastEpisodeAddedAt(
     itemId: string,
-    type: EMediaDataType,
+    type: MediaItemType,
   ): Promise<Date | null> {
     const seasons =
-      type === EMediaDataType.SEASONS
+      type === 'season'
         ? [{ id: itemId }]
         : await this.jellyfinService.getChildrenMetadata(itemId);
 
@@ -471,15 +475,15 @@ export class JellyfinGetterService {
 
   private async getTotalShowViews(
     itemId: string,
-    type: EMediaDataType,
+    type: MediaItemType,
   ): Promise<number> {
-    if (type === EMediaDataType.EPISODES) {
+    if (type === 'episode') {
       const history = await this.jellyfinService.getWatchHistory(itemId);
       return history.length;
     }
 
     const seasons =
-      type === EMediaDataType.SEASONS
+      type === 'season'
         ? [{ id: itemId }]
         : await this.jellyfinService.getChildrenMetadata(itemId);
 
@@ -543,7 +547,7 @@ export class JellyfinGetterService {
 
   private async getPlaylistCount(
     itemId: string,
-    type: EMediaDataType,
+    type: MediaItemType,
   ): Promise<number> {
     const names = await this.getPlaylistNames(itemId, type);
     return names.length;
@@ -551,15 +555,15 @@ export class JellyfinGetterService {
 
   private async getPlaylistNames(
     itemId: string,
-    type: EMediaDataType,
+    type: MediaItemType,
   ): Promise<string[]> {
     const playlists = await this.jellyfinService.getPlaylists('');
     const matchingPlaylists: string[] = [];
 
     // For shows, check all episodes
-    if (type === EMediaDataType.SHOWS || type === EMediaDataType.SEASONS) {
+    if (type === 'show' || type === 'season') {
       const seasons =
-        type === EMediaDataType.SEASONS
+        type === 'season'
           ? [{ id: itemId }]
           : await this.jellyfinService.getChildrenMetadata(itemId);
 
@@ -640,10 +644,10 @@ export class JellyfinGetterService {
 
   private async getLastEpisodeAiredAt(
     itemId: string,
-    type: EMediaDataType,
+    type: MediaItemType,
   ): Promise<Date | null> {
     const seasons =
-      type === EMediaDataType.SEASONS
+      type === 'season'
         ? [{ id: itemId }]
         : await this.jellyfinService.getChildrenMetadata(itemId);
 

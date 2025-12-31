@@ -1,4 +1,4 @@
-import { EMediaDataType } from '@maintainerr/contracts'
+import { MediaItemType } from '@maintainerr/contracts'
 
 export interface IAddModal {
   onCancel: () => void
@@ -21,7 +21,7 @@ export interface ICollectionMedia {
   visibleOnRecommended?: boolean
   visibleOnHome?: boolean
   deleteAfterDays?: number
-  type?: EMediaDataType
+  type?: MediaItemType
   collectionMedia?: []
 }
 
@@ -29,5 +29,5 @@ export interface IAlterableMediaDto {
   id: number
   index?: number
   parenIndex?: number
-  type: EMediaDataType
+  type: MediaItemType
 }

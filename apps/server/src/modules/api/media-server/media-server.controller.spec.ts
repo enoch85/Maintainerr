@@ -1,9 +1,10 @@
 import {
   CollectionVisibilitySettings,
-  EMediaDataType,
+  CreateCollectionParams,
   EMediaServerType,
   MediaCollection,
   MediaItem,
+  MediaItemType,
   MediaLibrary,
   MediaServerStatus,
   MediaUser,
@@ -42,7 +43,7 @@ describe('MediaServerController', () => {
   const mockMediaItem: MediaItem = {
     id: 'item1',
     title: 'Test Movie',
-    type: EMediaDataType.MOVIES,
+    type: 'movie',
     year: 2023,
     addedAt: new Date(),
     guid: 'plex://movie/12345',
@@ -157,12 +158,12 @@ describe('MediaServerController', () => {
     });
 
     it('should return library content with type filter', async () => {
-      await controller.getLibraryContent('1', 1, 50, EMediaDataType.MOVIES);
+      await controller.getLibraryContent('1', 1, 50, 'movie');
 
       expect(mockMediaServerService.getLibraryContents).toHaveBeenCalledWith('1', {
         offset: 0,
         limit: 50,
-        type: EMediaDataType.MOVIES,
+        type: 'movie',
       });
     });
 
@@ -256,10 +257,10 @@ describe('MediaServerController', () => {
     });
 
     it('should create a collection', async () => {
-      const params = {
+      const params: CreateCollectionParams = {
         libraryId: '1',
         title: 'New Collection',
-        type: EMediaDataType.MOVIES,
+        type: 'movie',
       };
       const result = await controller.createCollection(params);
 

@@ -1,4 +1,3 @@
-import { EMediaDataType } from '@maintainerr/contracts';
 import { EPlexDataType } from '../../plex-api/enums/plex-data-type-enum';
 import { PlexCollection } from '../../plex-api/interfaces/collection.interface';
 import {
@@ -10,68 +9,68 @@ import {
 import { PlexMapper } from './plex.mapper';
 
 describe('PlexMapper', () => {
-  describe('toMediaDataType', () => {
+  describe('toMediaItemType', () => {
     it('should map movie type correctly', () => {
-      expect(PlexMapper.toMediaDataType('movie')).toBe(EMediaDataType.MOVIES);
+      expect(PlexMapper.toMediaItemType('movie')).toBe('movie');
     });
 
     it('should map show type correctly', () => {
-      expect(PlexMapper.toMediaDataType('show')).toBe(EMediaDataType.SHOWS);
+      expect(PlexMapper.toMediaItemType('show')).toBe('show');
     });
 
     it('should map season type correctly', () => {
-      expect(PlexMapper.toMediaDataType('season')).toBe(EMediaDataType.SEASONS);
+      expect(PlexMapper.toMediaItemType('season')).toBe('season');
     });
 
     it('should map episode type correctly', () => {
-      expect(PlexMapper.toMediaDataType('episode')).toBe(
-        EMediaDataType.EPISODES,
+      expect(PlexMapper.toMediaItemType('episode')).toBe(
+        'episode',
       );
     });
 
     it('should map collection type to movie as fallback', () => {
-      expect(PlexMapper.toMediaDataType('collection')).toBe(
-        EMediaDataType.MOVIES,
+      expect(PlexMapper.toMediaItemType('collection')).toBe(
+        'movie',
       );
     });
   });
 
   describe('toPlexDataType', () => {
     it('should map MOVIE to MOVIES', () => {
-      expect(PlexMapper.toPlexDataType(EMediaDataType.MOVIES)).toBe(
+      expect(PlexMapper.toPlexDataType('movie')).toBe(
         EPlexDataType.MOVIES,
       );
     });
 
     it('should map SHOW to SHOWS', () => {
-      expect(PlexMapper.toPlexDataType(EMediaDataType.SHOWS)).toBe(
+      expect(PlexMapper.toPlexDataType('show')).toBe(
         EPlexDataType.SHOWS,
       );
     });
 
     it('should map SEASON to SEASONS', () => {
-      expect(PlexMapper.toPlexDataType(EMediaDataType.SEASONS)).toBe(
+      expect(PlexMapper.toPlexDataType('season')).toBe(
         EPlexDataType.SEASONS,
       );
     });
 
     it('should map EPISODE to EPISODES', () => {
-      expect(PlexMapper.toPlexDataType(EMediaDataType.EPISODES)).toBe(
+      expect(PlexMapper.toPlexDataType('episode')).toBe(
         EPlexDataType.EPISODES,
       );
     });
   });
 
-  describe('fromPlexDataType', () => {
+  describe('plexDataTypeToMediaItemType', () => {
     it('should map MOVIES to MOVIE', () => {
-      expect(PlexMapper.fromPlexDataType(EPlexDataType.MOVIES)).toBe(
-        EMediaDataType.MOVIES,
+      expect(PlexMapper.plexDataTypeToMediaItemType(EPlexDataType.MOVIES)).toBe(
+        'movie',
       );
     });
 
     it('should map SHOWS to SHOW', () => {
-      expect(PlexMapper.fromPlexDataType(EPlexDataType.SHOWS)).toBe(
-        EMediaDataType.SHOWS,
+      expect(PlexMapper.plexDataTypeToMediaItemType(EPlexDataType.SHOWS)).toBe(
+        'show',
       );
     });
   });
@@ -203,7 +202,7 @@ describe('PlexMapper', () => {
       expect(result.title).toBe('Test Movie');
       expect(result.parentTitle).toBe('Parent Title');
       expect(result.guid).toBe('plex://movie/abc');
-      expect(result.type).toBe(EMediaDataType.MOVIES);
+      expect(result.type).toBe('movie');
     });
 
     it('should convert timestamps to Date objects', () => {

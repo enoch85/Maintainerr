@@ -1,4 +1,4 @@
-import { EMediaDataType } from '@maintainerr/contracts';
+import { MediaItemType } from '@maintainerr/contracts';
 import { ICollection } from '../../collections/interfaces/collection.interface';
 import { Notification } from '../../notifications/entities/notification.entities';
 import { RuleDto } from './rule.dto';
@@ -19,7 +19,7 @@ export class RulesDto {
   rules: RuleDto[] | RuleDbDto[];
   manualCollection?: boolean;
   manualCollectionName?: string;
-  dataType: EMediaDataType;
+  dataType: MediaItemType;
   tautulliWatchedPercentOverride?: number;
   notifications?: Notification[];
   radarrSettingsId?: number;

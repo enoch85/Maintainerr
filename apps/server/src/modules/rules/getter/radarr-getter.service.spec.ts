@@ -7,7 +7,6 @@ import {
   createRadarrQuality,
   createRulesDto,
 } from '../../../../test/utils/data';
-import { EMediaDataType } from '@maintainerr/contracts';
 import { PlexLibraryItem } from '../../api/plex-api/interfaces/library.interfaces';
 import { RadarrApi } from '../../api/servarr-api/helpers/radarr.helper';
 import { RadarrMovie } from '../../api/servarr-api/interfaces/radarr.interface';
@@ -42,7 +41,7 @@ describe('RadarrGetterService', () => {
     let plexLibraryItem: PlexLibraryItem;
 
     beforeEach(() => {
-      collectionMedia = createCollectionMedia(EMediaDataType.MOVIES);
+      collectionMedia = createCollectionMedia('movie');
       collectionMedia.collection.radarrSettingsId = 1;
       plexLibraryItem = createPlexLibraryItem('movie');
       tmdbIdService.getTmdbIdFromPlexRatingKey.mockResolvedValue({
@@ -64,7 +63,7 @@ describe('RadarrGetterService', () => {
         plexLibraryItem,
         createRulesDto({
           collection: collectionMedia.collection,
-          dataType: EMediaDataType.MOVIES,
+          dataType: 'movie',
         }),
       );
 
@@ -84,7 +83,7 @@ describe('RadarrGetterService', () => {
         plexLibraryItem,
         createRulesDto({
           collection: collectionMedia.collection,
-          dataType: EMediaDataType.MOVIES,
+          dataType: 'movie',
         }),
       );
 
@@ -102,7 +101,7 @@ describe('RadarrGetterService', () => {
         plexLibraryItem,
         createRulesDto({
           collection: collectionMedia.collection,
-          dataType: EMediaDataType.MOVIES,
+          dataType: 'movie',
         }),
       );
 
@@ -115,7 +114,7 @@ describe('RadarrGetterService', () => {
     let plexLibraryItem: PlexLibraryItem;
 
     beforeEach(() => {
-      collectionMedia = createCollectionMedia(EMediaDataType.MOVIES);
+      collectionMedia = createCollectionMedia('movie');
       collectionMedia.collection.radarrSettingsId = 1;
       plexLibraryItem = createPlexLibraryItem('movie');
       tmdbIdService.getTmdbIdFromPlexRatingKey.mockResolvedValue({
@@ -141,7 +140,7 @@ describe('RadarrGetterService', () => {
         plexLibraryItem,
         createRulesDto({
           collection: collectionMedia.collection,
-          dataType: EMediaDataType.MOVIES,
+          dataType: 'movie',
         }),
       );
 
@@ -159,7 +158,7 @@ describe('RadarrGetterService', () => {
         plexLibraryItem,
         createRulesDto({
           collection: collectionMedia.collection,
-          dataType: EMediaDataType.MOVIES,
+          dataType: 'movie',
         }),
       );
 
@@ -172,7 +171,7 @@ describe('RadarrGetterService', () => {
     let plexLibraryItem: PlexLibraryItem;
 
     beforeEach(() => {
-      collectionMedia = createCollectionMedia(EMediaDataType.MOVIES);
+      collectionMedia = createCollectionMedia('movie');
       collectionMedia.collection.radarrSettingsId = 1;
       plexLibraryItem = createPlexLibraryItem('movie');
       tmdbIdService.getTmdbIdFromPlexRatingKey.mockResolvedValue({
@@ -194,7 +193,7 @@ describe('RadarrGetterService', () => {
         plexLibraryItem,
         createRulesDto({
           collection: collectionMedia.collection,
-          dataType: EMediaDataType.MOVIES,
+          dataType: 'movie',
         }),
       );
 
@@ -212,7 +211,7 @@ describe('RadarrGetterService', () => {
         plexLibraryItem,
         createRulesDto({
           collection: collectionMedia.collection,
-          dataType: EMediaDataType.MOVIES,
+          dataType: 'movie',
         }),
       );
 
@@ -232,7 +231,7 @@ describe('RadarrGetterService', () => {
         plexLibraryItem,
         createRulesDto({
           collection: collectionMedia.collection,
-          dataType: EMediaDataType.MOVIES,
+          dataType: 'movie',
         }),
       );
 

@@ -13,9 +13,9 @@ import {
 import {
   CollectionVisibilitySettings,
   CreateCollectionParams,
-  EMediaDataType,
   MediaCollection,
   MediaItem,
+  MediaItemType,
   MediaLibrary,
   MediaServerStatus,
   MediaUser,
@@ -70,7 +70,7 @@ export class MediaServerController {
     @Param('id') id: string,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
-    @Query('type') type?: EMediaDataType,
+    @Query('type') type?: MediaItemType,
   ): Promise<PagedResult<MediaItem>> {
     const mediaServer = await this.mediaServerFactory.getService();
     const pageNum = page ?? 1;
@@ -88,7 +88,7 @@ export class MediaServerController {
   async searchLibraryContent(
     @Param('id') id: string,
     @Param('query') query: string,
-    @Query('type') type?: EMediaDataType,
+    @Query('type') type?: MediaItemType,
   ): Promise<MediaItem[]> {
     const mediaServer = await this.mediaServerFactory.getService();
     return mediaServer.searchLibraryContents(id, query, type);

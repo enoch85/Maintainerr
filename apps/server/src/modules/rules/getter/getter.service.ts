@@ -1,4 +1,4 @@
-import { EMediaDataType, RuleValueType } from '@maintainerr/contracts';
+import { MediaItemType, RuleValueType } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import { PlexLibraryItem } from '../../../modules/api/plex-api/interfaces/library.interfaces';
 import { Application } from '../constants/rules.constants';
@@ -27,7 +27,7 @@ export class ValueGetterService {
     [val1, val2]: [number, number],
     libItem: PlexLibraryItem,
     ruleGroup?: RulesDto,
-    dataType?: EMediaDataType,
+    dataType?: MediaItemType,
   ): Promise<RuleValueType> {
     switch (val1) {
       case Application.PLEX: {

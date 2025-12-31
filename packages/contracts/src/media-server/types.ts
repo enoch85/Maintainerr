@@ -1,4 +1,4 @@
-import { EMediaDataType } from './enums'
+import { MediaItemType } from './enums'
 
 /**
  * Provider IDs for external databases (IMDB, TMDB, TVDB)
@@ -76,8 +76,8 @@ export interface MediaItem {
   parentGuid?: string
   /** Grandparent GUID */
   grandparentGuid?: string
-  /** Media type */
-  type: EMediaDataType
+  /** Media type (string for API responses) */
+  type: MediaItemType
   /** When the item was added to the library */
   addedAt: Date
   /** When the item was last updated */
@@ -248,7 +248,7 @@ export interface MediaServerStatus {
  */
 export interface LibraryQueryOptions {
   /** Filter by media type */
-  type?: EMediaDataType
+  type?: MediaItemType
   /** Pagination offset */
   offset?: number
   /** Number of items to return */
@@ -266,7 +266,7 @@ export interface RecentlyAddedOptions {
   /** Number of items to return */
   limit?: number
   /** Filter by media type */
-  type?: EMediaDataType
+  type?: MediaItemType
 }
 
 /**
@@ -294,7 +294,7 @@ export interface CreateCollectionParams {
   /** Collection summary */
   summary?: string
   /** Media type for the collection */
-  type: EMediaDataType
+  type: MediaItemType
   /** Sort title override */
   sortTitle?: string
 }

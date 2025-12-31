@@ -1,4 +1,7 @@
-import { RuleExecuteStatusDto } from '@maintainerr/contracts';
+import {
+  MediaItemType,
+  RuleExecuteStatusDto,
+} from '@maintainerr/contracts';
 import {
   Body,
   ConflictException,
@@ -269,13 +272,10 @@ export class RulesController {
    */
   @Post('/yaml/encode')
   async yamlEncode(
-    @Body() body: { rules: string; mediaType: number },
+    @Body() body: { rules: string; mediaType: MediaItemType },
   ): Promise<ReturnStatus> {
     try {
-      return this.rulesService.encodeToYaml(
-        JSON.parse(body.rules),
-        body.mediaType,
-      );
+      return this.rulesService.encodeToYaml(JSON.parse(body.rules), body.mediaType);
     } catch (err) {
       return {
         code: 0,
@@ -292,7 +292,7 @@ export class RulesController {
    */
   @Post('/yaml/decode')
   async yamlDecode(
-    @Body() body: { yaml: string; mediaType: number },
+    @Body() body: { yaml: string; mediaType: MediaItemType },
   ): Promise<ReturnStatus> {
     try {
       return this.rulesService.decodeFromYaml(body.yaml, body.mediaType);

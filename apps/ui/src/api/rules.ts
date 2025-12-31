@@ -14,7 +14,7 @@ import GetApiHandler, {
   PostApiHandler,
   PutApiHandler,
 } from '../utils/ApiHandler'
-import { EPlexDataType } from '../utils/PlexDataType-enum'
+import { EPlexDataType } from '@maintainerr/contracts'
 
 export interface RuleGroupCollectionPayload {
   visibleOnRecommended: boolean

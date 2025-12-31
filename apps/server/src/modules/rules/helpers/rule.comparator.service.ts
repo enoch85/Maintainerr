@@ -1,5 +1,5 @@
 import {
-  EMediaDataType,
+  MediaItemType,
   IComparisonStatistics,
   IRuleComparisonResult,
   RuleValueType,
@@ -45,7 +45,7 @@ export class RuleComparatorService {
   workerData: PlexLibraryItem[];
   resultData: PlexLibraryItem[];
   plexData: PlexLibraryItem[];
-  plexDataType: EMediaDataType;
+  plexDataType: MediaItemType;
   statistics: IComparisonStatistics[];
   statisticWorker: IRuleComparisonResult[];
   abortSignal?: AbortSignal;

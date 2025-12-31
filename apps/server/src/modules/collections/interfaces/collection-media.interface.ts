@@ -1,4 +1,4 @@
-import { CollectionLogMeta, EMediaDataType } from '@maintainerr/contracts';
+import { CollectionLogMeta, MediaItemType } from '@maintainerr/contracts';
 
 export interface ICollectionMedia {
   id: number;
@@ -20,5 +20,5 @@ export interface IAlterableMediaDto {
   id: number;
   index?: number;
   parenIndex?: number;
-  type: EMediaDataType;
+  type: MediaItemType;
 }

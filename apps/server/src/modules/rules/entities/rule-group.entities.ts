@@ -8,6 +8,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { MediaItemType } from '@maintainerr/contracts';
 import { Collection } from '../../collections/entities/collection.entities';
 import { ICollection } from '../../collections/interfaces/collection.interface';
 import { Notification } from '../../notifications/entities/notification.entities';
@@ -37,7 +38,7 @@ export class RuleGroup {
   useRules: boolean;
 
   @Column({ nullable: true })
-  dataType: number;
+  dataType: MediaItemType | null;
 
   @Column({ nullable: true, default: null })
   ruleHandlerCronSchedule: string | null;

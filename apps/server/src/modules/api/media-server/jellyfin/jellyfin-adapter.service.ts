@@ -20,12 +20,12 @@ import {
 import {
   type CollectionVisibilitySettings,
   type CreateCollectionParams,
-  EMediaDataType,
   EMediaServerFeature,
   EMediaServerType,
   type LibraryQueryOptions,
   type MediaCollection,
   type MediaItem,
+  type MediaItemType,
   type MediaLibrary,
   type MediaPlaylist,
   type UpdateCollectionParams,
@@ -315,7 +315,7 @@ export class JellyfinService implements IMediaServerService {
 
   async getLibraryContentCount(
     libraryId: string,
-    type?: EMediaDataType,
+    type?: MediaItemType,
   ): Promise<number> {
     if (!this.api) return 0;
 
@@ -339,7 +339,7 @@ export class JellyfinService implements IMediaServerService {
   async searchLibraryContents(
     libraryId: string,
     query: string,
-    type?: EMediaDataType,
+    type?: MediaItemType,
   ): Promise<MediaItem[]> {
     if (!this.api) return [];
 
@@ -478,7 +478,7 @@ export class JellyfinService implements IMediaServerService {
         .map((hint) => ({
           id: hint.Id || '',
           title: hint.Name || '',
-          type: JellyfinMapper.toMediaDataType(hint.Type),
+          type: JellyfinMapper.toMediaItemType(hint.Type),
           guid: hint.Id || '',
           addedAt: new Date(),
           providerIds: {},

@@ -1,4 +1,4 @@
-import { EMediaDataType, RuleValueType } from '@maintainerr/contracts';
+import { MediaItemType, RuleValueType } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import {
   PlexLibraryItem,
@@ -35,7 +35,7 @@ export class PlexGetterService {
   async get(
     id: number,
     libItem: PlexLibraryItem,
-    dataType?: EMediaDataType,
+    dataType?: MediaItemType,
     ruleGroup?: RulesDto,
   ): Promise<RuleValueType> {
     try {

@@ -1,12 +1,12 @@
 import {
   CollectionVisibilitySettings,
   CreateCollectionParams,
-  EMediaDataType,
   EMediaServerFeature,
   EMediaServerType,
   LibraryQueryOptions,
   MediaCollection,
   MediaItem,
+  MediaItemType,
   MediaLibrary,
   MediaPlaylist,
   MediaServerStatus,
@@ -109,7 +109,7 @@ export interface IMediaServerService {
    */
   getLibraryContentCount(
     libraryId: string,
-    type?: EMediaDataType,
+    type?: MediaItemType,
   ): Promise<number>;
 
   /**
@@ -118,7 +118,7 @@ export interface IMediaServerService {
   searchLibraryContents(
     libraryId: string,
     query: string,
-    type?: EMediaDataType,
+    type?: MediaItemType,
   ): Promise<MediaItem[]>;
 
   // ============================================================

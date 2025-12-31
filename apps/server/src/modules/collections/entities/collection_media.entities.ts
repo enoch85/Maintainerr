@@ -44,16 +44,8 @@ export type { MediaItemWithParent };
 
 /**
  * Collection media with server-agnostic metadata.
- * Replaces the previous CollectionMediaWithPlexData.
  */
 export class CollectionMediaWithMetadata extends CollectionMedia {
   /** Server-agnostic media metadata */
   mediaData: MediaItemWithParent;
-}
-
-/**
- * @deprecated Use CollectionMediaWithMetadata instead
- */
-export class CollectionMediaWithPlexData extends CollectionMedia {
-  plexData: MediaItemWithParent;
 }

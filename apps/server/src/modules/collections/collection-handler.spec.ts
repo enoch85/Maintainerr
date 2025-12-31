@@ -8,7 +8,7 @@ import {
 import { RadarrActionHandler } from '../actions/radarr-action-handler';
 import { SonarrActionHandler } from '../actions/sonarr-action-handler';
 import { OverseerrApiService } from '../api/overseerr-api/overseerr-api.service';
-import { EMediaDataType, MediaItem } from '@maintainerr/contracts';
+import { MediaItem } from '@maintainerr/contracts';
 import { MediaServerFactory } from '../api/media-server/media-server.factory';
 import { IMediaServerService } from '../api/media-server/media-server.interface';
 import { SettingsService } from '../settings/settings.service';
@@ -55,7 +55,7 @@ describe('CollectionHandler', () => {
   it('should do nothing if action is DO_NOTHING', async () => {
     const collection = createCollection({
       arrAction: ServarrAction.DO_NOTHING,
-      type: EMediaDataType.MOVIES,
+      type: 'movie',
     });
     const collectionMedia = createCollectionMedia(collection);
 
@@ -73,7 +73,7 @@ describe('CollectionHandler', () => {
   it('should delete from disk', async () => {
     const collection = createCollection({
       arrAction: ServarrAction.DELETE,
-      type: EMediaDataType.SHOWS,
+      type: 'show',
     });
     const collectionMedia = createCollectionMedia(collection);
 
@@ -93,7 +93,7 @@ describe('CollectionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.DELETE,
       radarrSettingsId: 1,
-      type: EMediaDataType.MOVIES,
+      type: 'movie',
     });
     const collectionMedia = createCollectionMedia(collection);
 
@@ -114,7 +114,7 @@ describe('CollectionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.DELETE,
       sonarrSettingsId: 1,
-      type: EMediaDataType.SHOWS,
+      type: 'show',
     });
     const collectionMedia = createCollectionMedia(collection);
 
@@ -135,7 +135,7 @@ describe('CollectionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.DELETE,
       forceOverseerr: true,
-      type: EMediaDataType.SEASONS,
+      type: 'season',
     });
     const collectionMedia = createCollectionMediaWithMetadata(collection);
 
@@ -162,7 +162,7 @@ describe('CollectionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.DELETE,
       forceOverseerr: true,
-      type: EMediaDataType.EPISODES,
+      type: 'episode',
     });
     const collectionMedia = createCollectionMediaWithMetadata(collection);
 
@@ -189,7 +189,7 @@ describe('CollectionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.DELETE,
       forceOverseerr: true,
-      type: EMediaDataType.MOVIES,
+      type: 'movie',
     });
     const collectionMedia = createCollectionMedia(collection);
 
@@ -215,7 +215,7 @@ describe('CollectionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.DELETE,
       forceOverseerr: true,
-      type: EMediaDataType.SHOWS,
+      type: 'show',
     });
     const collectionMedia = createCollectionMedia(collection);
 
@@ -241,7 +241,7 @@ describe('CollectionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.DELETE,
       forceOverseerr: false,
-      type: EMediaDataType.MOVIES,
+      type: 'movie',
     });
     const collectionMedia = createCollectionMedia(collection);
 
@@ -262,7 +262,7 @@ describe('CollectionHandler', () => {
     const collection = createCollection({
       arrAction: ServarrAction.DELETE,
       forceOverseerr: false,
-      type: EMediaDataType.MOVIES,
+      type: 'movie',
     });
     const collectionMedia = createCollectionMedia(collection);
 

@@ -1,4 +1,4 @@
-import { EMediaDataType, MediaItem } from '@maintainerr/contracts';
+import { MediaItem } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import { MediaServerFactory } from '../api/media-server/media-server.factory';
 import { ServarrService } from '../api/servarr-api/servarr.service';
@@ -35,7 +35,7 @@ export class SonarrActionHandler {
     // get the tvdb id
     let tvdbId: number | undefined = undefined;
     switch (collection.type) {
-      case EMediaDataType.SEASONS:
+      case 'season':
         mediaData = await mediaServer.getMetadata(media.mediaServerId);
         tvdbId = await this.mediaIdFinder.findTvdbId(
           mediaData?.parentId,
@@ -49,7 +49,7 @@ export class SonarrActionHandler {
               )
             )?.id;
         break;
-      case EMediaDataType.EPISODES:
+      case 'episode':
         mediaData = await mediaServer.getMetadata(media.mediaServerId);
         tvdbId = await this.mediaIdFinder.findTvdbId(
           mediaData?.grandparentId,
@@ -104,7 +104,7 @@ export class SonarrActionHandler {
     switch (collection.arrAction) {
       case ServarrAction.DELETE:
         switch (collection.type) {
-          case EMediaDataType.SEASONS:
+          case 'season':
             sonarrMedia = await sonarrApiClient.unmonitorSeasons(
               sonarrMedia.id,
               mediaData?.index,
@@ -114,7 +114,7 @@ export class SonarrActionHandler {
               `[Sonarr] Removed season ${mediaData?.index} from show '${sonarrMedia.title}'`,
             );
             break;
-          case EMediaDataType.EPISODES:
+          case 'episode':
             await sonarrApiClient.UnmonitorDeleteEpisodes(
               sonarrMedia.id,
               mediaData?.parentIndex,
@@ -137,7 +137,7 @@ export class SonarrActionHandler {
         break;
       case ServarrAction.UNMONITOR:
         switch (collection.type) {
-          case EMediaDataType.SEASONS:
+          case 'season':
             sonarrMedia = await sonarrApiClient.unmonitorSeasons(
               sonarrMedia.id,
               mediaData?.index,
@@ -147,7 +147,7 @@ export class SonarrActionHandler {
               `[Sonarr] Unmonitored season ${mediaData?.index} from show '${sonarrMedia.title}'`,
             );
             break;
-          case EMediaDataType.EPISODES:
+          case 'episode':
             await sonarrApiClient.UnmonitorDeleteEpisodes(
               sonarrMedia.id,
               mediaData?.parentIndex,
@@ -179,7 +179,7 @@ export class SonarrActionHandler {
         break;
       case ServarrAction.UNMONITOR_DELETE_ALL:
         switch (collection.type) {
-          case EMediaDataType.SHOWS:
+          case 'show':
             sonarrMedia = await sonarrApiClient.unmonitorSeasons(
               sonarrMedia.id,
               'all',
@@ -205,7 +205,7 @@ export class SonarrActionHandler {
         break;
       case ServarrAction.UNMONITOR_DELETE_EXISTING:
         switch (collection.type) {
-          case EMediaDataType.SEASONS:
+          case 'season':
             sonarrMedia = await sonarrApiClient.unmonitorSeasons(
               sonarrMedia.id,
               mediaData?.index,
@@ -216,7 +216,7 @@ export class SonarrActionHandler {
               `[Sonarr] Removed exisiting episodes from season ${mediaData?.index} from show '${sonarrMedia.title}'`,
             );
             break;
-          case EMediaDataType.SHOWS:
+          case 'show':
             sonarrMedia = await sonarrApiClient.unmonitorSeasons(
               sonarrMedia.id,
               'existing',

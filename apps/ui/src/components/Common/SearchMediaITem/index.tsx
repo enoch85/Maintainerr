@@ -1,7 +1,7 @@
 import { SingleValue } from 'react-select'
 import AsyncSelect from 'react-select/async'
 import GetApiHandler from '../../../utils/ApiHandler'
-import { EPlexDataType } from '../../../utils/PlexDataType-enum'
+import { EPlexDataType } from '@maintainerr/contracts'
 import { IPlexMetadata } from '../../Overview/Content'
 
 export interface IMediaOptions {

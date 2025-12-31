@@ -8,19 +8,23 @@ export enum EMediaServerType {
 }
 
 /**
- * Media data type enumeration
- * Server-agnostic media type classification
- * Uses numeric values and plural names for database compatibility with existing EPlexDataType data
+ * String type representation for media data types
+ * Uses singular lowercase names to match API conventions
  */
-export enum EMediaDataType {
-  MOVIES = 1,
-  SHOWS = 2,
-  SEASONS = 3,
-  EPISODES = 4,
-}
+export type MediaItemType = 'movie' | 'show' | 'season' | 'episode'
 
 /**
- * EMediaDataType values as strings for YAML serialization
+ * MediaItemType values array for validation and iteration
+ */
+export const MediaItemTypes: MediaItemType[] = [
+  'movie',
+  'show',
+  'season',
+  'episode',
+]
+
+/**
+ * MediaItemType values as uppercase strings for YAML serialization
  */
 export const MediaDataTypeStrings: string[] = [
   'MOVIES',
@@ -28,6 +32,23 @@ export const MediaDataTypeStrings: string[] = [
   'SEASONS',
   'EPISODES',
 ]
+
+/**
+ * Check if a MediaItemType matches a specific type
+ */
+export function isMediaType(
+  itemType: MediaItemType | null | undefined,
+  expectedType: MediaItemType,
+): boolean {
+  return itemType === expectedType
+}
+
+/**
+ * Validate if a string is a valid MediaItemType
+ */
+export function isValidMediaItemType(type: string): type is MediaItemType {
+  return MediaItemTypes.includes(type as MediaItemType)
+}
 
 /**
  * Feature flags for capability detection

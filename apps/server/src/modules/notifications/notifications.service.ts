@@ -1,6 +1,5 @@
 import {
   BasicResponseDto,
-  EMediaDataType,
   MaintainerrEvent,
   MediaItem,
 } from '@maintainerr/contracts';

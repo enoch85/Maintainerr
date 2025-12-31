@@ -1,4 +1,4 @@
-import { EMediaDataType } from '@maintainerr/contracts';
+import { MediaItemType } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import { RadarrActionHandler } from '../actions/radarr-action-handler';
 import { SonarrActionHandler } from '../actions/sonarr-action-handler';
@@ -85,7 +85,7 @@ export class CollectionHandler {
       // overseerr, if forced. Otherwise rely on media sync
       if (this.settings.overseerrConfigured() && collection.forceOverseerr) {
         switch (collection.type) {
-          case EMediaDataType.SEASONS:
+          case 'season':
             const mediaDataSeason = await mediaServer.getMetadata(
               media.mediaServerId,
             );
@@ -101,7 +101,7 @@ export class CollectionHandler {
               );
             }
             break;
-          case EMediaDataType.EPISODES:
+          case 'episode':
             const mediaDataEpisode = await mediaServer.getMetadata(
               media.mediaServerId,
             );
