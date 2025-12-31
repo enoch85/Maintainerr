@@ -1,15 +1,4 @@
-import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { Jellyfin, type Api } from '@jellyfin/sdk';
-import {
-  getItemsApi,
-  getLibraryApi,
-  getUserApi,
-  getCollectionApi,
-  getSystemApi,
-  getSearchApi,
-  getPlaylistsApi,
-  getUserViewsApi,
-} from '@jellyfin/sdk/lib/utils/api';
 import {
   BaseItemKind,
   ItemFields,
@@ -18,27 +7,36 @@ import {
   SortOrder,
 } from '@jellyfin/sdk/lib/generated-client/models';
 import {
-  type CollectionVisibilitySettings,
-  type CreateCollectionParams,
+  getCollectionApi,
+  getItemsApi,
+  getLibraryApi,
+  getSearchApi,
+  getSystemApi,
+  getUserApi,
+} from '@jellyfin/sdk/lib/utils/api';
+import {
   EMediaServerFeature,
   EMediaServerType,
+  type CollectionVisibilitySettings,
+  type CreateCollectionParams,
   type LibraryQueryOptions,
   type MediaCollection,
   type MediaItem,
   type MediaItemType,
   type MediaLibrary,
   type MediaPlaylist,
-  type UpdateCollectionParams,
   type MediaServerStatus,
   type MediaUser,
   type PagedResult,
   type RecentlyAddedOptions,
+  type UpdateCollectionParams,
   type WatchRecord,
 } from '@maintainerr/contracts';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { SettingsService } from '../../../settings/settings.service';
-import type { IMediaServerService } from '../media-server.interface';
+import cacheManager, { type Cache } from '../../lib/cache';
 import { supportsFeature } from '../media-server.constants';
-import { JellyfinMapper } from './jellyfin.mapper';
+import type { IMediaServerService } from '../media-server.interface';
 import {
   JELLYFIN_BATCH_SIZE,
   JELLYFIN_CACHE_KEYS,
@@ -46,8 +44,8 @@ import {
   JELLYFIN_CLIENT_INFO,
   JELLYFIN_DEVICE_INFO,
 } from './jellyfin.constants';
+import { JellyfinMapper } from './jellyfin.mapper';
 import type { JellyfinWatchedCacheEntry } from './jellyfin.types';
-import cacheManager, { type Cache } from '../../lib/cache';
 
 /**
  * Jellyfin media server service implementation.

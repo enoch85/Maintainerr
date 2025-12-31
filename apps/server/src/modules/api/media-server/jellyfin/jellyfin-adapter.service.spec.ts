@@ -1,7 +1,7 @@
-import { Mocked, TestBed } from '@suites/unit';
 import { EMediaServerFeature, EMediaServerType } from '@maintainerr/contracts';
-import { JellyfinService } from './jellyfin-adapter.service';
+import { Mocked, TestBed } from '@suites/unit';
 import { SettingsService } from '../../../settings/settings.service';
+import { JellyfinService } from './jellyfin-adapter.service';
 
 // Mock the @jellyfin/sdk module and its generated client
 jest.mock('@jellyfin/sdk', () => ({
