@@ -255,7 +255,7 @@ export class CollectionsService {
     }
   }
 
-  async getCollections(libraryId?: number, typeId?: MediaItemType) {
+  async getCollections(libraryId?: string, typeId?: MediaItemType) {
     try {
       const collections = await this.collectionRepo.find(
         libraryId
@@ -314,7 +314,7 @@ export class CollectionsService {
       ) {
         // Create collection via media server abstraction
         mediaCollection = await mediaServer.createCollection({
-          libraryId: collection.libraryId.toString(),
+          libraryId: collection.libraryId,
           title: collection.title,
           summary: collection?.description,
           sortTitle: collection?.sortTitle,
@@ -329,7 +329,7 @@ export class CollectionsService {
           mediaServer.supportsFeature(EMediaServerFeature.COLLECTION_VISIBILITY)
         ) {
           await this.plexApi.UpdateCollectionSettings({
-            libraryId: collection.libraryId.toString(),
+            libraryId: collection.libraryId,
             collectionId: mediaCollection.id,
             recommended: collection.visibleOnRecommended,
             ownHome: collection.visibleOnHome,
@@ -434,7 +434,7 @@ export class CollectionsService {
           !collection.manualCollection
         ) {
           await mediaServer.updateCollection({
-            libraryId: collection.libraryId.toString(),
+            libraryId: collection.libraryId,
             collectionId: dbCollection.mediaServerId,
             title: collection.title,
             summary: collection?.description,
@@ -447,7 +447,7 @@ export class CollectionsService {
             )
           ) {
             await mediaServer.updateCollectionVisibility({
-              libraryId: dbCollection.libraryId.toString(),
+              libraryId: dbCollection.libraryId,
               collectionId: dbCollection.mediaServerId,
               recommended: collection.visibleOnRecommended,
               ownHome: collection.visibleOnHome,
@@ -529,7 +529,7 @@ export class CollectionsService {
     if (collection.manualCollection) {
       const foundColl = await this.findMediaServerCollection(
         collection.manualCollectionName,
-        +collection.libraryId,
+        collection.libraryId,
       );
       if (foundColl) {
         collection.mediaServerId = foundColl.id;
@@ -569,7 +569,7 @@ export class CollectionsService {
       if (!serverColl) {
         const foundColl = await this.findMediaServerCollection(
           collection.title,
-          +collection.libraryId,
+          collection.libraryId,
         );
 
         if (foundColl) {
@@ -661,11 +661,11 @@ export class CollectionsService {
             if (collection.manualCollection) {
               newColl = await this.findMediaServerCollection(
                 collection.manualCollectionName,
-                +collection.libraryId,
+                collection.libraryId,
               );
             } else {
               newColl = await mediaServer.createCollection({
-                libraryId: collection.libraryId.toString(),
+                libraryId: collection.libraryId,
                 title: collection.title,
                 summary: collection.description,
                 sortTitle: collection.sortTitle,
@@ -1152,13 +1152,11 @@ export class CollectionsService {
    */
   public async findMediaServerCollection(
     name: string,
-    libraryId: number,
+    libraryId: string,
   ): Promise<MediaCollection | undefined> {
     try {
       const mediaServer = await this.getMediaServer();
-      const collections = await mediaServer.getCollections(
-        libraryId.toString(),
-      );
+      const collections = await mediaServer.getCollections(libraryId);
       if (collections) {
         const found = collections.find((coll) => {
           return coll.title.trim() === name.trim() && !coll.smart;

@@ -6,7 +6,7 @@ import { RuleDbDto } from './ruleDb.dto';
 
 export class RulesDto {
   id?: number;
-  libraryId: number;
+  libraryId: string;
   name: string;
   description: string;
   isActive?: boolean;

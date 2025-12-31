@@ -93,7 +93,7 @@ export class CollectionsController {
 
   @Get()
   getCollections(
-    @Query('libraryId') libraryId: number,
+    @Query('libraryId') libraryId: string,
     @Query('typeId') typeId: MediaItemType,
   ) {
     if (libraryId) {

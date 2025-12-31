@@ -86,7 +86,7 @@ export class RulesController {
     @Query()
     query: {
       activeOnly?: boolean;
-      libraryId?: number;
+      libraryId?: string;
       typeId?: number;
     },
   ) {

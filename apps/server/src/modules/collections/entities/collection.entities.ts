@@ -28,8 +28,8 @@ export class Collection {
   @Column({ type: 'varchar', default: EMediaServerType.PLEX })
   mediaServerType: EMediaServerType;
 
-  @Column()
-  libraryId: number;
+  @Column({ type: 'varchar' })
+  libraryId: string;
 
   @Column()
   title: string;

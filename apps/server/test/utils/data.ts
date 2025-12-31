@@ -64,7 +64,7 @@ export const createCollection = (
       'season',
       'show',
     ] as MediaItemType[]),
-    libraryId: faker.number.int(),
+    libraryId: faker.number.int().toString(),
     mediaServerId: faker.number.int().toString(),
     mediaServerType: EMediaServerType.PLEX,
     addDate: faker.date.past(),
@@ -545,7 +545,7 @@ export const createRulesDto = (
   properties: Partial<RulesDto> = {},
 ): RulesDto => ({
   id: faker.number.int(),
-  libraryId: faker.number.int(),
+  libraryId: faker.number.int().toString(),
   dataType: faker.helpers.arrayElement([
     'movie',
     'episode',

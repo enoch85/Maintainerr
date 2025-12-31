@@ -25,8 +25,8 @@ export class RuleGroup {
   @Column({ nullable: true })
   description: string;
 
-  @Column()
-  libraryId: number;
+  @Column({ type: 'varchar' })
+  libraryId: string;
 
   @Column({ default: true })
   isActive: boolean;

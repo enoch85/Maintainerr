@@ -8,7 +8,7 @@ export interface ICollection {
   mediaServerId?: string;
   /** Which media server this collection belongs to */
   mediaServerType?: EMediaServerType;
-  libraryId: number;
+  libraryId: string;
   title: string;
   description?: string;
   isActive: boolean;

@@ -1223,7 +1223,7 @@ export class SettingsService implements SettingDto {
           .createQueryBuilder()
           .update(RuleGroup)
           .set({
-            libraryId: 0, // Mark as needing library assignment
+            libraryId: '', // Mark as needing library assignment
           })
           .execute();
 
@@ -1235,7 +1235,7 @@ export class SettingsService implements SettingDto {
           .set({
             mediaServerId: null,
             mediaServerType: targetServerType,
-            libraryId: 0, // Will be updated when user assigns library
+            libraryId: '', // Will be updated when user assigns library
           })
           .execute();
 

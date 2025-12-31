@@ -150,7 +150,7 @@ export class RulesService {
 
   async getRuleGroups(
     activeOnly = false,
-    libraryId?: number,
+    libraryId?: string,
     typeId?: number,
   ): Promise<RulesDto[]> {
     try {
@@ -164,10 +164,10 @@ export class RulesService {
         )
         .andWhere(
           libraryId !== undefined
-            ? `rg.libraryId = ${libraryId}`
+            ? `rg.libraryId = '${libraryId}'`
             : typeId !== undefined
               ? `c.type = ${typeId}`
-              : 'rg.libraryId != -1',
+              : `rg.libraryId != '-1'`,
         )
         .orderBy('rg.id, r.id')
         .getMany();
@@ -316,11 +316,11 @@ export class RulesService {
       // create the collection
       const mediaServer = await this.getMediaServer();
       const lib = (await mediaServer.getLibraries()).find(
-        (el) => +el.id === +params.libraryId,
+        (el) => el.id === params.libraryId,
       );
       const collection = (
         await this.collectionService.createCollection({
-          libraryId: +params.libraryId,
+          libraryId: params.libraryId,
           type:
             lib.type === 'movie'
               ? 'movie'
@@ -453,11 +453,11 @@ export class RulesService {
         // update or create the collection
         const mediaServer = await this.getMediaServer();
         const lib = (await mediaServer.getLibraries()).find(
-          (el) => +el.id === +params.libraryId,
+          (el) => el.id === params.libraryId,
         );
 
         const collectionData = {
-          libraryId: +params.libraryId,
+          libraryId: params.libraryId,
           type:
             lib.type === 'movie'
               ? 'movie'
@@ -995,7 +995,7 @@ export class RulesService {
   private async createOrUpdateGroup(
     name: string,
     description: string,
-    libraryId: number,
+    libraryId: string,
     collectionId: number,
     useRules = true,
     isActive = true,
@@ -1008,7 +1008,7 @@ export class RulesService {
       const values = {
         name: name,
         description: description,
-        libraryId: +libraryId,
+        libraryId: libraryId,
         collectionId: +collectionId,
         isActive: isActive,
         useRules: useRules,

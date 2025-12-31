@@ -503,10 +503,10 @@ export class RuleExecutorService {
     await this.collectionService.saveCollection(collection);
   }
 
-  private async getMediaData(libraryId: number): Promise<void> {
+  private async getMediaData(libraryId: string): Promise<void> {
     const size = 50;
     const response = await this.plexApi.getLibraryContents(
-      libraryId.toString(),
+      libraryId,
       {
         offset: +this.mediaData.page * size,
         size: size,
