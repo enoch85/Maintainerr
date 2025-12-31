@@ -89,7 +89,7 @@ export class JellyfinMapper {
     if (!types?.length) {
       return [BaseItemKind.Movie, BaseItemKind.Series];
     }
-    return types.map((type) => this.toBaseItemKind(type));
+    return types.map((type) => JellyfinMapper.toBaseItemKind(type));
   }
 
   // ============================================================
@@ -145,13 +145,13 @@ export class JellyfinMapper {
       guid: item.Id || '', // Jellyfin uses Id as guid
       parentGuid: item.ParentId || undefined,
       grandparentGuid: item.SeriesId || undefined,
-      type: this.toMediaDataType(item.Type),
+      type: JellyfinMapper.toMediaDataType(item.Type),
       addedAt: item.DateCreated ? new Date(item.DateCreated) : new Date(),
       updatedAt: (item as { DateLastSaved?: string }).DateLastSaved
         ? new Date((item as { DateLastSaved?: string }).DateLastSaved!)
         : undefined,
-      providerIds: this.extractProviderIds(item.ProviderIds),
-      mediaSources: this.toMediaSources(item.MediaSources),
+      providerIds: JellyfinMapper.extractProviderIds(item.ProviderIds),
+      mediaSources: JellyfinMapper.toMediaSources(item.MediaSources),
       library: {
         id: item.ParentId || '',
         title: '',
@@ -169,10 +169,10 @@ export class JellyfinMapper {
       originallyAvailableAt: item.PremiereDate
         ? new Date(item.PremiereDate)
         : undefined,
-      ratings: this.toMediaRatings(item),
+      ratings: JellyfinMapper.toMediaRatings(item),
       userRating: item.UserData?.Rating || undefined,
-      genres: this.toMediaGenres(item.Genres),
-      actors: this.toMediaActors(item.People),
+      genres: JellyfinMapper.toMediaGenres(item.Genres),
+      actors: JellyfinMapper.toMediaActors(item.People),
       childCount: item.ChildCount || undefined,
       watchedChildCount: item.UserData?.PlayedPercentage
         ? Math.floor(
@@ -193,7 +193,7 @@ export class JellyfinMapper {
     return {
       id: item.Id || '',
       title: item.Name || '',
-      type: this.toLibraryType(item.CollectionType),
+      type: JellyfinMapper.toLibraryType(item.CollectionType),
       agent: undefined, // Jellyfin doesn't expose agent info
     };
   }

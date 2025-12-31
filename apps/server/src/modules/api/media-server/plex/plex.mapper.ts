@@ -171,11 +171,11 @@ export class PlexMapper {
       guid: plex.guid,
       parentGuid: plex.parentGuid,
       grandparentGuid: plex.grandparentGuid,
-      type: this.toMediaDataType(plex.type),
+      type: PlexMapper.toMediaDataType(plex.type),
       addedAt: new Date(plex.addedAt * 1000),
       updatedAt: plex.updatedAt ? new Date(plex.updatedAt * 1000) : undefined,
-      providerIds: this.extractProviderIds(plex.Guid),
-      mediaSources: this.toMediaSources(plex.Media),
+      providerIds: PlexMapper.extractProviderIds(plex.Guid),
+      mediaSources: PlexMapper.toMediaSources(plex.Media),
       library: {
         id: plex.librarySectionID?.toString(),
         title: plex.librarySectionTitle,
@@ -191,10 +191,10 @@ export class PlexMapper {
       originallyAvailableAt: plex.originallyAvailableAt
         ? new Date(plex.originallyAvailableAt)
         : undefined,
-      ratings: this.toMediaRatings(plex),
+      ratings: PlexMapper.toMediaRatings(plex),
       userRating: plex.userRating,
-      genres: this.toMediaGenres(plex.Genre),
-      actors: this.toMediaActors(plex.Role),
+      genres: PlexMapper.toMediaGenres(plex.Genre),
+      actors: PlexMapper.toMediaActors(plex.Role),
       childCount: plex.leafCount,
       watchedChildCount: plex.viewedLeafCount,
       index: plex.index,
@@ -219,11 +219,11 @@ export class PlexMapper {
       guid: plex.guid,
       parentGuid: undefined,
       grandparentGuid: undefined,
-      type: this.toMediaDataType(plex.type),
+      type: PlexMapper.toMediaDataType(plex.type),
       addedAt: new Date(plex.addedAt * 1000),
       updatedAt: plex.updatedAt ? new Date(plex.updatedAt * 1000) : undefined,
-      providerIds: this.extractProviderIds(plex.Guid),
-      mediaSources: this.toMediaSources(plex.Media || plex.media),
+      providerIds: PlexMapper.extractProviderIds(plex.Guid),
+      mediaSources: PlexMapper.toMediaSources(plex.Media || plex.media),
       library: {
         id: '', // Not available on PlexMetadata
         title: '',
@@ -237,10 +237,10 @@ export class PlexMapper {
       originallyAvailableAt: plex.originallyAvailableAt
         ? new Date(plex.originallyAvailableAt)
         : undefined,
-      ratings: this.metadataToMediaRatings(plex),
+      ratings: PlexMapper.metadataToMediaRatings(plex),
       userRating: plex.userRating,
-      genres: this.toMediaGenres(plex.Genre),
-      actors: this.toMediaActors(plex.Role),
+      genres: PlexMapper.toMediaGenres(plex.Genre),
+      actors: PlexMapper.toMediaActors(plex.Role),
       childCount: plex.leafCount,
       watchedChildCount: plex.viewedLeafCount,
       index: plex.index,
