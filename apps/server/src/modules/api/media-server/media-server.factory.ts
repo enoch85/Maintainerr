@@ -47,23 +47,32 @@ export class MediaServerFactory {
     const serverType =
       (settings.media_server_type as EMediaServerType) || EMediaServerType.PLEX;
 
-    return this.getServiceByType(serverType);
+    return await this.getServiceByType(serverType);
   }
 
   /**
    * Get a specific media server service by type.
    * Useful for testing or when the type is known.
+   * Ensures the service is initialized before returning.
    */
-  getServiceByType(serverType: EMediaServerType): IMediaServerService {
+  async getServiceByType(serverType: EMediaServerType): Promise<IMediaServerService> {
     switch (serverType) {
       case EMediaServerType.JELLYFIN:
         if (!this.jellyfinService) {
           throw new Error('Jellyfin service not available');
         }
+        // Initialize Jellyfin if not already initialized
+        if (!this.jellyfinService.isSetup()) {
+          await this.jellyfinService.initialize();
+        }
         return this.jellyfinService;
 
       case EMediaServerType.PLEX:
       default:
+        // Initialize Plex if not already initialized
+        if (!this.plexAdapter.isSetup()) {
+          await this.plexAdapter.initialize();
+        }
         return this.plexAdapter;
     }
   }
