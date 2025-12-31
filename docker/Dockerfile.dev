@@ -22,8 +22,9 @@ WORKDIR /app
 ARG BRANCH=jellyfin-phase-e
 ARG REPO=https://github.com/Maintainerr/Maintainerr.git
 
-# Install git and build tools
-RUN apk add --no-cache git
+# Install git and build tools for native modules (better-sqlite3, esbuild, etc.)
+# libc6-compat is needed for some prebuilt binaries
+RUN apk add --no-cache git python3 make g++ libc6-compat
 
 # Install turbo globally
 RUN yarn global add turbo@^2
