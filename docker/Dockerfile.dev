@@ -46,22 +46,26 @@ ENV DO_NOT_TRACK=1
 RUN yarn config set enableScripts false && \
     yarn install --network-timeout 99999999
 
-# Manually build essential native modules
-RUN cd node_modules/esbuild && node install.js || true
-RUN cd node_modules/better-sqlite3 && npx --yes prebuild-install -r napi || \
-    (cd node_modules/better-sqlite3 && npx --yes node-gyp rebuild --release) || true
-
-# Re-enable scripts for build phase
+# Re-enable scripts
 RUN yarn config set enableScripts true
+
+# Manually ensure esbuild binary is installed (required for Vite)
+# Force reinstall to ensure the correct platform binary is downloaded
+RUN npm rebuild esbuild
+
+# Manually build better-sqlite3 native module
+RUN cd node_modules/better-sqlite3 && npx --yes prebuild-install -r napi || \
+    (npx --yes node-gyp rebuild --release) || true
 
 # Set base path for UI (empty for root)
 RUN echo "VITE_BASE_PATH=" >> ./apps/ui/.env
 
 # Build all packages (without turbo to avoid crashes in LXC/container environments)
 # Build order matters: contracts first, then server and ui
-RUN yarn workspace @maintainerr/contracts build && \
-    yarn workspace @maintainerr/server build && \
-    yarn workspace @maintainerr/ui build
+# ESBUILD_WORKER_THREADS=1 helps with LXC container compatibility
+RUN ESBUILD_WORKER_THREADS=1 yarn workspace @maintainerr/contracts build && \
+    ESBUILD_WORKER_THREADS=1 yarn workspace @maintainerr/server build && \
+    ESBUILD_WORKER_THREADS=1 yarn workspace @maintainerr/ui build
 
 # Only install production dependencies to reduce image size
 RUN yarn workspaces focus --all --production
