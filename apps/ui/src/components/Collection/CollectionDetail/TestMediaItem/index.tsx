@@ -67,18 +67,12 @@ const TestMediaItem = (props: ITestMediaItem) => {
     if (!mediaItem || !ruleGroup) return false
 
     // if movies or shows is selected
-    if (
-      ruleGroup.dataType === 'movie' ||
-      ruleGroup.dataType === 'show'
-    ) {
+    if (ruleGroup.dataType === 'movie' || ruleGroup.dataType === 'show') {
       return true
     }
 
     // if seasons & season is selected
-    else if (
-      ruleGroup.dataType === 'season' &&
-      selectedSeasons !== -1
-    ) {
+    else if (ruleGroup.dataType === 'season' && selectedSeasons !== -1) {
       return true
     }
     // if episodes mediaitem, season & episode is selected
@@ -236,9 +230,7 @@ const TestMediaItem = (props: ITestMediaItem) => {
                       ? 'episodes'
                       : 'series'
               }, as a result only media of type ${
-                ruleGroup.dataType === 'movie'
-                  ? 'movies'
-                  : 'series'
+                ruleGroup.dataType === 'movie' ? 'movies' : 'series'
               } will be displayed in the search bar.`}
             </Alert>
           </div>
