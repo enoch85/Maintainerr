@@ -149,7 +149,10 @@ export const useMediaServerLibraries = (
   >({
     queryKey: mediaServerKeys.libraries(),
     queryFn: async () => {
-      return await GetApiHandler<MediaLibrary[]>('/media-server/libraries')
+      console.log('[DEBUG] useMediaServerLibraries - fetching /media-server/libraries')
+      const result = await GetApiHandler<MediaLibrary[]>('/media-server/libraries')
+      console.log('[DEBUG] useMediaServerLibraries - response:', result)
+      return result
     },
     staleTime: 0,
     ...options,

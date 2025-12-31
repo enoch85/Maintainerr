@@ -414,7 +414,9 @@ export class SettingsService implements SettingDto {
     try {
       // Import Jellyfin SDK dynamically to avoid circular dependencies
       const { Jellyfin } = await import('@jellyfin/sdk');
-      const { getSystemApi } = await import('@jellyfin/sdk/lib/utils/api');
+      const { getSystemApi, getUserApi } = await import(
+        '@jellyfin/sdk/lib/utils/api'
+      );
 
       const jellyfin = new Jellyfin({
         clientInfo: { name: 'Maintainerr', version: '2.0.0' },
@@ -434,10 +436,23 @@ export class SettingsService implements SettingDto {
         ),
       );
 
+      // First get public system info to check if server is reachable
       const systemInfo = await Promise.race([
         getSystemApi(api).getPublicSystemInfo(),
         timeoutPromise,
       ]);
+
+      // Then verify API key by calling an authenticated endpoint (getUsers requires auth)
+      try {
+        await Promise.race([getUserApi(api).getUsers(), timeoutPromise]);
+      } catch (authError) {
+        this.logger.error('Jellyfin API key validation failed: ', authError);
+        return {
+          status: 'NOK',
+          code: 0,
+          message: 'Invalid API key - authentication failed',
+        };
+      }
 
       this.logger.log(
         `Jellyfin connection test successful: ${systemInfo.data.ServerName} (${systemInfo.data.Version})`,

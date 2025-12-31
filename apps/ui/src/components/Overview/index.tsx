@@ -25,7 +25,10 @@ const Overview = () => {
   const pageData = useRef<number>(0)
   const SearchCtx = useContext(SearchContext)
 
-  const { data: libraries } = useMediaServerLibraries()
+  const { data: libraries, error: librariesError, isLoading: librariesLoading } = useMediaServerLibraries()
+
+  // Debug logging
+  console.log('[DEBUG] Overview: libraries =', libraries, 'error =', librariesError, 'loading =', librariesLoading)
 
   const fetchAmount = 30
 
@@ -34,7 +37,11 @@ const Overview = () => {
   }
 
   useEffect(() => {
-    if (!libraries || libraries.length === 0) return
+    console.log('[DEBUG] Overview useEffect[libraries]: libraries =', libraries)
+    if (!libraries || libraries.length === 0) {
+      console.log('[DEBUG] Overview: No libraries available yet')
+      return
+    }
 
     setTimeout(() => {
       if (
@@ -42,6 +49,7 @@ const Overview = () => {
         data.length === 0 &&
         SearchCtx.search.text === ''
       ) {
+        console.log('[DEBUG] Overview: Switching to library', selectedLibrary || libraries[0].id)
         switchLib(selectedLibrary ? selectedLibrary : +libraries[0].id)
       }
     }, 300)
@@ -93,6 +101,7 @@ const Overview = () => {
   }, [totalSize])
 
   const switchLib = (libraryId: number) => {
+    console.log('[DEBUG] Overview.switchLib() called with libraryId =', libraryId)
     // get all movies & shows from plex
     setIsLoading(true)
     pageData.current = 0
@@ -104,6 +113,7 @@ const Overview = () => {
   }
 
   const fetchData = async () => {
+    console.log('[DEBUG] Overview.fetchData() called, selectedLibraryRef =', selectedLibraryRef.current)
     // This function didn't work with normal state. Used a state/ref hack as a result.
     if (
       selectedLibraryRef.current &&
@@ -112,12 +122,15 @@ const Overview = () => {
     ) {
       const askedLib = clone(selectedLibraryRef.current)
 
+      console.log('[DEBUG] Overview.fetchData() - fetching /media-server/library/' + selectedLibraryRef.current + '/content')
       const resp: { totalSize: number; items: IPlexMetadata[] } =
         await GetApiHandler(
           `/media-server/library/${selectedLibraryRef.current}/content?page=${
             pageData.current + 1
           }&limit=${fetchAmount}`,
         )
+
+      console.log('[DEBUG] Overview.fetchData() - response:', resp)
 
       if (askedLib === selectedLibraryRef.current) {
         // check lib again, we don't want to change array when lib was changed
@@ -128,6 +141,8 @@ const Overview = () => {
       }
       setLoadingExtra(false)
       setIsLoading(false)
+    } else {
+      console.log('[DEBUG] Overview.fetchData() - skipped, conditions not met')
     }
   }
 

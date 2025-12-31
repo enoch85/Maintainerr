@@ -233,11 +233,15 @@ const AddModal = (props: AddModal) => {
 
   const selectedLibraryId = watch('libraryId') ?? ''
   const selectedType = watch('dataType') ?? ''
+  // Debug logging for library type selection
+  const selectedLib = libraries?.find((el: MediaLibrary) => el.id === selectedLibraryId)
+  console.log('[DEBUG] AddModal: selectedLibraryId =', selectedLibraryId, 'selectedLib =', selectedLib, 'dataType =', selectedType)
   const selectedLibraryType: undefined | 'movie' | 'show' = selectedType
     ? +selectedType === EPlexDataType.MOVIES
       ? 'movie'
       : 'show'
     : undefined
+  console.log('[DEBUG] AddModal: selectedLibraryType =', selectedLibraryType, 'EPlexDataType.MOVIES =', EPlexDataType.MOVIES)
   const manualCollectionEnabled = watch('manualCollection')
   const useRulesEnabled = watch('useRules')
   const arrActionValue = watch('arrAction') as number | undefined
@@ -347,18 +351,22 @@ const AddModal = (props: AddModal) => {
     constants?.applications?.some((x) => x.id == Application.OVERSEERR) ?? false
 
   function updateLibraryId(value: string) {
+    console.log('[DEBUG] updateLibraryId called with value =', value)
     if (!libraries) {
       throw new Error('Libraries not loaded')
     }
 
     const lib = libraries.find((el: MediaLibrary) => +el.id === +value)
+    console.log('[DEBUG] updateLibraryId: found lib =', lib)
 
     if (lib) {
+      const newDataType = lib.type === 'movie'
+        ? EPlexDataType.MOVIES.toString()
+        : EPlexDataType.SHOWS.toString()
+      console.log('[DEBUG] updateLibraryId: lib.type =', lib.type, 'setting dataType to', newDataType)
       setValue(
         'dataType',
-        lib.type === 'movie'
-          ? EPlexDataType.MOVIES.toString()
-          : EPlexDataType.SHOWS.toString(),
+        newDataType,
       )
     }
 
