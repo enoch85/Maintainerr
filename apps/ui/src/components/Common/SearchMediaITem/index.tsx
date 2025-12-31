@@ -17,6 +17,12 @@ interface ISearchMediaITem {
 
 const SearchMediaItem = (props: ISearchMediaITem) => {
   const loadData = async (query: string): Promise<IMediaOptions[]> => {
+    // Validate libraryId before making API call
+    if (!props.libraryId) {
+      console.warn('SearchMediaItem: libraryId is required but was not provided')
+      return []
+    }
+
     const resp: MediaItem[] = await GetApiHandler(
       `/media-server/library/${props.libraryId}/content/search/${query}?type=${props.mediatype == EPlexDataType.MOVIES ? EPlexDataType.MOVIES : EPlexDataType.SHOWS}`,
     )
