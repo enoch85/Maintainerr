@@ -1,4 +1,3 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
   CollectionVisibilitySettings,
   CreateCollectionParams,
@@ -13,14 +12,15 @@ import {
   MediaServerStatus,
   MediaUser,
   PagedResult,
-  UpdateCollectionParams,
   RecentlyAddedOptions,
+  UpdateCollectionParams,
   WatchRecord,
 } from '@maintainerr/contracts';
-import { PlexApiService } from '../../plex-api/plex-api.service';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { EPlexDataType } from '../../plex-api/enums/plex-data-type-enum';
-import { IMediaServerService } from '../media-server.interface';
+import { PlexApiService } from '../../plex-api/plex-api.service';
 import { supportsFeature } from '../media-server.constants';
+import { IMediaServerService } from '../media-server.interface';
 import { PlexMapper } from './plex.mapper';
 
 /**

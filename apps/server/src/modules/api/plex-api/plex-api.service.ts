@@ -539,8 +539,11 @@ export class PlexApiService {
         },
         false,
       );
-      const collection: PlexCollection = response.MediaContainer
-        .Metadata as PlexCollection;
+      // Metadata can be a single object or an array - handle both
+      const metadata = response.MediaContainer.Metadata;
+      const collection = (
+        Array.isArray(metadata) ? metadata[0] : metadata
+      ) as PlexCollection;
 
       return collection;
     } catch (err) {
