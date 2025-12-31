@@ -7,7 +7,6 @@ import {
   createSonarrEpisode,
   createSonarrEpisodeFile,
   createSonarrSeries,
-  EPlexDataTypeToPlexTypeMap,
 } from '../../../../test/utils/data';
 import { MediaItemType } from '@maintainerr/contracts';
 import { PlexLibraryItem } from '../../api/plex-api/interfaces/library.interfaces';
@@ -408,7 +407,7 @@ describe('SonarrGetterService', () => {
           }),
         );
         const plexLibraryItem = createPlexLibraryItem(
-          EPlexDataTypeToPlexTypeMap[type as MediaItemType],
+          type as MediaItemType,
         );
         const series = createSonarrSeries({
           qualityProfileId: 2,

@@ -10,10 +10,7 @@ import {
   UploadIcon,
 } from '@heroicons/react/solid'
 import { zodResolver } from '@hookform/resolvers/zod'
-import {
-  EPlexDataType,
-  plexDataTypeToMediaItemType,
-} from '@maintainerr/contracts'
+import { EPlexDataType, MediaItemType } from '@maintainerr/contracts'
 import { isValidCron } from 'cron-validator'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -236,16 +233,17 @@ const AddModal = (props: AddModal) => {
 
   const selectedLibraryId = watch('libraryId') ?? ''
   const selectedType = watch('dataType') ?? ''
+  // dataType is now stored as MediaItemType string ('movie', 'show', 'season', 'episode')
   const selectedLibraryType: undefined | 'movie' | 'show' = selectedType
-    ? +selectedType === EPlexDataType.MOVIES
+    ? selectedType === 'movie'
       ? 'movie'
       : 'show'
     : undefined
   console.log(
     '[DEBUG] AddModal: selectedLibraryType =',
     selectedLibraryType,
-    'EPlexDataType.MOVIES =',
-    EPlexDataType.MOVIES,
+    'selectedType =',
+    selectedType,
   )
   const manualCollectionEnabled = watch('manualCollection')
   const useRulesEnabled = watch('useRules')
@@ -365,10 +363,8 @@ const AddModal = (props: AddModal) => {
     console.log('[DEBUG] updateLibraryId: found lib =', lib)
 
     if (lib) {
-      const newDataType =
-        lib.type === 'movie'
-          ? EPlexDataType.MOVIES.toString()
-          : EPlexDataType.SHOWS.toString()
+      // Store MediaItemType string directly ('movie' or 'show')
+      const newDataType = lib.type
       console.log(
         '[DEBUG] updateLibraryId: lib.type =',
         lib.type,
@@ -507,7 +503,7 @@ const AddModal = (props: AddModal) => {
       description: data.description ?? '',
       libraryId: data.libraryId,
       arrAction: data.arrAction ?? 0,
-      dataType: plexDataTypeToMediaItemType(+data.dataType),
+      dataType: data.dataType as MediaItemType,
       isActive: data.active,
       useRules: data.useRules,
       listExclusions: data.listExclusions,
@@ -746,28 +742,16 @@ const AddModal = (props: AddModal) => {
                                     updateArrOption(0)
                                   }}
                                 >
-                                  {Object.keys(EPlexDataType)
-                                    .filter((v) => isNaN(Number(v)))
-                                    .filter((v) => v !== 'MOVIES')
-                                    .map((data: string) => {
-                                      return (
-                                        <option
-                                          key={
-                                            EPlexDataType[
-                                              data as keyof typeof EPlexDataType
-                                            ]
-                                          }
-                                          value={
-                                            EPlexDataType[
-                                              data as keyof typeof EPlexDataType
-                                            ]
-                                          }
-                                        >
-                                          {data[0].toUpperCase() +
-                                            data.slice(1).toLowerCase()}
-                                        </option>
-                                      )
-                                    })}
+                                  {/* Show TV-related types: show, season, episode */}
+                                  {(['show', 'season', 'episode'] as const).map(
+                                    (mediaType) => (
+                                      <option key={mediaType} value={mediaType}>
+                                        {mediaType[0].toUpperCase() +
+                                          mediaType.slice(1) +
+                                          's'}
+                                      </option>
+                                    ),
+                                  )}
                                 </select>
                               )
                             })()}
@@ -789,7 +773,7 @@ const AddModal = (props: AddModal) => {
                           handleUpdateArrAction('Sonarr', e, settingId)
                         }}
                         options={
-                          +selectedType === EPlexDataType.SHOWS
+                          selectedType === 'show'
                             ? [
                                 {
                                   id: 0,
@@ -812,7 +796,7 @@ const AddModal = (props: AddModal) => {
                                   name: 'Do nothing',
                                 },
                               ]
-                            : +selectedType === EPlexDataType.SEASONS
+                            : selectedType === 'season'
                               ? [
                                   {
                                     id: 0,
@@ -969,8 +953,7 @@ const AddModal = (props: AddModal) => {
                     {(radarrSettingsId != null ||
                       (sonarrSettingsId != null &&
                         arrActionValue === 0 &&
-                        (+selectedType as EPlexDataType) ===
-                          EPlexDataType.SHOWS)) && (
+                        selectedType === 'show')) && (
                       <div className="flex flex-row items-center justify-between py-4">
                         <label htmlFor="list_exclusions" className="text-label">
                           Add import list exclusions
@@ -1342,7 +1325,19 @@ const AddModal = (props: AddModal) => {
                         : 2
                       : 0
                   }
-                  dataType={+selectedType as EPlexDataType}
+                  dataType={
+                    // Convert MediaItemType string to EPlexDataType for RuleCreator
+                    // TODO: Migrate RuleCreator to use MediaItemType
+                    selectedType === 'movie'
+                      ? EPlexDataType.MOVIES
+                      : selectedType === 'show'
+                        ? EPlexDataType.SHOWS
+                        : selectedType === 'season'
+                          ? EPlexDataType.SEASONS
+                          : selectedType === 'episode'
+                            ? EPlexDataType.EPISODES
+                            : EPlexDataType.MOVIES
+                  }
                   editData={{ rules: rules }}
                   radarrSettingsId={radarrSettingsId}
                   sonarrSettingsId={sonarrSettingsId}

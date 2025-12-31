@@ -32,23 +32,6 @@ import {
 import { ServarrAction } from '../../src/modules/collections/interfaces/collection.interface';
 import { RulesDto } from '../../src/modules/rules/dtos/rules.dto';
 
-export const EPlexDataTypeToPlexTypeMap = {
-  [EPlexDataType.MOVIES]: 'movie',
-  [EPlexDataType.EPISODES]: 'episode',
-  [EPlexDataType.SHOWS]: 'show',
-  [EPlexDataType.SEASONS]: 'season',
-} as const;
-
-export const EPlexDataTypeToMediaItemType: Record<
-  EPlexDataType,
-  MediaItemType
-> = {
-  [EPlexDataType.MOVIES]: 'movie',
-  [EPlexDataType.EPISODES]: 'episode',
-  [EPlexDataType.SHOWS]: 'show',
-  [EPlexDataType.SEASONS]: 'season',
-};
-
 export const createCollection = (
   properties: Partial<Collection> = {},
 ): Collection => {
