@@ -1,9 +1,10 @@
 import React, { memo, useEffect, useMemo, useState } from 'react'
+import { useMediaServerType } from '../../../../hooks/useMediaServerType'
 import GetApiHandler from '../../../../utils/ApiHandler'
 
 interface ModalContentProps {
   onClose: () => void
-  id: number
+  id: number | string
   image?: string
   userScore?: number
   backdrop?: string
@@ -47,9 +48,11 @@ const iconMap: Record<string, Record<string, string>> = {
 
 const MediaModalContent: React.FC<ModalContentProps> = memo(
   ({ onClose, mediaType, id, summary, year, title, tmdbid }) => {
+    const { isPlex, isJellyfin } = useMediaServerType()
     const [loading, setLoading] = useState<boolean>(true)
     const [backdrop, setBackdrop] = useState<string | null>(null)
     const [machineId, setMachineId] = useState<string | null>(null)
+    const [serverUrl, setServerUrl] = useState<string | null>(null)
     const [tautulliModalUrl, setTautulliModalUrl] = useState<string | null>(
       null,
     )
@@ -64,9 +67,13 @@ const MediaModalContent: React.FC<ModalContentProps> = memo(
     const basePath = import.meta.env.VITE_BASE_PATH ?? ''
 
     useEffect(() => {
-      GetApiHandler('/media-server').then((resp) =>
-        setMachineId(resp?.machineId),
-      )
+      GetApiHandler('/media-server').then((resp) => {
+        setMachineId(resp?.machineId)
+        // For Jellyfin, we need the server URL to construct links
+        if (resp?.url) {
+          setServerUrl(resp.url)
+        }
+      })
       GetApiHandler('/settings').then((resp) =>
         setTautulliModalUrl(resp?.tautulli_url || null),
       )
@@ -78,7 +85,7 @@ const MediaModalContent: React.FC<ModalContentProps> = memo(
         .then((resp) => setBackdrop(resp))
         .catch((error) => {
           console.error(
-            'Error fetching backdrop image. Check your Plex metadata',
+            'Error fetching backdrop image. Check your media server metadata',
             error,
           )
           setBackdrop(null)
@@ -203,21 +210,40 @@ const MediaModalContent: React.FC<ModalContentProps> = memo(
                       </a>
                     </div>
                   )}
-                  <div>
-                    <a
-                      href={`https://app.plex.tv/desktop#!/server/${machineId}/details?key=%2Flibrary%2Fmetadata%2F${id}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <img
-                        src={`${basePath}/icons_logos/plex_logo.svg`}
-                        alt="Plex Logo"
-                        width={128}
-                        height={32}
-                        className="mt-1 h-8 w-32 rounded-lg bg-black bg-opacity-70 p-1 shadow-lg"
-                      />
-                    </a>
-                  </div>
+                  {isPlex && (
+                    <div>
+                      <a
+                        href={`https://app.plex.tv/desktop#!/server/${machineId}/details?key=%2Flibrary%2Fmetadata%2F${id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <img
+                          src={`${basePath}/icons_logos/plex_logo.svg`}
+                          alt="Plex Logo"
+                          width={128}
+                          height={32}
+                          className="mt-1 h-8 w-32 rounded-lg bg-black bg-opacity-70 p-1 shadow-lg"
+                        />
+                      </a>
+                    </div>
+                  )}
+                  {isJellyfin && serverUrl && (
+                    <div>
+                      <a
+                        href={`${serverUrl}/web/#/details?id=${id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <img
+                          src={`${basePath}/icons_logos/jellyfin.svg`}
+                          alt="Jellyfin Logo"
+                          width={128}
+                          height={32}
+                          className="mt-1 h-8 w-32 rounded-lg bg-black bg-opacity-70 p-1 shadow-lg"
+                        />
+                      </a>
+                    </div>
+                  )}
                   {tautulliModalUrl && (
                     <div>
                       <a

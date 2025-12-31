@@ -192,35 +192,8 @@ export const useMediaServerStatus = (options?: UseMediaServerStatusOptions) => {
   })
 }
 
-type UseMediaServerTypeQueryKey = ReturnType<typeof mediaServerKeys.type>
-type UseMediaServerTypeOptions = Omit<
-  UseQueryOptions<
-    { type: string },
-    Error,
-    { type: string },
-    UseMediaServerTypeQueryKey
-  >,
-  'queryKey' | 'queryFn'
->
-
-/**
- * Hook to get the type of the configured media server.
- */
-export const useMediaServerType = (options?: UseMediaServerTypeOptions) => {
-  return useQuery<
-    { type: string },
-    Error,
-    { type: string },
-    UseMediaServerTypeQueryKey
-  >({
-    queryKey: mediaServerKeys.type(),
-    queryFn: async () => {
-      return await GetApiHandler<{ type: string }>('/media-server/type')
-    },
-    staleTime: Infinity, // Server type doesn't change
-    ...options,
-  })
-}
+// NOTE: useMediaServerType hook is located in hooks/useMediaServerType.ts
+// It provides isPlex/isJellyfin booleans from settings
 
 type UseMediaServerUsersQueryKey = ReturnType<typeof mediaServerKeys.users>
 type UseMediaServerUsersOptions = Omit<
@@ -361,7 +334,6 @@ export type UseMediaServerLibrariesResult = ReturnType<
   typeof useMediaServerLibraries
 >
 export type UseMediaServerStatusResult = ReturnType<typeof useMediaServerStatus>
-export type UseMediaServerTypeResult = ReturnType<typeof useMediaServerType>
 export type UseMediaServerUsersResult = ReturnType<typeof useMediaServerUsers>
 export type UseMediaServerCollectionsResult = ReturnType<
   typeof useMediaServerCollections

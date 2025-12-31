@@ -161,11 +161,18 @@ export class JellyfinService implements IMediaServerService {
       }
 
       const response = await getSystemApi(this.api).getPublicSystemInfo();
+      const settings = await this.settingsService.getSettings();
+      // Extract jellyfin_url if settings is a valid Settings object (not an error response)
+      const jellyfinUrl =
+        settings && 'jellyfin_url' in settings
+          ? settings.jellyfin_url
+          : undefined;
       const status = JellyfinMapper.toMediaServerStatus(
         response.data.Id || '',
         response.data.Version || '',
         response.data.ServerName,
         response.data.OperatingSystem,
+        jellyfinUrl,
       );
 
       this.cache.data.set(

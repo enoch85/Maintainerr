@@ -1,5 +1,4 @@
-import { EPlexDataType } from '@maintainerr/contracts'
-import { IPlexMetadata } from '../Overview/Content'
+import { EPlexDataType, type MediaItem } from '@maintainerr/contracts'
 
 export interface ICollection {
   id?: number
@@ -38,5 +37,6 @@ export interface ICollectionMedia {
   image_path: string
   isManual: boolean
   collection: ICollection
-  plexData?: IPlexMetadata
+  /** Media metadata from the media server */
+  plexData?: MediaItem
 }

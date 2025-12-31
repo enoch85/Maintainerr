@@ -1,10 +1,11 @@
+import { type MediaItem } from '@maintainerr/contracts'
 import { clone } from 'lodash'
 import { useContext, useEffect, useRef, useState } from 'react'
 import { useMediaServerLibraries } from '../../api/media-server'
 import SearchContext from '../../contexts/search-context'
 import GetApiHandler from '../../utils/ApiHandler'
 import LibrarySwitcher from '../Common/LibrarySwitcher'
-import OverviewContent, { IPlexMetadata } from './Content'
+import OverviewContent from './Content'
 
 const Overview = () => {
   // const [isLoading, setIsLoading] = useState<Boolean>(false)
@@ -12,8 +13,8 @@ const Overview = () => {
 
   const [loadingExtra, setLoadingExtra] = useState<boolean>(false)
 
-  const [data, setData] = useState<IPlexMetadata[]>([])
-  const dataRef = useRef<IPlexMetadata[]>([])
+  const [data, setData] = useState<MediaItem[]>([])
+  const dataRef = useRef<MediaItem[]>([])
 
   const [totalSize, setTotalSize] = useState<number>(999)
   const totalSizeRef = useRef<number>(999)
@@ -82,7 +83,7 @@ const Overview = () => {
 
     if (SearchCtx.search.text !== '') {
       GetApiHandler(`/media-server/search/${SearchCtx.search.text}`).then(
-        (resp: IPlexMetadata[]) => {
+        (resp: MediaItem[]) => {
           setSearchUsed(true)
           setTotalSize(resp.length)
           pageData.current = resp.length * 50
@@ -147,7 +148,7 @@ const Overview = () => {
           selectedLibraryRef.current +
           '/content',
       )
-      const resp: { totalSize: number; items: IPlexMetadata[] } =
+      const resp: { totalSize: number; items: MediaItem[] } =
         await GetApiHandler(
           `/media-server/library/${selectedLibraryRef.current}/content?page=${
             pageData.current + 1

@@ -5,7 +5,7 @@ export interface IAddModal {
   onSubmit: () => void
   libraryId?: string
   type?: number
-  plexId: number
+  plexId: number | string
   modalType: 'add' | 'exclude'
 }
 

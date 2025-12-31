@@ -1,9 +1,10 @@
+import { type MediaItem } from '@maintainerr/contracts'
 import { debounce } from 'lodash-es'
 import { useEffect, useRef, useState } from 'react'
 import { useOutletContext, useParams } from 'react-router-dom'
 import { ICollection, ICollectionMedia } from '../components/Collection'
 import GetApiHandler from '../utils/ApiHandler'
-import OverviewContent, { IPlexMetadata } from '../components/Overview/Content'
+import OverviewContent from '../components/Overview/Content'
 
 interface CollectionContextType {
   collection: ICollection
@@ -12,7 +13,7 @@ interface CollectionContextType {
 const CollectionMediaPage = () => {
   const { collection } = useOutletContext<CollectionContextType>()
   const { id } = useParams<{ id: string }>()
-  const [data, setData] = useState<IPlexMetadata[]>([])
+  const [data, setData] = useState<MediaItem[]>([])
   const [media, setMedia] = useState<ICollectionMedia[]>([])
   // paging
   const pageData = useRef<number>(0)
@@ -77,8 +78,10 @@ const CollectionMediaPage = () => {
     setData((prevData) => [
       ...prevData,
       ...resp.items.map((el) => {
-        el.plexData!.maintainerrIsManual = el.isManual ? el.isManual : false
-        return el.plexData ? el.plexData : ({} as IPlexMetadata)
+        if (el.plexData) {
+          el.plexData.maintainerrIsManual = el.isManual ? el.isManual : false
+        }
+        return el.plexData ? el.plexData : ({} as MediaItem)
       }),
     ])
     setIsLoading(false)
@@ -111,8 +114,8 @@ const CollectionMediaPage = () => {
       }
       onRemove={(id: string) =>
         setTimeout(() => {
-          setData((prevData) => prevData.filter((el) => +el.ratingKey !== +id))
-          setMedia((prevMedia) => prevMedia.filter((el) => +el.plexId !== +id))
+          setData((prevData) => prevData.filter((el) => el.id !== id))
+          setMedia((prevMedia) => prevMedia.filter((el) => String(el.plexId) !== id))
         }, 500)
       }
       collectionInfo={media.map((el) => {

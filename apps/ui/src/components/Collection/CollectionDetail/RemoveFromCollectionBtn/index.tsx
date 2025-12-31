@@ -5,7 +5,7 @@ import Button from '../../../Common/Button'
 import Modal from '../../../Common/Modal'
 
 interface IRemoveFromCollectionBtn {
-  plexId: number
+  plexId: number | string
   collectionId: number
   exclusionId?: number
   popup?: boolean

@@ -9,7 +9,7 @@ import Button from '../Button'
 import MediaModalContent from './MediaModal'
 
 interface IMediaCard {
-  id: number
+  id: number | string
   image?: string
   summary?: string
   year?: string

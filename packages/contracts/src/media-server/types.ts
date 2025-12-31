@@ -241,6 +241,8 @@ export interface MediaServerStatus {
   name?: string
   /** Operating system */
   platform?: string
+  /** Server URL (for building links to web UI) */
+  url?: string
 }
 
 /**

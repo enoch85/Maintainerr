@@ -292,12 +292,14 @@ export class JellyfinMapper {
     version: string,
     serverName?: string | null,
     platform?: string | null,
+    url?: string | null,
   ): MediaServerStatus {
     return {
       machineId,
       version,
       name: serverName || undefined,
       platform: platform || undefined,
+      url: url || undefined,
     };
   }
 
