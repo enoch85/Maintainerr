@@ -1,10 +1,10 @@
 import { ClipboardCopyIcon } from '@heroicons/react/solid'
+import { EPlexDataType } from '@maintainerr/contracts'
 import { Editor } from '@monaco-editor/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import YAML from 'yaml'
 import GetApiHandler, { PostApiHandler } from '../../../../utils/ApiHandler'
-import { EPlexDataType } from '@maintainerr/contracts'
 import Alert from '../../../Common/Alert'
 import FormItem from '../../../Common/FormItem'
 import Modal from '../../../Common/Modal'
@@ -52,7 +52,12 @@ const TestMediaItem = (props: ITestMediaItem) => {
   useEffect(() => {
     GetApiHandler(`/rules/collection/${props.collectionId}`).then((resp) => {
       console.log('[DEBUG] TestMediaItem: ruleGroup response =', resp)
-      console.log('[DEBUG] TestMediaItem: libraryId =', resp?.libraryId, 'type =', typeof resp?.libraryId)
+      console.log(
+        '[DEBUG] TestMediaItem: libraryId =',
+        resp?.libraryId,
+        'type =',
+        typeof resp?.libraryId,
+      )
       setRuleGroup(resp)
       setLoading(false)
     })
