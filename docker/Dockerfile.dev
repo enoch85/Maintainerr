@@ -34,38 +34,14 @@ RUN echo "Cloning branch: ${BRANCH} from ${REPO}" && \
     git clone --depth 1 --branch ${BRANCH} ${REPO} . && \
     echo "Cloned commit: $(git rev-parse HEAD)"
 
-# Configure git for any postinstall scripts that might need it
-RUN git config --global --add safe.directory /app
-
-# Set env vars to disable telemetry in postinstall scripts
-ENV SCARF_ANALYTICS=false
-ENV DO_NOT_TRACK=1
-
-# Disable all postinstall scripts, then manually run only the essential ones
-# This avoids issues with telemetry scripts and other optional postinstall hooks
-RUN yarn config set enableScripts false && \
-    yarn install --network-timeout 99999999
-
-# Re-enable scripts
-RUN yarn config set enableScripts true
-
-# Manually ensure esbuild binary is installed (required for Vite)
-# Force reinstall to ensure the correct platform binary is downloaded
-RUN npm rebuild esbuild
-
-# Manually build better-sqlite3 native module
-RUN cd node_modules/better-sqlite3 && npx --yes prebuild-install -r napi || \
-    (npx --yes node-gyp rebuild --release) || true
+# Install dependencies
+RUN yarn install --network-timeout 99999999
 
 # Set base path for UI (empty for root)
 RUN echo "VITE_BASE_PATH=" >> ./apps/ui/.env
 
-# Build all packages (without turbo to avoid crashes in LXC/container environments)
-# Build order matters: contracts first, then server and ui
-# ESBUILD_WORKER_THREADS=1 helps with LXC container compatibility
-RUN ESBUILD_WORKER_THREADS=1 yarn workspace @maintainerr/contracts build && \
-    ESBUILD_WORKER_THREADS=1 yarn workspace @maintainerr/server build && \
-    ESBUILD_WORKER_THREADS=1 yarn workspace @maintainerr/ui build
+# Build all packages
+RUN yarn turbo build
 
 # Only install production dependencies to reduce image size
 RUN yarn workspaces focus --all --production
