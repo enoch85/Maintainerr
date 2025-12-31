@@ -29,9 +29,9 @@ RUN apk add --no-cache git python3 make g++ libc6-compat
 # Install turbo globally
 RUN yarn global add turbo@^2
 
-# Clone the specific branch (full clone needed for postinstall scripts that use git rev-parse)
+# Clone the specific branch
 RUN echo "Cloning branch: ${BRANCH} from ${REPO}" && \
-    git clone --branch ${BRANCH} ${REPO} . && \
+    git clone --depth 1 --branch ${BRANCH} ${REPO} . && \
     echo "Cloned commit: $(git rev-parse HEAD)"
 
 # Configure git for any postinstall scripts that might need it
@@ -41,8 +41,16 @@ RUN git config --global --add safe.directory /app
 ENV SCARF_ANALYTICS=false
 ENV DO_NOT_TRACK=1
 
-# Install dependencies
-RUN yarn install --network-timeout 99999999
+# Disable all postinstall scripts, then manually run only the essential ones
+# This avoids issues with telemetry scripts and other optional postinstall hooks
+RUN yarn config set enableScripts false && \
+    yarn install --network-timeout 99999999 && \
+    yarn config set enableScripts true
+
+# Manually build essential native modules
+RUN cd node_modules/esbuild && node install.js || true
+RUN cd node_modules/better-sqlite3 && npx --yes prebuild-install -r napi || \
+    (cd node_modules/better-sqlite3 && npx --yes node-gyp rebuild --release) || true
 
 # Set base path for UI (empty for root)
 RUN echo "VITE_BASE_PATH=" >> ./apps/ui/.env
