@@ -81,16 +81,25 @@ const MediaModalContent: React.FC<ModalContentProps> = memo(
         setMetadata(data)
         setLoading(false)
       })
-      GetApiHandler(`/moviedb/backdrop/${mediaType}/${tmdbid}`)
-        .then((resp) => setBackdrop(resp))
-        .catch((error) => {
-          console.error(
-            'Error fetching backdrop image. Check your media server metadata',
-            error,
-          )
-          setBackdrop(null)
-        })
-    }, [id, mediaType, tmdbid])
+      // Only fetch backdrop if tmdbid is available
+      if (tmdbid) {
+        GetApiHandler(`/moviedb/backdrop/${mediaType}/${tmdbid}`)
+          .then((resp) => setBackdrop(resp))
+          .catch((error) => {
+            console.error(
+              'Error fetching backdrop image. Check your media server metadata',
+              error,
+            )
+            setBackdrop(null)
+          })
+      } else {
+        console.warn(
+          `No TMDB ID found for "${title}" (id: ${id}). Backdrop image unavailable. ` +
+            'Please check your media server metadata - the item may not be matched correctly.',
+        )
+        setBackdrop(null)
+      }
+    }, [id, mediaType, tmdbid, title])
 
     useEffect(() => {
       document.body.style.overflow = 'hidden'
