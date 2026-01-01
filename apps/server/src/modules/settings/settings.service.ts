@@ -488,11 +488,24 @@ export class SettingsService implements SettingDto {
         };
       }
 
+      // Auto-detect admin user if not provided
+      let userId = settings.jellyfin_user_id;
+      if (!userId) {
+        userId = await this.autoDetectJellyfinAdminUser(settings);
+        if (userId) {
+          this.logger.log(`Auto-detected Jellyfin admin user ID: ${userId}`);
+        } else {
+          this.logger.warn(
+            'Could not auto-detect Jellyfin admin user. Some features may not work correctly.',
+          );
+        }
+      }
+
       await this.saveSettings({
         ...settingsDb,
         jellyfin_url: settings.jellyfin_url,
         jellyfin_api_key: settings.jellyfin_api_key,
-        jellyfin_user_id: settings.jellyfin_user_id || null,
+        jellyfin_user_id: userId || null,
         jellyfin_server_name: testResult.serverName || null,
         media_server_type: MediaServerType.JELLYFIN,
       });
@@ -502,7 +515,7 @@ export class SettingsService implements SettingDto {
 
       this.jellyfin_url = settings.jellyfin_url;
       this.jellyfin_api_key = settings.jellyfin_api_key;
-      this.jellyfin_user_id = settings.jellyfin_user_id;
+      this.jellyfin_user_id = userId;
       this.jellyfin_server_name = testResult.serverName;
       this.media_server_type = MediaServerType.JELLYFIN;
 
@@ -513,6 +526,54 @@ export class SettingsService implements SettingDto {
       const message =
         e instanceof Error ? e.message : 'Failed to save settings';
       return { status: 'NOK', code: 0, message };
+    }
+  }
+
+  /**
+   * Auto-detect an admin user from Jellyfin
+   */
+  private async autoDetectJellyfinAdminUser(settings: {
+    jellyfin_url: string;
+    jellyfin_api_key: string;
+  }): Promise<string | undefined> {
+    try {
+      const { Jellyfin } = await import('@jellyfin/sdk');
+      const { getUserApi } = await import('@jellyfin/sdk/lib/utils/api');
+
+      const jellyfin = new Jellyfin({
+        clientInfo: { name: 'Maintainerr', version: '2.0.0' },
+        deviceInfo: { name: 'Maintainerr-AutoDetect', id: 'maintainerr-detect' },
+      });
+
+      const api = jellyfin.createApi(
+        settings.jellyfin_url,
+        settings.jellyfin_api_key,
+      );
+
+      const response = await getUserApi(api).getUsers();
+      const users = response.data || [];
+
+      // Find first admin user
+      const adminUser = users.find((user) => user.Policy?.IsAdministrator);
+      if (adminUser?.Id) {
+        this.logger.debug(
+          `Found Jellyfin admin user: ${adminUser.Name} (${adminUser.Id})`,
+        );
+        return adminUser.Id;
+      }
+
+      // Fallback to first user if no admin found
+      if (users.length > 0 && users[0].Id) {
+        this.logger.debug(
+          `No admin user found, using first user: ${users[0].Name} (${users[0].Id})`,
+        );
+        return users[0].Id;
+      }
+
+      return undefined;
+    } catch (error) {
+      this.logger.error('Failed to auto-detect Jellyfin admin user: ', error);
+      return undefined;
     }
   }
 

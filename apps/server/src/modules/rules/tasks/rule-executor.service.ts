@@ -3,6 +3,7 @@ import {
   MaintainerrEvent,
   MediaItem,
   MediaItemType,
+  MediaServerType,
   RuleHandlerFinishedEventDto,
   RuleHandlerStartedEventDto,
 } from '@maintainerr/contracts';
@@ -251,7 +252,21 @@ export class RuleExecutorService {
         }
 
         // Handle manually removed
-        if (collectionMedia && collectionMedia.length > 0) {
+        // NOTE: For Jellyfin, only perform removal check if children were successfully retrieved.
+        // Jellyfin's API has significant delays in reporting collection children,
+        // which would cause all items to be falsely removed as "manually removed".
+        // For Plex, we can trust the children response even if empty.
+        const isJellyfin =
+          this.settings.media_server_type === MediaServerType.JELLYFIN;
+        const shouldCheckRemovals = isJellyfin
+          ? children && children.length > 0
+          : true;
+
+        if (
+          collectionMedia &&
+          collectionMedia.length > 0 &&
+          shouldCheckRemovals
+        ) {
           for (const media of collectionMedia) {
             if (media && media.mediaServerId) {
               if (
@@ -279,7 +294,7 @@ export class RuleExecutorService {
             collection.manualCollection
               ? collection.manualCollectionName
               : collection.title
-          }' with Plex`,
+          }' with media server`,
         );
       }
     }
