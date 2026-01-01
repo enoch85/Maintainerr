@@ -597,14 +597,8 @@ export class CollectionsService {
       // If we just linked/found it (originalMediaServerId was null), don't delete it -
       // the media server may not have finished processing recent additions yet.
       //
-      // NOTE: This check is Plex-only. The original bug (f0dcea7e) that introduced this
-      // was Plex-specific: "fix a problem where media couldn't get added anymore when
-      // something unexpected had happened to the Plex collection".
-      // For Jellyfin: Skip this check entirely because:
-      // 1. Jellyfin's API has significant delays updating collection children counts
-      // 2. This causes false positives (deleting non-empty collections)
-      // 3. The rapid create/delete cycle causes file lock errors in Jellyfin
-      // 4. During testing, the API took ~40 seconds before returning accurate child counts
+      // Plex-only: Skip for Jellyfin because API lag causes false positives.
+      // Jellyfin natively auto-deletes empty collections, so no manual cleanup needed.
       if (
         this.settingsService.media_server_type === MediaServerType.PLEX &&
         serverColl &&
