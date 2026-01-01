@@ -1,50 +1,19 @@
-import { MediaItemType, MediaType } from '@maintainerr/contracts';
+import {
+  Application,
+  MediaItemType,
+  MediaType,
+  RuleOperators,
+  RulePossibility,
+} from '@maintainerr/contracts';
 
-export enum RulePossibility {
-  BIGGER,
-  SMALLER,
-  EQUALS,
-  NOT_EQUALS,
-  CONTAINS,
-  BEFORE,
-  AFTER,
-  IN_LAST,
-  IN_NEXT,
-  NOT_CONTAINS,
-  CONTAINS_PARTIAL,
-  NOT_CONTAINS_PARTIAL,
-  CONTAINS_ALL,
-  NOT_CONTAINS_ALL,
-  COUNT_EQUALS,
-  COUNT_NOT_EQUALS,
-  COUNT_BIGGER,
-  COUNT_SMALLER,
-}
-
-export enum RuleOperators {
-  AND,
-  OR,
-}
-
-export enum Application {
-  PLEX = 0,
-  RADARR = 1,
-  SONARR = 2,
-  OVERSEERR = 3,
-  TAUTULLI = 4,
-  JELLYSEERR = 5,
-  JELLYFIN = 6,
-}
+export { Application, MediaType, RuleOperators, RulePossibility };
 
 export const enum ArrAction {
   DELETE,
-  UNMONITOR, // this also deletes
+  UNMONITOR,
   SW_UNMONITOR_EXISTING_SEASONS,
   UNMONITOR_NO_DELETE,
 }
-
-// Re-export MediaType from contracts for backward compatibility
-export { MediaType };
 
 export class RuleType {
   static readonly NUMBER = new RuleType(

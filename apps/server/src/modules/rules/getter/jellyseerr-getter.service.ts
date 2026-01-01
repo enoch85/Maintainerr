@@ -1,9 +1,13 @@
-import { MediaItem, MediaItemType, MediaUser } from '@maintainerr/contracts';
+import {
+  MediaItem,
+  MediaItemType,
+  MediaUser,
+  RequestMediaStatus,
+} from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import _ from 'lodash';
 import {
   JellyseerrApiService,
-  JellyseerrMediaStatus,
   JellyseerrMovieResponse,
   JellyseerrSeasonRequest,
   JellyseerrSeasonResponse,
@@ -209,7 +213,7 @@ export class JellyseerrGetterService {
               if (season && season.media) {
                 if (
                   season.media.status >=
-                  JellyseerrMediaStatus.PARTIALLY_AVAILABLE
+                  RequestMediaStatus.PARTIALLY_AVAILABLE
                 ) {
                   return new Date(season.media.updatedAt);
                 }
@@ -217,7 +221,7 @@ export class JellyseerrGetterService {
               return null;
             } else {
               return mediaResponse?.mediaInfo.status >=
-                JellyseerrMediaStatus.PARTIALLY_AVAILABLE
+                RequestMediaStatus.PARTIALLY_AVAILABLE
                 ? new Date(mediaResponse?.mediaInfo?.updatedAt)
                 : null;
             }
@@ -231,7 +235,7 @@ export class JellyseerrGetterService {
               if (season && season.media) {
                 if (
                   season.media.status >=
-                  JellyseerrMediaStatus.PARTIALLY_AVAILABLE
+                  RequestMediaStatus.PARTIALLY_AVAILABLE
                 ) {
                   return new Date(season.media.mediaAddedAt);
                 }
@@ -239,7 +243,7 @@ export class JellyseerrGetterService {
               return null;
             } else {
               return mediaResponse?.mediaInfo.status >=
-                JellyseerrMediaStatus.PARTIALLY_AVAILABLE
+                RequestMediaStatus.PARTIALLY_AVAILABLE
                 ? new Date(mediaResponse?.mediaInfo?.mediaAddedAt)
                 : null;
             }

@@ -22,13 +22,13 @@ import {
   MediaLibrary,
   useMediaServerLibraries,
 } from '../../../../api/media-server'
+import { Application } from '@maintainerr/contracts'
 import {
   RuleGroupCreatePayload,
   useCreateRuleGroup,
   useRuleConstants,
   useUpdateRuleGroup,
 } from '../../../../api/rules'
-import { Application } from '../../../../contexts/constants-context'
 import { useMediaServerType } from '../../../../hooks/useMediaServerType'
 import { PostApiHandler } from '../../../../utils/ApiHandler'
 import Alert from '../../../Common/Alert'
@@ -239,12 +239,7 @@ const AddModal = (props: AddModal) => {
       ? 'movie'
       : 'show'
     : undefined
-  console.log(
-    '[DEBUG] AddModal: selectedLibraryType =',
-    selectedLibraryType,
-    'selectedType =',
-    selectedType,
-  )
+
   const manualCollectionEnabled = watch('manualCollection')
   const useRulesEnabled = watch('useRules')
   const arrActionValue = watch('arrAction') as number | undefined
@@ -354,24 +349,15 @@ const AddModal = (props: AddModal) => {
     constants?.applications?.some((x) => x.id == Application.OVERSEERR) ?? false
 
   function updateLibraryId(value: string) {
-    console.log('[DEBUG] updateLibraryId called with value =', value)
     if (!libraries) {
       throw new Error('Libraries not loaded')
     }
 
     const lib = libraries.find((el: MediaLibrary) => el.id === value)
-    console.log('[DEBUG] updateLibraryId: found lib =', lib)
 
     if (lib) {
       // Store MediaItemType string directly ('movie' or 'show')
-      const newDataType = lib.type
-      console.log(
-        '[DEBUG] updateLibraryId: lib.type =',
-        lib.type,
-        'setting dataType to',
-        newDataType,
-      )
-      setValue('dataType', newDataType)
+      setValue('dataType', lib.type)
     }
 
     setValue('radarrSettingsId', undefined)

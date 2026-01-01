@@ -28,7 +28,6 @@ import { PlexMapper } from './plex.mapper';
  *
  * This adapter:
  * - Translates MediaItem/MediaLibrary types to/from Plex-specific types
- * - Maintains backwards compatibility with existing Plex functionality
  * - Provides feature detection for Plex-specific capabilities
  */
 @Injectable()

@@ -237,34 +237,20 @@ export class JellyfinService implements IMediaServerService {
   // ============================================================
 
   async getLibraries(): Promise<MediaLibrary[]> {
-    this.logger.debug(
-      `[DEBUG] JellyfinService.getLibraries() called, api=${!!this.api}, initialized=${this.initialized}`,
-    );
     if (!this.api) {
-      this.logger.warn(
-        '[DEBUG] getLibraries() - API not initialized, returning []',
-      );
+      this.logger.warn('getLibraries() - API not initialized');
       return [];
     }
 
     try {
       if (this.cache.data.has(JELLYFIN_CACHE_KEYS.LIBRARIES)) {
-        const cached =
+        return (
           this.cache.data.get<MediaLibrary[]>(JELLYFIN_CACHE_KEYS.LIBRARIES) ||
-          [];
-        this.logger.debug(
-          `[DEBUG] getLibraries() - returning ${cached.length} cached libraries`,
+          []
         );
-        return cached;
       }
 
-      this.logger.debug(
-        '[DEBUG] getLibraries() - calling getMediaFolders()...',
-      );
       const response = await getLibraryApi(this.api).getMediaFolders();
-      this.logger.debug(
-        `[DEBUG] getMediaFolders() returned ${response.data.Items?.length || 0} items: ${JSON.stringify(response.data.Items?.map((i) => ({ name: i.Name, type: i.CollectionType })))}`,
-      );
       const libraries = (response.data.Items || [])
         .filter(
           (item) =>
@@ -272,10 +258,6 @@ export class JellyfinService implements IMediaServerService {
             item.CollectionType === 'tvshows',
         )
         .map(JellyfinMapper.toMediaLibrary);
-
-      this.logger.debug(
-        `[DEBUG] After filtering: ${libraries.length} libraries: ${JSON.stringify(libraries)}`,
-      );
 
       this.cache.data.set(
         JELLYFIN_CACHE_KEYS.LIBRARIES,
@@ -285,7 +267,7 @@ export class JellyfinService implements IMediaServerService {
 
       return libraries;
     } catch (error) {
-      this.logger.error('[DEBUG] Failed to get Jellyfin libraries', error);
+      this.logger.error('Failed to get Jellyfin libraries', error);
       return [];
     }
   }
@@ -294,20 +276,12 @@ export class JellyfinService implements IMediaServerService {
     libraryId: string,
     options?: LibraryQueryOptions,
   ): Promise<PagedResult<MediaItem>> {
-    this.logger.debug(
-      `[DEBUG] JellyfinService.getLibraryContents(${libraryId}) called, api=${!!this.api}`,
-    );
     if (!this.api) {
-      this.logger.warn(
-        '[DEBUG] getLibraryContents() - API not initialized, returning empty',
-      );
+      this.logger.warn('getLibraryContents() - API not initialized');
       return { items: [], totalSize: 0, offset: 0, limit: 50 };
     }
 
     try {
-      this.logger.debug(
-        `[DEBUG] getLibraryContents() - calling getItems() with parentId=${libraryId}`,
-      );
       const response = await getItemsApi(this.api).getItems({
         parentId: libraryId,
         recursive: true,
@@ -335,9 +309,6 @@ export class JellyfinService implements IMediaServerService {
         ],
       });
 
-      this.logger.debug(
-        `[DEBUG] getItems() returned ${response.data.Items?.length || 0} items, TotalRecordCount=${response.data.TotalRecordCount}`,
-      );
       const items = (response.data.Items || []).map(JellyfinMapper.toMediaItem);
 
       return {
@@ -348,7 +319,7 @@ export class JellyfinService implements IMediaServerService {
       };
     } catch (error) {
       this.logger.error(
-        `[DEBUG] Failed to get library contents for ${libraryId}`,
+        `Failed to get library contents for ${libraryId}`,
         error,
       );
       return { items: [], totalSize: 0, offset: 0, limit: 50 };

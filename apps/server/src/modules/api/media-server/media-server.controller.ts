@@ -64,16 +64,8 @@ export class MediaServerController {
 
   @Get('libraries')
   async getLibraries(): Promise<MediaLibrary[]> {
-    this.logger.debug('[DEBUG] GET /api/media-server/libraries called');
     const mediaServer = await this.mediaServerFactory.getService();
-    this.logger.debug(
-      `[DEBUG] Got service: ${mediaServer.getServerType()}, isSetup: ${mediaServer.isSetup()}`,
-    );
-    const libraries = await mediaServer.getLibraries();
-    this.logger.debug(
-      `[DEBUG] getLibraries() returned ${libraries.length} libraries: ${JSON.stringify(libraries)}`,
-    );
-    return libraries;
+    return await mediaServer.getLibraries();
   }
 
   @Get('library/:id/content')
@@ -83,23 +75,16 @@ export class MediaServerController {
     @Query('limit') limit?: number,
     @Query('type') type?: MediaItemType,
   ): Promise<PagedResult<MediaItem>> {
-    this.logger.debug(
-      `[DEBUG] GET /api/media-server/library/${id}/content called, page=${page}, limit=${limit}`,
-    );
     const mediaServer = await this.mediaServerFactory.getService();
     const pageNum = page ?? 1;
     const size = limit ?? 50;
     const offset = (pageNum - 1) * size;
 
-    const result = await mediaServer.getLibraryContents(id, {
+    return await mediaServer.getLibraryContents(id, {
       offset,
       limit: size,
       type,
     });
-    this.logger.debug(
-      `[DEBUG] getLibraryContents() returned ${result.items.length} items, totalSize=${result.totalSize}`,
-    );
-    return result;
   }
 
   @Get('library/:id/content/search/:query')

@@ -5,12 +5,12 @@ import { IRule } from '../'
 import { useRuleConstants } from '../../../../../api/rules'
 import {
   Application,
-  IProperty,
+  type MediaItemType,
   MediaType,
   RulePossibility,
   RulePossibilityTranslations,
-} from '../../../../../contexts/constants-context'
-import { type MediaItemType } from '@maintainerr/contracts'
+} from '@maintainerr/contracts'
+import { IProperty } from '../../../../../contexts/constants-context'
 import LoadingSpinner from '../../../../Common/LoadingSpinner'
 
 enum RuleType {

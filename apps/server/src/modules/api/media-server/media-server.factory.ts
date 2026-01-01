@@ -44,21 +44,14 @@ export class MediaServerFactory {
    * This method reads from settings on each call to support runtime configuration changes.
    */
   async getService(): Promise<IMediaServerService> {
-    this.logger.debug('[DEBUG] getService() called');
     const settings = await this.settingsService.getSettings();
 
-    // Handle case where getSettings returns error response
     if (!isSettings(settings)) {
-      this.logger.debug(
-        '[DEBUG] getService() - settings not valid, falling back to Plex',
-      );
-      // Fall back to Plex if settings unavailable
       return this.plexAdapter;
     }
 
     const serverType =
       (settings.media_server_type as EMediaServerType) || EMediaServerType.PLEX;
-    this.logger.debug(`[DEBUG] getService() - serverType = ${serverType}`);
 
     return await this.getServiceByType(serverType);
   }
@@ -71,32 +64,19 @@ export class MediaServerFactory {
   async getServiceByType(
     serverType: EMediaServerType,
   ): Promise<IMediaServerService> {
-    this.logger.debug(`[DEBUG] getServiceByType(${serverType})`);
     switch (serverType) {
       case EMediaServerType.JELLYFIN:
         if (!this.jellyfinService) {
-          this.logger.error('[DEBUG] Jellyfin service not available!');
           throw new Error('Jellyfin service not available');
         }
-        // Initialize Jellyfin if not already initialized
-        this.logger.debug(
-          `[DEBUG] JellyfinService.isSetup() = ${this.jellyfinService.isSetup()}`,
-        );
         if (!this.jellyfinService.isSetup()) {
-          this.logger.debug('[DEBUG] Initializing JellyfinService...');
           await this.jellyfinService.initialize();
-          this.logger.debug('[DEBUG] JellyfinService initialized');
         }
         return this.jellyfinService;
 
       case EMediaServerType.PLEX:
       default:
-        // Initialize Plex if not already initialized
-        this.logger.debug(
-          `[DEBUG] PlexAdapter.isSetup() = ${this.plexAdapter.isSetup()}`,
-        );
         if (!this.plexAdapter.isSetup()) {
-          this.logger.debug('[DEBUG] Initializing PlexAdapter...');
           await this.plexAdapter.initialize();
         }
         return this.plexAdapter;

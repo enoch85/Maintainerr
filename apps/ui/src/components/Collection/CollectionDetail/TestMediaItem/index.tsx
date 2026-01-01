@@ -51,13 +51,6 @@ const TestMediaItem = (props: ITestMediaItem) => {
 
   useEffect(() => {
     GetApiHandler(`/rules/collection/${props.collectionId}`).then((resp) => {
-      console.log('[DEBUG] TestMediaItem: ruleGroup response =', resp)
-      console.log(
-        '[DEBUG] TestMediaItem: libraryId =',
-        resp?.libraryId,
-        'type =',
-        typeof resp?.libraryId,
-      )
       setRuleGroup(resp)
       setLoading(false)
     })

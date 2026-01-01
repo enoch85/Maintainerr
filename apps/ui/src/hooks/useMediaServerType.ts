@@ -1,6 +1,4 @@
-import { useSettings } from '../api/settings'
-
-export type MediaServerType = 'plex' | 'jellyfin'
+import { useSettings, type MediaServerType } from '../api/settings'
 
 /**
  * Hook to get the current media server type from settings.
