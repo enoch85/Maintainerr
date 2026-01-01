@@ -27,7 +27,6 @@ import {
  * - Cache management is implementation-specific but exposed via resetMetadataCache
  */
 export interface IMediaServerService {
-
   /**
    * Initialize the connection to the media server.
    * Should validate connection and cache server info.
@@ -50,20 +49,17 @@ export interface IMediaServerService {
    */
   getServerType(): EMediaServerType;
 
-
   /**
    * Check if a specific feature is supported by this media server.
    * Used to conditionally enable/disable functionality.
    */
   supportsFeature(feature: EMediaServerFeature): boolean;
 
-
   /**
    * Get server status and version information.
    * Returns undefined if server is unreachable.
    */
   getStatus(): Promise<MediaServerStatus | undefined>;
-
 
   /**
    * Get all users with access to the media server.
@@ -74,7 +70,6 @@ export interface IMediaServerService {
    * Get a specific user by ID.
    */
   getUser(id: string): Promise<MediaUser | undefined>;
-
 
   /**
    * Get all libraries available on the media server.
@@ -106,7 +101,6 @@ export interface IMediaServerService {
     type?: MediaItemType,
   ): Promise<MediaItem[]>;
 
-
   /**
    * Get detailed metadata for a specific item.
    */
@@ -125,12 +119,10 @@ export interface IMediaServerService {
     options?: RecentlyAddedOptions,
   ): Promise<MediaItem[]>;
 
-
   /**
    * Search across all content on the server.
    */
   searchContent(query: string): Promise<MediaItem[]>;
-
 
   /**
    * Get watch history for a specific item.
@@ -145,7 +137,6 @@ export interface IMediaServerService {
    * Convenience method built on top of getWatchHistory.
    */
   getItemSeenBy(itemId: string): Promise<string[]>;
-
 
   /**
    * Get all collections in a library.
@@ -196,26 +187,22 @@ export interface IMediaServerService {
     settings: CollectionVisibilitySettings,
   ): Promise<void>;
 
-
   /**
    * Get watchlist items for a user.
    * Only available on Plex (requires Plex.tv API).
    */
   getWatchlistForUser?(userId: string): Promise<string[]>;
 
-
   /**
    * Get playlists in a library.
    */
   getPlaylists(libraryId: string): Promise<MediaPlaylist[]>;
-
 
   /**
    * Delete an item from disk.
    * This is a destructive operation!
    */
   deleteFromDisk(itemId: string): Promise<void>;
-
 
   /**
    * Get all media server IDs for a context action (add/remove from collection).
@@ -231,7 +218,6 @@ export interface IMediaServerService {
     context: { type: MediaItemType; id: string },
     mediaId: string,
   ): Promise<string[]>;
-
 
   /**
    * Reset metadata cache.

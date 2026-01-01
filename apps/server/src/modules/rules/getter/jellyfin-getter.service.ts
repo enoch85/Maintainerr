@@ -1,7 +1,7 @@
 import {
+  isMediaType,
   MediaItem,
   MediaItemType,
-  isMediaType,
   RuleValueType,
 } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
@@ -332,7 +332,6 @@ export class JellyfinGetterService {
       return undefined;
     }
   }
-
 
   private async getLastViewedAt(itemId: string): Promise<Date | null> {
     const watchHistory = await this.jellyfinService.getWatchHistory(itemId);

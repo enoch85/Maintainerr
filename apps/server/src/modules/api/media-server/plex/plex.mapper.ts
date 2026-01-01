@@ -41,7 +41,6 @@ import { Media, PlexMetadata } from '../../plex-api/interfaces/media.interface';
  * - Media[] → mediaSources
  */
 export class PlexMapper {
-
   /**
    * Convert Plex type string to MediaItemType string.
    * This is what the API returns to the frontend.
@@ -103,7 +102,6 @@ export class PlexMapper {
     }
   }
 
-
   /**
    * Extract provider IDs (IMDB, TMDB, TVDB) from Plex GUID format.
    *
@@ -146,7 +144,6 @@ export class PlexMapper {
 
     return providerIds;
   }
-
 
   /**
    * Convert a Plex library item to a MediaItem.
@@ -323,7 +320,6 @@ export class PlexMapper {
       platform: undefined,
     };
   }
-
 
   private static toMediaSources(media: Media[] | undefined): MediaSource[] {
     if (!media || !Array.isArray(media)) {

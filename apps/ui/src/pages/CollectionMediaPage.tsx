@@ -3,8 +3,8 @@ import { debounce } from 'lodash-es'
 import { useEffect, useRef, useState } from 'react'
 import { useOutletContext, useParams } from 'react-router-dom'
 import { ICollection, ICollectionMedia } from '../components/Collection'
-import GetApiHandler from '../utils/ApiHandler'
 import OverviewContent from '../components/Overview/Content'
+import GetApiHandler from '../utils/ApiHandler'
 
 interface CollectionContextType {
   collection: ICollection

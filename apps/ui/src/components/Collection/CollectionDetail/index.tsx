@@ -1,5 +1,5 @@
-import { type MediaItem } from '@maintainerr/contracts'
 import { PlayIcon } from '@heroicons/react/solid'
+import { type MediaItem } from '@maintainerr/contracts'
 import { debounce } from 'lodash-es'
 import { useEffect, useRef, useState } from 'react'
 import { ICollection, ICollectionMedia } from '..'
