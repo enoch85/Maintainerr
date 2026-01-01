@@ -1272,8 +1272,9 @@ export class SettingsService implements SettingDto {
       // Uninitialize old media server
       if (currentServerType === EMediaServerType.PLEX) {
         this.plexApi.uninitialize();
+      } else if (currentServerType === EMediaServerType.JELLYFIN) {
+        this.jellyfinService.uninitialize();
       }
-      // TODO: Add Jellyfin uninitialize when implemented
 
       this.logger.log(
         `Successfully switched media server to ${targetServerType}`,

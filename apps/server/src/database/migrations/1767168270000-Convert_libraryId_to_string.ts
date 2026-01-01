@@ -1,33 +1,11 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-/**
- * Migration to convert libraryId from INTEGER to TEXT (string)
- *
- * This change is needed to support Jellyfin's UUID-based library IDs
- * while maintaining compatibility with Plex's numeric library IDs.
- *
- * SQLite doesn't support ALTER COLUMN, so we need to:
- * 1. Create new tables with the correct column type
- * 2. Copy data (casting integers to text)
- * 3. Drop old tables
- * 4. Rename new tables
- */
 export class ConvertLibraryIdToString1767168270000 implements MigrationInterface {
   name = 'ConvertLibraryIdToString1767168270000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // =====================================================
-    // COLLECTION TABLE
-    // =====================================================
-
-    // 1. Get the current table schema
-    const collectionColumns = await queryRunner.query(
-      `PRAGMA table_info(collection)`,
-    );
-
-    // 2. Create a new table with libraryId as TEXT
     await queryRunner.query(`
-      CREATE TABLE "collection_new" (
+      CREATE TABLE "temporary_collection" (
         "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
         "mediaServerId" varchar,
         "mediaServerType" varchar DEFAULT ('plex'),
@@ -56,10 +34,8 @@ export class ConvertLibraryIdToString1767168270000 implements MigrationInterface
         CONSTRAINT "FK_sonarr" FOREIGN KEY ("sonarrSettingsId") REFERENCES "sonarr_settings" ("id") ON DELETE SET NULL ON UPDATE NO ACTION
       )
     `);
-
-    // 3. Copy data, converting libraryId to string
     await queryRunner.query(`
-      INSERT INTO "collection_new" (
+      INSERT INTO "temporary_collection" (
         "id", "mediaServerId", "mediaServerType", "libraryId", "title", "description",
         "isActive", "arrAction", "visibleOnRecommended", "visibleOnHome", "deleteAfterDays",
         "manualCollection", "manualCollectionName", "listExclusions", "forceOverseerr",
@@ -74,22 +50,13 @@ export class ConvertLibraryIdToString1767168270000 implements MigrationInterface
         "tautulliWatchedPercentOverride", "radarrSettingsId", "sonarrSettingsId", "sortTitle"
       FROM "collection"
     `);
-
-    // 4. Drop the old table
     await queryRunner.query(`DROP TABLE "collection"`);
-
-    // 5. Rename the new table
     await queryRunner.query(
-      `ALTER TABLE "collection_new" RENAME TO "collection"`,
+      `ALTER TABLE "temporary_collection" RENAME TO "collection"`,
     );
 
-    // =====================================================
-    // RULE_GROUP TABLE
-    // =====================================================
-
-    // 1. Create a new table with libraryId as TEXT
     await queryRunner.query(`
-      CREATE TABLE "rule_group_new" (
+      CREATE TABLE "temporary_rule_group" (
         "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
         "name" varchar NOT NULL,
         "description" varchar,
@@ -102,10 +69,8 @@ export class ConvertLibraryIdToString1767168270000 implements MigrationInterface
         CONSTRAINT "FK_collection" FOREIGN KEY ("collectionId") REFERENCES "collection" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
       )
     `);
-
-    // 2. Copy data, converting libraryId to string
     await queryRunner.query(`
-      INSERT INTO "rule_group_new" (
+      INSERT INTO "temporary_rule_group" (
         "id", "name", "description", "libraryId", "isActive", "collectionId", 
         "useRules", "dataType", "ruleHandlerCronSchedule"
       )
@@ -114,26 +79,15 @@ export class ConvertLibraryIdToString1767168270000 implements MigrationInterface
         "useRules", "dataType", "ruleHandlerCronSchedule"
       FROM "rule_group"
     `);
-
-    // 3. Drop the old table
     await queryRunner.query(`DROP TABLE "rule_group"`);
-
-    // 4. Rename the new table
     await queryRunner.query(
-      `ALTER TABLE "rule_group_new" RENAME TO "rule_group"`,
+      `ALTER TABLE "temporary_rule_group" RENAME TO "rule_group"`,
     );
-
-    // 5. Recreate foreign keys and indexes for rules table
-    // The rules table has a foreign key to rule_group, we need to ensure it still works
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    // =====================================================
-    // RULE_GROUP TABLE (revert)
-    // =====================================================
-
     await queryRunner.query(`
-      CREATE TABLE "rule_group_old" (
+      CREATE TABLE "temporary_rule_group" (
         "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
         "name" varchar NOT NULL,
         "description" varchar,
@@ -146,9 +100,8 @@ export class ConvertLibraryIdToString1767168270000 implements MigrationInterface
         CONSTRAINT "FK_collection" FOREIGN KEY ("collectionId") REFERENCES "collection" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
       )
     `);
-
     await queryRunner.query(`
-      INSERT INTO "rule_group_old" (
+      INSERT INTO "temporary_rule_group" (
         "id", "name", "description", "libraryId", "isActive", "collectionId",
         "useRules", "dataType", "ruleHandlerCronSchedule"
       )
@@ -157,18 +110,13 @@ export class ConvertLibraryIdToString1767168270000 implements MigrationInterface
         "useRules", "dataType", "ruleHandlerCronSchedule"
       FROM "rule_group"
     `);
-
     await queryRunner.query(`DROP TABLE "rule_group"`);
     await queryRunner.query(
-      `ALTER TABLE "rule_group_old" RENAME TO "rule_group"`,
+      `ALTER TABLE "temporary_rule_group" RENAME TO "rule_group"`,
     );
 
-    // =====================================================
-    // COLLECTION TABLE (revert)
-    // =====================================================
-
     await queryRunner.query(`
-      CREATE TABLE "collection_old" (
+      CREATE TABLE "temporary_collection" (
         "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
         "mediaServerId" varchar,
         "mediaServerType" varchar DEFAULT ('plex'),
@@ -197,9 +145,8 @@ export class ConvertLibraryIdToString1767168270000 implements MigrationInterface
         CONSTRAINT "FK_sonarr" FOREIGN KEY ("sonarrSettingsId") REFERENCES "sonarr_settings" ("id") ON DELETE SET NULL ON UPDATE NO ACTION
       )
     `);
-
     await queryRunner.query(`
-      INSERT INTO "collection_old" (
+      INSERT INTO "temporary_collection" (
         "id", "mediaServerId", "mediaServerType", "libraryId", "title", "description",
         "isActive", "arrAction", "visibleOnRecommended", "visibleOnHome", "deleteAfterDays",
         "manualCollection", "manualCollectionName", "listExclusions", "forceOverseerr",
@@ -214,10 +161,9 @@ export class ConvertLibraryIdToString1767168270000 implements MigrationInterface
         "tautulliWatchedPercentOverride", "radarrSettingsId", "sonarrSettingsId", "sortTitle"
       FROM "collection"
     `);
-
     await queryRunner.query(`DROP TABLE "collection"`);
     await queryRunner.query(
-      `ALTER TABLE "collection_old" RENAME TO "collection"`,
+      `ALTER TABLE "temporary_collection" RENAME TO "collection"`,
     );
   }
 }

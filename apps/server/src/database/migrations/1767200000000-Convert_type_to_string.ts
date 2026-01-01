@@ -1,33 +1,12 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-/**
- * Migration to convert numeric type columns to string values.
- *
- * Converts:
- * - 1 → 'movie'
- * - 2 → 'show'
- * - 3 → 'season'
- * - 4 → 'episode'
- *
- * Affected tables:
- * - collection.type
- * - exclusion.type
- * - rule_group.dataType
- */
 export class ConvertTypeToString1767200000000 implements MigrationInterface {
   name = 'ConvertTypeToString1767200000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // =====================================================
-    // COLLECTION TABLE
-    // =====================================================
-
-    // Create new column
     await queryRunner.query(
       `ALTER TABLE "collection" ADD COLUMN "type_new" varchar`,
     );
-
-    // Convert numeric values to strings (handle both integer and string representations)
     await queryRunner.query(`
       UPDATE "collection" SET "type_new" = CASE
         WHEN "type" = 1 OR "type" = '1' THEN 'movie'
@@ -37,10 +16,8 @@ export class ConvertTypeToString1767200000000 implements MigrationInterface {
         ELSE 'movie'
       END
     `);
-
-    // SQLite doesn't support DROP COLUMN directly, recreate the table
     await queryRunner.query(`
-      CREATE TABLE "collection_new" (
+      CREATE TABLE "temporary_collection" (
         "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
         "mediaServerId" varchar,
         "mediaServerType" varchar DEFAULT 'plex',
@@ -67,10 +44,8 @@ export class ConvertTypeToString1767200000000 implements MigrationInterface {
         "sortTitle" varchar
       )
     `);
-
-    // Copy data
     await queryRunner.query(`
-      INSERT INTO "collection_new" (
+      INSERT INTO "temporary_collection" (
         "id", "mediaServerId", "mediaServerType", "libraryId", "title", "description",
         "isActive", "arrAction", "visibleOnRecommended", "visibleOnHome", "deleteAfterDays",
         "manualCollection", "manualCollectionName", "listExclusions", "forceOverseerr",
@@ -85,23 +60,14 @@ export class ConvertTypeToString1767200000000 implements MigrationInterface {
         "tautulliWatchedPercentOverride", "radarrSettingsId", "sonarrSettingsId", "sortTitle"
       FROM "collection"
     `);
-
-    // Drop old table and rename new one
     await queryRunner.query(`DROP TABLE "collection"`);
     await queryRunner.query(
-      `ALTER TABLE "collection_new" RENAME TO "collection"`,
+      `ALTER TABLE "temporary_collection" RENAME TO "collection"`,
     );
 
-    // =====================================================
-    // EXCLUSION TABLE
-    // =====================================================
-
-    // Create new column
     await queryRunner.query(
       `ALTER TABLE "exclusion" ADD COLUMN "type_new" varchar`,
     );
-
-    // Convert numeric values to strings (handle both integer and string representations)
     await queryRunner.query(`
       UPDATE "exclusion" SET "type_new" = CASE
         WHEN "type" = 1 OR "type" = '1' THEN 'movie'
@@ -111,10 +77,8 @@ export class ConvertTypeToString1767200000000 implements MigrationInterface {
         ELSE NULL
       END
     `);
-
-    // Recreate table with string type
     await queryRunner.query(`
-      CREATE TABLE "exclusion_new" (
+      CREATE TABLE "temporary_exclusion" (
         "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
         "mediaServerId" varchar NOT NULL,
         "ruleGroupId" integer,
@@ -122,30 +86,19 @@ export class ConvertTypeToString1767200000000 implements MigrationInterface {
         "type" varchar
       )
     `);
-
-    // Copy data
     await queryRunner.query(`
-      INSERT INTO "exclusion_new" ("id", "mediaServerId", "ruleGroupId", "parent", "type")
+      INSERT INTO "temporary_exclusion" ("id", "mediaServerId", "ruleGroupId", "parent", "type")
       SELECT "id", "mediaServerId", "ruleGroupId", "parent", "type_new"
       FROM "exclusion"
     `);
-
-    // Drop old table and rename new one
     await queryRunner.query(`DROP TABLE "exclusion"`);
     await queryRunner.query(
-      `ALTER TABLE "exclusion_new" RENAME TO "exclusion"`,
+      `ALTER TABLE "temporary_exclusion" RENAME TO "exclusion"`,
     );
 
-    // =====================================================
-    // RULE_GROUP TABLE
-    // =====================================================
-
-    // Create new column
     await queryRunner.query(
       `ALTER TABLE "rule_group" ADD COLUMN "dataType_new" varchar`,
     );
-
-    // Convert numeric values to strings (handle both integer and string representations)
     await queryRunner.query(`
       UPDATE "rule_group" SET "dataType_new" = CASE
         WHEN "dataType" = 1 OR "dataType" = '1' THEN 'movie'
@@ -155,10 +108,8 @@ export class ConvertTypeToString1767200000000 implements MigrationInterface {
         ELSE NULL
       END
     `);
-
-    // Recreate table with string type
     await queryRunner.query(`
-      CREATE TABLE "rule_group_new" (
+      CREATE TABLE "temporary_rule_group" (
         "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
         "name" varchar NOT NULL,
         "description" varchar,
@@ -170,10 +121,8 @@ export class ConvertTypeToString1767200000000 implements MigrationInterface {
         "ruleHandlerCronSchedule" varchar
       )
     `);
-
-    // Copy data
     await queryRunner.query(`
-      INSERT INTO "rule_group_new" (
+      INSERT INTO "temporary_rule_group" (
         "id", "name", "description", "libraryId", "isActive",
         "collectionId", "useRules", "dataType", "ruleHandlerCronSchedule"
       )
@@ -182,23 +131,16 @@ export class ConvertTypeToString1767200000000 implements MigrationInterface {
         "collectionId", "useRules", "dataType_new", "ruleHandlerCronSchedule"
       FROM "rule_group"
     `);
-
-    // Drop old table and rename new one
     await queryRunner.query(`DROP TABLE "rule_group"`);
     await queryRunner.query(
-      `ALTER TABLE "rule_group_new" RENAME TO "rule_group"`,
+      `ALTER TABLE "temporary_rule_group" RENAME TO "rule_group"`,
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    // =====================================================
-    // RULE_GROUP TABLE - Revert to numeric
-    // =====================================================
-
     await queryRunner.query(
       `ALTER TABLE "rule_group" ADD COLUMN "dataType_old" integer`,
     );
-
     await queryRunner.query(`
       UPDATE "rule_group" SET "dataType_old" = CASE
         WHEN "dataType" = 'movie' THEN 1
@@ -208,9 +150,8 @@ export class ConvertTypeToString1767200000000 implements MigrationInterface {
         ELSE NULL
       END
     `);
-
     await queryRunner.query(`
-      CREATE TABLE "rule_group_old" (
+      CREATE TABLE "temporary_rule_group" (
         "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
         "name" varchar NOT NULL,
         "description" varchar,
@@ -222,9 +163,8 @@ export class ConvertTypeToString1767200000000 implements MigrationInterface {
         "ruleHandlerCronSchedule" varchar
       )
     `);
-
     await queryRunner.query(`
-      INSERT INTO "rule_group_old" (
+      INSERT INTO "temporary_rule_group" (
         "id", "name", "description", "libraryId", "isActive",
         "collectionId", "useRules", "dataType", "ruleHandlerCronSchedule"
       )
@@ -233,20 +173,14 @@ export class ConvertTypeToString1767200000000 implements MigrationInterface {
         "collectionId", "useRules", "dataType_old", "ruleHandlerCronSchedule"
       FROM "rule_group"
     `);
-
     await queryRunner.query(`DROP TABLE "rule_group"`);
     await queryRunner.query(
-      `ALTER TABLE "rule_group_old" RENAME TO "rule_group"`,
+      `ALTER TABLE "temporary_rule_group" RENAME TO "rule_group"`,
     );
-
-    // =====================================================
-    // EXCLUSION TABLE - Revert to numeric
-    // =====================================================
 
     await queryRunner.query(
       `ALTER TABLE "exclusion" ADD COLUMN "type_old" integer`,
     );
-
     await queryRunner.query(`
       UPDATE "exclusion" SET "type_old" = CASE
         WHEN "type" = 'movie' THEN 1
@@ -256,9 +190,8 @@ export class ConvertTypeToString1767200000000 implements MigrationInterface {
         ELSE NULL
       END
     `);
-
     await queryRunner.query(`
-      CREATE TABLE "exclusion_old" (
+      CREATE TABLE "temporary_exclusion" (
         "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
         "mediaServerId" varchar NOT NULL,
         "ruleGroupId" integer,
@@ -266,26 +199,19 @@ export class ConvertTypeToString1767200000000 implements MigrationInterface {
         "type" integer
       )
     `);
-
     await queryRunner.query(`
-      INSERT INTO "exclusion_old" ("id", "mediaServerId", "ruleGroupId", "parent", "type")
+      INSERT INTO "temporary_exclusion" ("id", "mediaServerId", "ruleGroupId", "parent", "type")
       SELECT "id", "mediaServerId", "ruleGroupId", "parent", "type_old"
       FROM "exclusion"
     `);
-
     await queryRunner.query(`DROP TABLE "exclusion"`);
     await queryRunner.query(
-      `ALTER TABLE "exclusion_old" RENAME TO "exclusion"`,
+      `ALTER TABLE "temporary_exclusion" RENAME TO "exclusion"`,
     );
-
-    // =====================================================
-    // COLLECTION TABLE - Revert to numeric
-    // =====================================================
 
     await queryRunner.query(
       `ALTER TABLE "collection" ADD COLUMN "type_old" integer`,
     );
-
     await queryRunner.query(`
       UPDATE "collection" SET "type_old" = CASE
         WHEN "type" = 'movie' THEN 1
@@ -295,9 +221,8 @@ export class ConvertTypeToString1767200000000 implements MigrationInterface {
         ELSE 1
       END
     `);
-
     await queryRunner.query(`
-      CREATE TABLE "collection_old" (
+      CREATE TABLE "temporary_collection" (
         "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
         "mediaServerId" varchar,
         "mediaServerType" varchar DEFAULT 'plex',
@@ -324,9 +249,8 @@ export class ConvertTypeToString1767200000000 implements MigrationInterface {
         "sortTitle" varchar
       )
     `);
-
     await queryRunner.query(`
-      INSERT INTO "collection_old" (
+      INSERT INTO "temporary_collection" (
         "id", "mediaServerId", "mediaServerType", "libraryId", "title", "description",
         "isActive", "arrAction", "visibleOnRecommended", "visibleOnHome", "deleteAfterDays",
         "manualCollection", "manualCollectionName", "listExclusions", "forceOverseerr",
@@ -341,10 +265,9 @@ export class ConvertTypeToString1767200000000 implements MigrationInterface {
         "tautulliWatchedPercentOverride", "radarrSettingsId", "sonarrSettingsId", "sortTitle"
       FROM "collection"
     `);
-
     await queryRunner.query(`DROP TABLE "collection"`);
     await queryRunner.query(
-      `ALTER TABLE "collection_old" RENAME TO "collection"`,
+      `ALTER TABLE "temporary_collection" RENAME TO "collection"`,
     );
   }
 }
