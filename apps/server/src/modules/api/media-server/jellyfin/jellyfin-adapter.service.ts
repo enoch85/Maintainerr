@@ -754,14 +754,47 @@ export class JellyfinService implements IMediaServerService {
     }
 
     try {
+      // First, get the existing collection to preserve all properties
+      const existingResponse = await getItemsApi(this.api).getItems({
+        ids: [params.collectionId],
+        includeItemTypes: [BaseItemKind.BoxSet],
+        fields: [
+          ItemFields.Overview,
+          ItemFields.DateCreated,
+          ItemFields.ChildCount,
+          ItemFields.Tags,
+          ItemFields.Genres,
+          ItemFields.Studios,
+          ItemFields.People,
+        ],
+      });
+
+      const existingCollection = existingResponse.data.Items?.[0];
+      if (!existingCollection) {
+        throw new Error(`Collection ${params.collectionId} not found`);
+      }
+
       // Update collection metadata using ItemUpdateApi
+      // We must include array properties to avoid null reference errors in Jellyfin
       await getItemUpdateApi(this.api).updateItem({
         itemId: params.collectionId,
         baseItemDto: {
-          Id: params.collectionId,
+          // Preserve existing properties
+          ...existingCollection,
+          // Update only the fields we want to change
           Name: params.title,
           Overview: params.summary,
           ForcedSortName: params.sortTitle,
+          // Ensure array properties are never null (Jellyfin bug workaround)
+          Tags: existingCollection.Tags ?? [],
+          Genres: existingCollection.Genres ?? [],
+          Studios: existingCollection.Studios ?? [],
+          People: existingCollection.People ?? [],
+          GenreItems: existingCollection.GenreItems ?? [],
+          TagItems: existingCollection.TagItems ?? [],
+          RemoteTrailers: existingCollection.RemoteTrailers ?? [],
+          ProviderIds: existingCollection.ProviderIds ?? {},
+          LockedFields: existingCollection.LockedFields ?? [],
         },
       });
 
