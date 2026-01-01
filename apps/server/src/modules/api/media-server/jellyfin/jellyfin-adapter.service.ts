@@ -785,7 +785,7 @@ export class JellyfinService implements IMediaServerService {
           Name: params.title,
           Overview: params.summary,
           ForcedSortName: params.sortTitle,
-          // Ensure array properties are never null (Jellyfin bug workaround)
+          // Jellyfin's updateItem API requires array properties to be provided
           Tags: existingCollection.Tags ?? [],
           Genres: existingCollection.Genres ?? [],
           Studios: existingCollection.Studios ?? [],
