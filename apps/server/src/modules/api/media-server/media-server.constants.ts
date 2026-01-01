@@ -1,4 +1,4 @@
-import { EMediaServerFeature, MediaServerType } from '@maintainerr/contracts';
+import { MediaServerFeature, MediaServerType } from '@maintainerr/contracts';
 
 /**
  * Feature support matrix for media servers.
@@ -6,18 +6,18 @@ import { EMediaServerFeature, MediaServerType } from '@maintainerr/contracts';
  */
 export const MEDIA_SERVER_FEATURES: Record<
   MediaServerType,
-  Set<EMediaServerFeature>
+  Set<MediaServerFeature>
 > = {
   [MediaServerType.PLEX]: new Set([
-    EMediaServerFeature.COLLECTION_VISIBILITY,
-    EMediaServerFeature.WATCHLIST,
-    EMediaServerFeature.CENTRAL_WATCH_HISTORY,
-    EMediaServerFeature.LABELS,
-    EMediaServerFeature.PLAYLISTS,
+    MediaServerFeature.COLLECTION_VISIBILITY,
+    MediaServerFeature.WATCHLIST,
+    MediaServerFeature.CENTRAL_WATCH_HISTORY,
+    MediaServerFeature.LABELS,
+    MediaServerFeature.PLAYLISTS,
   ]),
   [MediaServerType.JELLYFIN]: new Set([
-    EMediaServerFeature.LABELS, // Tags in Jellyfin
-    EMediaServerFeature.PLAYLISTS,
+    MediaServerFeature.LABELS, // Tags in Jellyfin
+    MediaServerFeature.PLAYLISTS,
     // Note: COLLECTION_VISIBILITY not supported
     // Note: WATCHLIST not supported (no API)
     // Note: CENTRAL_WATCH_HISTORY not supported (requires user iteration)
@@ -29,7 +29,7 @@ export const MEDIA_SERVER_FEATURES: Record<
  */
 export function supportsFeature(
   serverType: MediaServerType,
-  feature: EMediaServerFeature,
+  feature: MediaServerFeature,
 ): boolean {
   return MEDIA_SERVER_FEATURES[serverType]?.has(feature) ?? false;
 }

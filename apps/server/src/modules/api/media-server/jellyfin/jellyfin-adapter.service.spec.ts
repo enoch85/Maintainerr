@@ -1,4 +1,4 @@
-import { EMediaServerFeature, MediaServerType } from '@maintainerr/contracts';
+import { MediaServerFeature, MediaServerType } from '@maintainerr/contracts';
 import { Mocked, TestBed } from '@suites/unit';
 import { SettingsService } from '../../../settings/settings.service';
 import { JellyfinService } from './jellyfin-adapter.service';
@@ -169,28 +169,28 @@ describe('JellyfinService', () => {
 
   describe('feature detection', () => {
     it('should support LABELS feature', () => {
-      expect(service.supportsFeature(EMediaServerFeature.LABELS)).toBe(true);
+      expect(service.supportsFeature(MediaServerFeature.LABELS)).toBe(true);
     });
 
     it('should support PLAYLISTS feature', () => {
-      expect(service.supportsFeature(EMediaServerFeature.PLAYLISTS)).toBe(true);
+      expect(service.supportsFeature(MediaServerFeature.PLAYLISTS)).toBe(true);
     });
 
     it('should NOT support COLLECTION_VISIBILITY feature', () => {
       expect(
-        service.supportsFeature(EMediaServerFeature.COLLECTION_VISIBILITY),
+        service.supportsFeature(MediaServerFeature.COLLECTION_VISIBILITY),
       ).toBe(false);
     });
 
     it('should NOT support WATCHLIST feature', () => {
-      expect(service.supportsFeature(EMediaServerFeature.WATCHLIST)).toBe(
+      expect(service.supportsFeature(MediaServerFeature.WATCHLIST)).toBe(
         false,
       );
     });
 
     it('should NOT support CENTRAL_WATCH_HISTORY feature', () => {
       expect(
-        service.supportsFeature(EMediaServerFeature.CENTRAL_WATCH_HISTORY),
+        service.supportsFeature(MediaServerFeature.CENTRAL_WATCH_HISTORY),
       ).toBe(false);
     });
   });

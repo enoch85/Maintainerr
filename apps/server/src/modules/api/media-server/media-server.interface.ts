@@ -1,7 +1,7 @@
 import {
   CollectionVisibilitySettings,
   CreateCollectionParams,
-  EMediaServerFeature,
+  MediaServerFeature,
   MediaServerType,
   LibraryQueryOptions,
   MediaCollection,
@@ -53,7 +53,7 @@ export interface IMediaServerService {
    * Check if a specific feature is supported by this media server.
    * Used to conditionally enable/disable functionality.
    */
-  supportsFeature(feature: EMediaServerFeature): boolean;
+  supportsFeature(feature: MediaServerFeature): boolean;
 
   /**
    * Get server status and version information.

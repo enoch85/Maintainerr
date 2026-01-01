@@ -1,7 +1,7 @@
 import {
   CollectionLogMeta,
   ECollectionLogType,
-  EMediaServerFeature,
+  MediaServerFeature,
   isMediaType,
   MaintainerrEvent,
   MediaCollection,
@@ -325,7 +325,7 @@ export class CollectionsService {
 
         // Handle visibility settings (Plex-only feature)
         if (
-          mediaServer.supportsFeature(EMediaServerFeature.COLLECTION_VISIBILITY)
+          mediaServer.supportsFeature(MediaServerFeature.COLLECTION_VISIBILITY)
         ) {
           await mediaServer.updateCollectionVisibility({
             libraryId: collection.libraryId,
@@ -346,7 +346,7 @@ export class CollectionsService {
           // Handle visibility settings (Plex-only feature)
           if (
             mediaServer.supportsFeature(
-              EMediaServerFeature.COLLECTION_VISIBILITY,
+              MediaServerFeature.COLLECTION_VISIBILITY,
             )
           ) {
             await mediaServer.updateCollectionVisibility({
@@ -442,7 +442,7 @@ export class CollectionsService {
           // Handle visibility settings (Plex-only feature)
           if (
             mediaServer.supportsFeature(
-              EMediaServerFeature.COLLECTION_VISIBILITY,
+              MediaServerFeature.COLLECTION_VISIBILITY,
             )
           ) {
             await mediaServer.updateCollectionVisibility({
@@ -699,7 +699,7 @@ export class CollectionsService {
               // Handle visibility settings (Plex-only feature)
               if (
                 mediaServer.supportsFeature(
-                  EMediaServerFeature.COLLECTION_VISIBILITY,
+                  MediaServerFeature.COLLECTION_VISIBILITY,
                 )
               ) {
                 await mediaServer.updateCollectionVisibility({

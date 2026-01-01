@@ -1,7 +1,7 @@
 import {
   CollectionVisibilitySettings,
   CreateCollectionParams,
-  EMediaServerFeature,
+  MediaServerFeature,
   MediaServerType,
   LibraryQueryOptions,
   MediaCollection,
@@ -55,7 +55,7 @@ export class PlexAdapterService implements IMediaServerService {
   }
 
 
-  supportsFeature(feature: EMediaServerFeature): boolean {
+  supportsFeature(feature: MediaServerFeature): boolean {
     return supportsFeature(MediaServerType.PLEX, feature);
   }
 

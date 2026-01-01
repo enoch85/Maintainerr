@@ -54,7 +54,7 @@ export function isValidMediaItemType(type: string): type is MediaItemType {
  * Feature flags for capability detection
  * Different media servers support different features
  */
-export enum EMediaServerFeature {
+export enum MediaServerFeature {
   /** Ability to set collection visibility (home/recommended) */
   COLLECTION_VISIBILITY = 'collection_visibility',
   /** Watchlist functionality via external API (Plex.tv) */
