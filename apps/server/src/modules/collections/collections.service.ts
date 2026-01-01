@@ -562,6 +562,7 @@ export class CollectionsService {
     // checks and fixes automatic collection link
     if (!collection.manualCollection) {
       let serverColl: MediaCollection | undefined = undefined;
+      const originalMediaServerId = collection.mediaServerId; // Track if we already had a link
 
       this.logger.debug(
         `[checkAutomaticMediaServerLink] Collection "${collection.title}" (DB id: ${collection.id}, mediaServerId: ${collection.mediaServerId})`,
@@ -592,9 +593,10 @@ export class CollectionsService {
       }
 
       // If the collection is empty, remove it. Otherwise issues when adding media
-      // Note: We use getCollectionChildren instead of childCount because some media servers
-      // (like Jellyfin) don't update ChildCount metadata immediately after adding items
-      if (serverColl && collection.mediaServerId !== null) {
+      // ONLY check this if we already had a mediaServerId when entering this function.
+      // If we just linked/found it (originalMediaServerId was null), don't delete it -
+      // the media server may not have finished processing recent additions yet.
+      if (serverColl && collection.mediaServerId !== null && originalMediaServerId !== null) {
         const children = await mediaServer.getCollectionChildren(serverColl.id);
         const actualChildCount = children?.length ?? 0;
 
