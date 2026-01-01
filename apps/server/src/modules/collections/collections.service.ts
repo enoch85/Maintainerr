@@ -605,7 +605,9 @@ export class CollectionsService {
 
         // For Jellyfin, the metadata childCount can be stale/delayed.
         // Make a fresh API call to get the actual children count.
-        if (this.settingsService.media_server_type === MediaServerType.JELLYFIN) {
+        if (
+          this.settingsService.media_server_type === MediaServerType.JELLYFIN
+        ) {
           const children = await mediaServer.getCollectionChildren(
             serverColl.id,
           );
