@@ -430,7 +430,8 @@ export class CollectionsService {
         if (
           collection.type === dbCollection.type &&
           !dbCollection.manualCollection &&
-          !collection.manualCollection
+          !collection.manualCollection &&
+          collection.libraryId === dbCollection.libraryId // Library must match
         ) {
           await mediaServer.updateCollection({
             libraryId: collection.libraryId,
@@ -454,12 +455,13 @@ export class CollectionsService {
             });
           }
         } else {
-          // if the type changed, or the manual collection changed
+          // if the type, manual collection, or library changed - reset the media server collection
           if (
             collection.manualCollection !== dbCollection.manualCollection ||
             collection.type !== dbCollection.type ||
             collection.manualCollectionName !==
-              dbCollection.manualCollectionName
+              dbCollection.manualCollectionName ||
+            collection.libraryId !== dbCollection.libraryId
           ) {
             if (!dbCollection.manualCollection) {
               // Don't remove the collections if it was a manual one
@@ -485,7 +487,7 @@ export class CollectionsService {
       return { dbCollection: dbResp };
     } catch (err) {
       this.logger.warn(
-        'An error occurred while performing collection actions.',
+        `An error occurred while performing collection actions: ${err.message || err}`,
       );
       await this.addLogRecord(
         { id: collection.id } as Collection,
@@ -1202,6 +1204,14 @@ export class CollectionsService {
     name: string,
     libraryId: string,
   ): Promise<MediaCollection | undefined> {
+    // Cannot search for collections without a valid library ID
+    if (!libraryId || libraryId === '') {
+      this.logger.debug(
+        `[findMediaServerCollection] Skipping search - libraryId is empty`,
+      );
+      return undefined;
+    }
+
     try {
       const mediaServer = await this.getMediaServer();
       const collections = await mediaServer.getCollections(libraryId);

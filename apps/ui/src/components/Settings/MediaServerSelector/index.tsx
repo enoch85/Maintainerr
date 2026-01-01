@@ -163,7 +163,7 @@ const MediaServerSelector = ({
         <h3 className="heading">Media Server</h3>
         <p className="description">
           {currentType
-            ? 'Select your media server type. Switching will clear all collections and related data.'
+            ? 'Select your media server type. Switching will reset media server-specific data.'
             : 'Select your media server to get started with Maintainerr.'}
         </p>
 
