@@ -436,6 +436,24 @@ export class RulesService {
             collectionId: group.collectionId,
           });
 
+          // Delete the media server collection if it exists, then clear mediaServerId.
+          // Jellyfin auto-deletes empty collections, but Plex does not.
+          if (dbCollection.mediaServerId) {
+            const mediaServer = await this.getMediaServer();
+            try {
+              await mediaServer.deleteCollection(dbCollection.mediaServerId);
+            } catch (e) {
+              // Collection may already be deleted, ignore errors
+              this.logger.debug(
+                `Failed to delete media server collection: ${e.message}`,
+              );
+            }
+          }
+          await this.collectionService.saveCollection({
+            ...dbCollection,
+            mediaServerId: null,
+          });
+
           await this.collectionService.addLogRecord(
             { id: group.collectionId } as Collection,
             'A crucial setting of the collection was updated. As a result all media and specific exclusions were removed',
