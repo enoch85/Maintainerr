@@ -690,11 +690,13 @@ export class CollectionsService {
 
         // Check if we need to create a new media server collection
         // This happens when: 1) we have new items to add, OR 2) we have existing items but no media server collection
-        const needsMediaServerCollection = !collection.mediaServerId && 
+        const needsMediaServerCollection =
+          !collection.mediaServerId &&
           (newMedia.length > 0 || collectionMedia.length > 0);
-        
+
         // Check if we need to sync existing items to a newly created collection
-        const needsResync = !collection.mediaServerId && collectionMedia.length > 0;
+        const needsResync =
+          !collection.mediaServerId && collectionMedia.length > 0;
 
         // Create media server collection if needed
         if (needsMediaServerCollection) {
@@ -759,7 +761,7 @@ export class CollectionsService {
             }
           }
         }
-        
+
         // add new children to collection
         if (newMedia.length > 0 && collection.mediaServerId) {
           for (const childMedia of newMedia) {
