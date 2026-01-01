@@ -596,7 +596,11 @@ export class CollectionsService {
       // ONLY check this if we already had a mediaServerId when entering this function.
       // If we just linked/found it (originalMediaServerId was null), don't delete it -
       // the media server may not have finished processing recent additions yet.
-      if (serverColl && collection.mediaServerId !== null && originalMediaServerId !== null) {
+      if (
+        serverColl &&
+        collection.mediaServerId !== null &&
+        originalMediaServerId !== null
+      ) {
         const children = await mediaServer.getCollectionChildren(serverColl.id);
         const actualChildCount = children?.length ?? 0;
 
