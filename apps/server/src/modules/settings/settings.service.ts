@@ -542,7 +542,10 @@ export class SettingsService implements SettingDto {
 
       const jellyfin = new Jellyfin({
         clientInfo: { name: 'Maintainerr', version: '2.0.0' },
-        deviceInfo: { name: 'Maintainerr-AutoDetect', id: 'maintainerr-detect' },
+        deviceInfo: {
+          name: 'Maintainerr-AutoDetect',
+          id: 'maintainerr-detect',
+        },
       });
 
       const api = jellyfin.createApi(
