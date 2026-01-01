@@ -680,7 +680,7 @@ export class CollectionsService {
       });
 
       // filter already existing out
-      media = media.filter(
+      const newMedia = media.filter(
         (m) =>
           !collectionMedia.find((el) => el.mediaServerId === m.mediaServerId),
       );
@@ -688,53 +688,81 @@ export class CollectionsService {
       if (collection) {
         collection = await this.checkAutomaticMediaServerLink(collection);
 
-        // Create media server collection if we have new items to add
-        if (media.length > 0) {
-          if (!collection.mediaServerId) {
-            let newColl: MediaCollection | undefined = undefined;
-            if (collection.manualCollection) {
-              newColl = await this.findMediaServerCollection(
-                collection.manualCollectionName,
-                collection.libraryId,
-              );
-            } else {
-              newColl = await mediaServer.createCollection({
+        // Check if we need to create a new media server collection
+        // This happens when: 1) we have new items to add, OR 2) we have existing items but no media server collection
+        const needsMediaServerCollection = !collection.mediaServerId && 
+          (newMedia.length > 0 || collectionMedia.length > 0);
+        
+        // Check if we need to sync existing items to a newly created collection
+        const needsResync = !collection.mediaServerId && collectionMedia.length > 0;
+
+        // Create media server collection if needed
+        if (needsMediaServerCollection) {
+          let newColl: MediaCollection | undefined = undefined;
+          if (collection.manualCollection) {
+            newColl = await this.findMediaServerCollection(
+              collection.manualCollectionName,
+              collection.libraryId,
+            );
+          } else {
+            newColl = await mediaServer.createCollection({
+              libraryId: collection.libraryId,
+              title: collection.title,
+              summary: collection.description,
+              sortTitle: collection.sortTitle,
+              type: collection.type,
+            });
+          }
+          if (newColl?.id) {
+            collection = await this.collectionRepo.save({
+              ...collection,
+              mediaServerId: newColl.id,
+            });
+            // Handle visibility settings (Plex-only feature)
+            if (
+              mediaServer.supportsFeature(
+                MediaServerFeature.COLLECTION_VISIBILITY,
+              )
+            ) {
+              await mediaServer.updateCollectionVisibility({
                 libraryId: collection.libraryId,
-                title: collection.title,
-                summary: collection.description,
-                sortTitle: collection.sortTitle,
-                type: collection.type,
+                collectionId: collection.mediaServerId,
+                recommended: collection.visibleOnRecommended,
+                ownHome: collection.visibleOnHome,
+                sharedHome: collection.visibleOnHome,
               });
             }
-            if (newColl?.id) {
-              collection = await this.collectionRepo.save({
-                ...collection,
-                mediaServerId: newColl.id,
-              });
-              // Handle visibility settings (Plex-only feature)
-              if (
-                mediaServer.supportsFeature(
-                  MediaServerFeature.COLLECTION_VISIBILITY,
-                )
-              ) {
-                await mediaServer.updateCollectionVisibility({
-                  libraryId: collection.libraryId,
-                  collectionId: collection.mediaServerId,
-                  recommended: collection.visibleOnRecommended,
-                  ownHome: collection.visibleOnHome,
-                  sharedHome: collection.visibleOnHome,
-                });
+
+            // If we had existing collection_media items, sync them to the new media server collection
+            if (needsResync) {
+              this.logger.log(
+                `Syncing ${collectionMedia.length} existing items to newly created media server collection`,
+              );
+              for (const existingMedia of collectionMedia) {
+                try {
+                  await mediaServer.addToCollection(
+                    collection.mediaServerId,
+                    existingMedia.mediaServerId,
+                  );
+                } catch (err) {
+                  this.logger.warn(
+                    `Failed to sync item ${existingMedia.mediaServerId} to collection: ${err.message}`,
+                  );
+                }
               }
-            } else {
-              if (collection.manualCollection) {
-                this.logger.warn(
-                  `Manual Collection '${collection.manualCollectionName}' doesn't exist in media server..`,
-                );
-              }
+            }
+          } else {
+            if (collection.manualCollection) {
+              this.logger.warn(
+                `Manual Collection '${collection.manualCollectionName}' doesn't exist in media server..`,
+              );
             }
           }
-          // add children to collection
-          for (const childMedia of media) {
+        }
+        
+        // add new children to collection
+        if (newMedia.length > 0 && collection.mediaServerId) {
+          for (const childMedia of newMedia) {
             await this.addChildToCollection(
               { mediaServerId: collection.mediaServerId, dbId: collection.id },
               childMedia.mediaServerId,
