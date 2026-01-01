@@ -11,11 +11,16 @@ export class MediaIdFinder {
     private tmdbIdHelper: TmdbIdService,
   ) {}
 
-  public async findTvdbId(mediaServerId: string | number, tmdbId?: number | null) {
+  public async findTvdbId(
+    mediaServerId: string | number,
+    tmdbId?: number | null,
+  ) {
     let tvdbid = undefined;
     if (!tmdbId && mediaServerId) {
       tmdbId = (
-        await this.tmdbIdHelper.getTmdbIdFromPlexRatingKey(mediaServerId.toString())
+        await this.tmdbIdHelper.getTmdbIdFromPlexRatingKey(
+          mediaServerId.toString(),
+        )
       )?.id;
     }
 
