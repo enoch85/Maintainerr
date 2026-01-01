@@ -1,4 +1,4 @@
-import { EMediaServerFeature, EMediaServerType } from '@maintainerr/contracts';
+import { EMediaServerFeature, MediaServerType } from '@maintainerr/contracts';
 import { Mocked, TestBed } from '@suites/unit';
 import { SettingsService } from '../../../settings/settings.service';
 import { JellyfinService } from './jellyfin-adapter.service';
@@ -111,7 +111,7 @@ describe('JellyfinService', () => {
     });
 
     it('should return JELLYFIN as server type', () => {
-      expect(service.getServerType()).toBe(EMediaServerType.JELLYFIN);
+      expect(service.getServerType()).toBe(MediaServerType.JELLYFIN);
     });
 
     it('should initialize successfully with valid settings', async () => {

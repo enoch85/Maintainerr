@@ -1,21 +1,21 @@
-import { EMediaServerFeature, EMediaServerType } from '@maintainerr/contracts';
+import { EMediaServerFeature, MediaServerType } from '@maintainerr/contracts';
 
 /**
  * Feature support matrix for media servers.
  * Used by MediaServerFactory and feature detection.
  */
 export const MEDIA_SERVER_FEATURES: Record<
-  EMediaServerType,
+  MediaServerType,
   Set<EMediaServerFeature>
 > = {
-  [EMediaServerType.PLEX]: new Set([
+  [MediaServerType.PLEX]: new Set([
     EMediaServerFeature.COLLECTION_VISIBILITY,
     EMediaServerFeature.WATCHLIST,
     EMediaServerFeature.CENTRAL_WATCH_HISTORY,
     EMediaServerFeature.LABELS,
     EMediaServerFeature.PLAYLISTS,
   ]),
-  [EMediaServerType.JELLYFIN]: new Set([
+  [MediaServerType.JELLYFIN]: new Set([
     EMediaServerFeature.LABELS, // Tags in Jellyfin
     EMediaServerFeature.PLAYLISTS,
     // Note: COLLECTION_VISIBILITY not supported
@@ -28,7 +28,7 @@ export const MEDIA_SERVER_FEATURES: Record<
  * Check if a media server type supports a specific feature.
  */
 export function supportsFeature(
-  serverType: EMediaServerType,
+  serverType: MediaServerType,
   feature: EMediaServerFeature,
 ): boolean {
   return MEDIA_SERVER_FEATURES[serverType]?.has(feature) ?? false;

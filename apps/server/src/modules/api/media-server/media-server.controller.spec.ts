@@ -1,7 +1,7 @@
 import {
   CollectionVisibilitySettings,
   CreateCollectionParams,
-  EMediaServerType,
+  MediaServerType,
   MediaCollection,
   MediaItem,
   MediaItemType,
@@ -69,7 +69,7 @@ describe('MediaServerController', () => {
       initialize: jest.fn(),
       uninitialize: jest.fn(),
       isSetup: jest.fn().mockReturnValue(true),
-      getServerType: jest.fn().mockReturnValue(EMediaServerType.PLEX),
+      getServerType: jest.fn().mockReturnValue(MediaServerType.PLEX),
       supportsFeature: jest.fn().mockReturnValue(true),
       getStatus: jest.fn().mockResolvedValue(mockStatus),
       getUsers: jest.fn().mockResolvedValue(mockUsers),
@@ -124,7 +124,7 @@ describe('MediaServerController', () => {
     it('should return server type', async () => {
       const result = await controller.getServerType();
 
-      expect(result).toEqual({ type: EMediaServerType.PLEX });
+      expect(result).toEqual({ type: MediaServerType.PLEX });
     });
   });
 

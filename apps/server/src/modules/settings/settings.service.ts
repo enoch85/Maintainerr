@@ -1,5 +1,5 @@
 import {
-  EMediaServerType,
+  MediaServerType,
   JellyseerrSettingDto,
   MaintainerrEvent,
   MediaServerSwitchPreviewDto,
@@ -59,7 +59,7 @@ export class SettingsService implements SettingDto {
 
   locale: string;
 
-  media_server_type?: 'plex' | 'jellyfin';
+  media_server_type?: MediaServerType;
 
   plex_name: string;
 
@@ -495,7 +495,7 @@ export class SettingsService implements SettingDto {
         jellyfin_api_key: settings.jellyfin_api_key,
         jellyfin_user_id: settings.jellyfin_user_id || null,
         jellyfin_server_name: testResult.serverName || null,
-        media_server_type: 'jellyfin',
+        media_server_type: MediaServerType.JELLYFIN,
       });
 
       // Uninitialize service so it reinitializes with new credentials on next use
@@ -505,7 +505,7 @@ export class SettingsService implements SettingDto {
       this.jellyfin_api_key = settings.jellyfin_api_key;
       this.jellyfin_user_id = settings.jellyfin_user_id;
       this.jellyfin_server_name = testResult.serverName;
-      this.media_server_type = 'jellyfin';
+      this.media_server_type = MediaServerType.JELLYFIN;
 
       this.logger.log('Jellyfin settings saved successfully');
       return { status: 'OK', code: 1, message: 'Success' };
@@ -951,7 +951,7 @@ export class SettingsService implements SettingDto {
         return false;
       }
 
-      if (this.media_server_type === 'jellyfin') {
+      if (this.media_server_type === MediaServerType.JELLYFIN) {
         // Test Jellyfin with current settings
         if (this.jellyfin_url && this.jellyfin_api_key) {
           mediaServerState =
@@ -965,7 +965,7 @@ export class SettingsService implements SettingDto {
         } else {
           mediaServerState = false;
         }
-      } else if (this.media_server_type === 'plex') {
+      } else if (this.media_server_type === MediaServerType.PLEX) {
         mediaServerState = (await this.testPlex()).status === 'OK';
       } else {
         mediaServerState = false;
@@ -1042,12 +1042,12 @@ export class SettingsService implements SettingDto {
       }
 
       // Check based on configured media server type
-      if (this.media_server_type === 'jellyfin') {
+      if (this.media_server_type === MediaServerType.JELLYFIN) {
         // Jellyfin requires URL and API key (user ID is optional, can be auto-detected later)
         if (this.jellyfin_url && this.jellyfin_api_key) {
           return true;
         }
-      } else if (this.media_server_type === 'plex') {
+      } else if (this.media_server_type === MediaServerType.PLEX) {
         // Plex requires hostname, name, port, and auth token
         if (
           this.plex_hostname &&
@@ -1086,10 +1086,10 @@ export class SettingsService implements SettingDto {
    * Preview what data will be cleared when switching media servers
    */
   public async previewMediaServerSwitch(
-    targetServerType: EMediaServerType,
+    targetServerType: MediaServerType,
   ): Promise<MediaServerSwitchPreviewDto> {
     const currentServerType =
-      (this.media_server_type as EMediaServerType) || EMediaServerType.PLEX;
+      (this.media_server_type as MediaServerType) || MediaServerType.PLEX;
 
     // Count media server-specific data
     const collectionsCount = await this.collectionRepo.count();
@@ -1152,7 +1152,7 @@ export class SettingsService implements SettingDto {
     }
 
     // Get current server type - don't default to PLEX on fresh install
-    const currentServerType = this.media_server_type as EMediaServerType | null;
+    const currentServerType = this.media_server_type as MediaServerType | null;
 
     // Check if already on target server type (only if currentServerType is actually set)
     if (currentServerType && currentServerType === targetServerType) {
@@ -1250,13 +1250,13 @@ export class SettingsService implements SettingDto {
       };
 
       // Clear the credentials of the server we're switching FROM
-      if (currentServerType === EMediaServerType.PLEX) {
+      if (currentServerType === MediaServerType.PLEX) {
         updatedSettings.plex_name = null;
         updatedSettings.plex_hostname = null;
         updatedSettings.plex_port = null;
         updatedSettings.plex_ssl = null;
         updatedSettings.plex_auth_token = null;
-      } else if (currentServerType === EMediaServerType.JELLYFIN) {
+      } else if (currentServerType === MediaServerType.JELLYFIN) {
         updatedSettings.jellyfin_url = null;
         updatedSettings.jellyfin_api_key = null;
         updatedSettings.jellyfin_user_id = null;
@@ -1267,9 +1267,9 @@ export class SettingsService implements SettingDto {
       await this.init();
 
       // Uninitialize old media server
-      if (currentServerType === EMediaServerType.PLEX) {
+      if (currentServerType === MediaServerType.PLEX) {
         this.plexApi.uninitialize();
-      } else if (currentServerType === EMediaServerType.JELLYFIN) {
+      } else if (currentServerType === MediaServerType.JELLYFIN) {
         this.jellyfinService.uninitialize();
       }
 

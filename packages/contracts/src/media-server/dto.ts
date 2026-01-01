@@ -1,4 +1,4 @@
-import { EMediaServerType } from './enums'
+import { MediaServerType } from './enums'
 
 /**
  * Request DTO for switching media server type
@@ -7,7 +7,7 @@ export interface SwitchMediaServerRequestDto {
   /**
    * Target media server type to switch to
    */
-  targetServerType: EMediaServerType
+  targetServerType: MediaServerType
 
   /**
    * Confirmation that user understands data will be cleared
@@ -74,8 +74,8 @@ export interface SwitchMediaServerResponseDto {
  * Summary of data that will be cleared when switching media servers
  */
 export interface MediaServerSwitchPreviewDto {
-  currentServerType: EMediaServerType
-  targetServerType: EMediaServerType
+  currentServerType: MediaServerType
+  targetServerType: MediaServerType
   dataToBeCleared: {
     collections: number
     collectionMedia: number

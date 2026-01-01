@@ -1,9 +1,8 @@
+import { MediaServerType } from '@maintainerr/contracts';
 import { CronExpression } from '@nestjs/schedule';
 import { randomUUID } from 'crypto';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { SettingDto } from "../dto's/setting.dto";
-
-export type MediaServerType = 'plex' | 'jellyfin';
 
 @Entity()
 export class Settings implements SettingDto {

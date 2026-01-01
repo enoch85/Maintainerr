@@ -1,4 +1,4 @@
-import { EMediaServerType, MediaItemType } from '@maintainerr/contracts';
+import { MediaServerType, MediaItemType } from '@maintainerr/contracts';
 import {
   Column,
   Entity,
@@ -25,8 +25,8 @@ export class Collection {
   mediaServerId: string;
 
   /** Which media server this collection belongs to */
-  @Column({ type: 'varchar', default: EMediaServerType.PLEX })
-  mediaServerType: EMediaServerType;
+  @Column({ type: 'varchar', default: MediaServerType.PLEX })
+  mediaServerType: MediaServerType;
 
   @Column({ type: 'varchar' })
   libraryId: string;

@@ -81,17 +81,6 @@ export const ApplicationNames: Record<Application, string> = {
 }
 
 /**
- * Servarr (Radarr/Sonarr) action types
- */
-export enum ServarrAction {
-  DELETE = 0,
-  UNMONITOR_DELETE_ALL = 1,
-  UNMONITOR_DELETE_EXISTING = 2,
-  UNMONITOR = 3,
-  DO_NOTHING = 4,
-}
-
-/**
  * Media status for Overseerr/Jellyseerr requests
  */
 export enum RequestMediaStatus {

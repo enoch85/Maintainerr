@@ -11,8 +11,7 @@ import GetApiHandler, {
   PatchApiHandler,
   PostApiHandler,
 } from '../utils/ApiHandler'
-
-export type MediaServerType = 'plex' | 'jellyfin'
+import { MediaServerType } from '@maintainerr/contracts'
 
 interface ISettings {
   id: number

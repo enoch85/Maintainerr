@@ -2,7 +2,7 @@
  * Media server type enumeration
  * Identifies which media server implementation is being used
  */
-export enum EMediaServerType {
+export enum MediaServerType {
   PLEX = 'plex',
   JELLYFIN = 'jellyfin',
 }

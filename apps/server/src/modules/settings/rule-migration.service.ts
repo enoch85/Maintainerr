@@ -5,7 +5,7 @@ import { Rules } from '../rules/entities/rules.entities';
 import { RuleGroup } from '../rules/entities/rule-group.entities';
 import { RuleDto } from '../rules/dtos/rule.dto';
 import { Application } from '../rules/constants/rules.constants';
-import { EMediaServerType } from '@maintainerr/contracts';
+import { MediaServerType } from '@maintainerr/contracts';
 
 /**
  * Properties that exist in Plex but NOT in Jellyfin.
@@ -110,8 +110,8 @@ export class RuleMigrationService {
    * Does not modify any data.
    */
   async previewMigration(
-    fromServer: EMediaServerType,
-    toServer: EMediaServerType,
+    fromServer: MediaServerType,
+    toServer: MediaServerType,
   ): Promise<RuleMigrationPreview> {
     const sourceApp = this.getApplicationId(fromServer);
     // Validate target server type (throws if invalid)
@@ -171,8 +171,8 @@ export class RuleMigrationService {
    * @param skipIncompatible If true, skip rules that can't be migrated. If false, fail on first incompatible rule.
    */
   async migrateRules(
-    fromServer: EMediaServerType,
-    toServer: EMediaServerType,
+    fromServer: MediaServerType,
+    toServer: MediaServerType,
     skipIncompatible = true,
   ): Promise<RuleMigrationResult> {
     const sourceApp = this.getApplicationId(fromServer);
@@ -307,11 +307,11 @@ export class RuleMigrationService {
   /**
    * Get the Application enum value for a media server type.
    */
-  private getApplicationId(serverType: EMediaServerType): Application {
+  private getApplicationId(serverType: MediaServerType): Application {
     switch (serverType) {
-      case EMediaServerType.PLEX:
+      case MediaServerType.PLEX:
         return Application.PLEX;
-      case EMediaServerType.JELLYFIN:
+      case MediaServerType.JELLYFIN:
         return Application.JELLYFIN;
       default:
         throw new Error(`Unknown media server type: ${serverType}`);
@@ -322,18 +322,18 @@ export class RuleMigrationService {
    * Get properties that exist in the source but not in the target server.
    */
   private getIncompatibleProperties(
-    fromServer: EMediaServerType,
-    toServer: EMediaServerType,
+    fromServer: MediaServerType,
+    toServer: MediaServerType,
   ): Set<number> {
     if (
-      fromServer === EMediaServerType.PLEX &&
-      toServer === EMediaServerType.JELLYFIN
+      fromServer === MediaServerType.PLEX &&
+      toServer === MediaServerType.JELLYFIN
     ) {
       return PLEX_ONLY_PROPERTIES;
     }
     if (
-      fromServer === EMediaServerType.JELLYFIN &&
-      toServer === EMediaServerType.PLEX
+      fromServer === MediaServerType.JELLYFIN &&
+      toServer === MediaServerType.PLEX
     ) {
       return JELLYFIN_ONLY_PROPERTIES;
     }

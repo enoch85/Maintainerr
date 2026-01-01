@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 import {
-  EMediaServerType,
+  MediaServerType,
   MediaItem,
   MediaItemType,
   MediaItemWithParent,
@@ -48,7 +48,7 @@ export const createCollection = (
     ] as MediaItemType[]),
     libraryId: faker.number.int().toString(),
     mediaServerId: faker.number.int().toString(),
-    mediaServerType: EMediaServerType.PLEX,
+    mediaServerType: MediaServerType.PLEX,
     addDate: faker.date.past(),
     collectionLog: [],
     collectionMedia: [],

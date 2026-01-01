@@ -16,7 +16,7 @@ import {
 } from '@jellyfin/sdk/lib/utils/api';
 import {
   EMediaServerFeature,
-  EMediaServerType,
+  MediaServerType,
   type CollectionVisibilitySettings,
   type CreateCollectionParams,
   type LibraryQueryOptions,
@@ -131,13 +131,13 @@ export class JellyfinService implements IMediaServerService {
     return this.initialized && this.api !== undefined;
   }
 
-  getServerType(): EMediaServerType {
-    return EMediaServerType.JELLYFIN;
+  getServerType(): MediaServerType {
+    return MediaServerType.JELLYFIN;
   }
 
 
   supportsFeature(feature: EMediaServerFeature): boolean {
-    return supportsFeature(EMediaServerType.JELLYFIN, feature);
+    return supportsFeature(MediaServerType.JELLYFIN, feature);
   }
 
 

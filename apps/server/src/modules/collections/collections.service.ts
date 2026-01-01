@@ -2,7 +2,7 @@ import {
   CollectionLogMeta,
   ECollectionLogType,
   EMediaServerFeature,
-  EMediaServerType,
+  MediaServerType,
   isMediaType,
   MaintainerrEvent,
   MediaCollection,
@@ -83,7 +83,7 @@ export class CollectionsService {
   /**
    * Get the currently configured media server type
    */
-  private async getMediaServerType(): Promise<EMediaServerType> {
+  private async getMediaServerType(): Promise<MediaServerType> {
     return this.mediaServerFactory.getConfiguredServerType();
   }
 

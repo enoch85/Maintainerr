@@ -1,6 +1,6 @@
 import {
   BasicResponseDto,
-  EMediaServerType,
+  MediaServerType,
   JellyfinSettingDto,
   JellyseerrSettingDto,
   MediaServerSwitchPreviewDto,
@@ -259,7 +259,7 @@ export class SettingsController {
    */
   @Get('/media-server/switch/preview/:targetServerType')
   async previewMediaServerSwitch(
-    @Param('targetServerType') targetServerType: EMediaServerType,
+    @Param('targetServerType') targetServerType: MediaServerType,
   ): Promise<MediaServerSwitchPreviewDto> {
     return this.settingsService.previewMediaServerSwitch(targetServerType);
   }

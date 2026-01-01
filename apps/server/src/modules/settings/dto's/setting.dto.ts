@@ -1,4 +1,4 @@
-export type MediaServerType = 'plex' | 'jellyfin';
+import { MediaServerType } from '@maintainerr/contracts';
 
 export class SettingDto {
   id: number;

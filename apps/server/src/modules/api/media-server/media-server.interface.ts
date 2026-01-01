@@ -2,7 +2,7 @@ import {
   CollectionVisibilitySettings,
   CreateCollectionParams,
   EMediaServerFeature,
-  EMediaServerType,
+  MediaServerType,
   LibraryQueryOptions,
   MediaCollection,
   MediaItem,
@@ -47,7 +47,7 @@ export interface IMediaServerService {
   /**
    * Get the type of media server this service connects to.
    */
-  getServerType(): EMediaServerType;
+  getServerType(): MediaServerType;
 
   /**
    * Check if a specific feature is supported by this media server.

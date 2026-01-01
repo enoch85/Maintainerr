@@ -3,7 +3,7 @@ import { Repository } from 'typeorm';
 import { RuleMigrationService } from './rule-migration.service';
 import { Rules } from '../rules/entities/rules.entities';
 import { RuleGroup } from '../rules/entities/rule-group.entities';
-import { EMediaServerType } from '@maintainerr/contracts';
+import { MediaServerType } from '@maintainerr/contracts';
 import {
   Application,
   RuleOperators,
@@ -57,8 +57,8 @@ describe('RuleMigrationService', () => {
       ruleGroupRepo.count.mockResolvedValue(1);
 
       const result = await service.previewMigration(
-        EMediaServerType.PLEX,
-        EMediaServerType.JELLYFIN,
+        MediaServerType.PLEX,
+        MediaServerType.JELLYFIN,
       );
 
       expect(result.canMigrate).toBe(true);
@@ -101,8 +101,8 @@ describe('RuleMigrationService', () => {
       ruleGroupRepo.count.mockResolvedValue(2);
 
       const result = await service.previewMigration(
-        EMediaServerType.PLEX,
-        EMediaServerType.JELLYFIN,
+        MediaServerType.PLEX,
+        MediaServerType.JELLYFIN,
       );
 
       expect(result.canMigrate).toBe(true);
@@ -121,8 +121,8 @@ describe('RuleMigrationService', () => {
       ruleGroupRepo.count.mockResolvedValue(0);
 
       const result = await service.previewMigration(
-        EMediaServerType.PLEX,
-        EMediaServerType.JELLYFIN,
+        MediaServerType.PLEX,
+        MediaServerType.JELLYFIN,
       );
 
       expect(result.canMigrate).toBe(false);
@@ -150,8 +150,8 @@ describe('RuleMigrationService', () => {
       rulesRepo.update.mockResolvedValue({ affected: 1 } as any);
 
       const result = await service.migrateRules(
-        EMediaServerType.PLEX,
-        EMediaServerType.JELLYFIN,
+        MediaServerType.PLEX,
+        MediaServerType.JELLYFIN,
         true,
       );
 
@@ -198,8 +198,8 @@ describe('RuleMigrationService', () => {
       rulesRepo.update.mockResolvedValue({ affected: 1 } as any);
 
       const result = await service.migrateRules(
-        EMediaServerType.PLEX,
-        EMediaServerType.JELLYFIN,
+        MediaServerType.PLEX,
+        MediaServerType.JELLYFIN,
         true, // skipIncompatible
       );
 
@@ -230,8 +230,8 @@ describe('RuleMigrationService', () => {
 
       await expect(
         service.migrateRules(
-          EMediaServerType.PLEX,
-          EMediaServerType.JELLYFIN,
+          MediaServerType.PLEX,
+          MediaServerType.JELLYFIN,
           false, // Don't skip - throw on incompatible
         ),
       ).rejects.toThrow(/cannot be migrated/);
@@ -255,8 +255,8 @@ describe('RuleMigrationService', () => {
       rulesRepo.update.mockResolvedValue({ affected: 1 } as any);
 
       await service.migrateRules(
-        EMediaServerType.PLEX,
-        EMediaServerType.JELLYFIN,
+        MediaServerType.PLEX,
+        MediaServerType.JELLYFIN,
         true,
       );
 
@@ -286,8 +286,8 @@ describe('RuleMigrationService', () => {
       rulesRepo.update.mockResolvedValue({ affected: 1 } as any);
 
       const result = await service.migrateRules(
-        EMediaServerType.PLEX,
-        EMediaServerType.JELLYFIN,
+        MediaServerType.PLEX,
+        MediaServerType.JELLYFIN,
         true,
       );
 
@@ -306,8 +306,8 @@ describe('RuleMigrationService', () => {
 
       await expect(
         service.previewMigration(
-          'unknown' as EMediaServerType,
-          EMediaServerType.JELLYFIN,
+          'unknown' as MediaServerType,
+          MediaServerType.JELLYFIN,
         ),
       ).rejects.toThrow(/Unknown media server type/);
     });
