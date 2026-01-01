@@ -308,10 +308,11 @@ const MediaServerSelector = ({
                       )}
                     </span>
                     {migrateRules && (
-                      <span className="mt-1 block text-xs text-zinc-500">
-                        Note: Rule groups will need library re-assignment after
-                        migration.
-                      </span>
+                      <div className="mt-2 rounded border border-amber-600/50 bg-amber-900/20 p-2 text-sm text-amber-300">
+                        <strong>Important:</strong> After migration, you must
+                        manually assign a library to each rule group before
+                        rules can run.
+                      </div>
                     )}
                   </label>
                 </div>

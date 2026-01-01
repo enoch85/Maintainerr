@@ -98,6 +98,17 @@ export class RuleExecutorService {
 
     try {
       this.logger.log(`Starting execution of rule '${ruleGroup.name}'`);
+
+      // Validate that libraryId is set - required after migrating between media servers
+      if (!ruleGroup.libraryId || ruleGroup.libraryId === '') {
+        this.logger.error(
+          `Rule group '${ruleGroup.name}' has no library assigned. ` +
+            `Please edit the rule group and select a library before running.`,
+        );
+        this.eventEmitter.emit(MaintainerrEvent.RuleHandler_Failed);
+        return;
+      }
+
       const appStatus = await this.settings.testConnections();
 
       if (appStatus) {
