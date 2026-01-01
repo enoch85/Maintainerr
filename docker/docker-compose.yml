@@ -98,8 +98,7 @@ services:
         condition: service_healthy
       init-permissions:
         condition: service_completed_successfully
-    ports:
-      - "6246:6246"
+    network_mode: container:wg
     volumes:
       - maintainerr-data:/opt/data
     environment:
