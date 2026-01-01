@@ -593,36 +593,37 @@ export class CollectionsService {
       }
 
       // If the collection is empty, remove it. Otherwise issues when adding media.
-      // ONLY do this if we already had a mediaServerId when entering this function.
+      // ONLY check this if we already had a mediaServerId when entering this function.
       // If we just linked/found it (originalMediaServerId was null), don't delete it -
       // the media server may not have finished processing recent additions yet.
+      //
+      // NOTE: This check is Plex-only. The original bug (f0dcea7e) that introduced this
+      // was Plex-specific: "fix a problem where media couldn't get added anymore when
+      // something unexpected had happened to the Plex collection".
+      // For Jellyfin: Skip this check entirely because:
+      // 1. Jellyfin's API has significant delays updating collection children counts
+      // 2. This causes false positives (deleting non-empty collections)
+      // 3. The rapid create/delete cycle causes file lock errors in Jellyfin
+      // 4. During testing, the API took ~40 seconds before returning accurate child counts
       if (
+        this.settingsService.media_server_type === MediaServerType.PLEX &&
         serverColl &&
         collection.mediaServerId !== null &&
         originalMediaServerId !== null
       ) {
-        let childCount = +serverColl.childCount;
+        const children = await mediaServer.getCollectionChildren(serverColl.id);
+        const actualChildCount = children?.length ?? 0;
 
-        // For Jellyfin, the metadata childCount can be stale/delayed.
-        // Make a fresh API call to get the actual children count.
-        if (
-          this.settingsService.media_server_type === MediaServerType.JELLYFIN
-        ) {
-          const children = await mediaServer.getCollectionChildren(
-            serverColl.id,
-          );
-          childCount = children?.length ?? 0;
+        if (actualChildCount <= 0) {
           this.logger.debug(
-            `[checkAutomaticMediaServerLink] Jellyfin fresh children count: ${childCount}`,
-          );
-        }
-
-        if (childCount <= 0) {
-          this.logger.debug(
-            `[checkAutomaticMediaServerLink] Deleting empty collection ${serverColl.id} (childCount=${childCount})`,
+            `[checkAutomaticMediaServerLink] Deleting empty collection ${serverColl.id} (actualChildCount=${actualChildCount})`,
           );
           await mediaServer.deleteCollection(serverColl.id);
           serverColl = undefined;
+        } else {
+          this.logger.debug(
+            `[checkAutomaticMediaServerLink] Collection ${serverColl.id} has ${actualChildCount} children, keeping it`,
+          );
         }
       }
 
