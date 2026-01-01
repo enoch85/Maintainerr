@@ -6,6 +6,8 @@ import {
 } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import _ from 'lodash';
+import { MediaServerFactory } from '../../api/media-server/media-server.factory';
+import { IMediaServerService } from '../../api/media-server/media-server.interface';
 import {
   OverseerrApiService,
   OverSeerrMovieResponse,
@@ -14,8 +16,6 @@ import {
   OverseerrTVRequest,
   OverSeerrTVResponse,
 } from '../../api/overseerr-api/overseerr-api.service';
-import { MediaServerFactory } from '../../api/media-server/media-server.factory';
-import { IMediaServerService } from '../../api/media-server/media-server.interface';
 import { TmdbIdService } from '../../api/tmdb-api/tmdb-id.service';
 import { TmdbApiService } from '../../api/tmdb-api/tmdb.service';
 import { MaintainerrLogger } from '../../logging/logs.service';
@@ -163,7 +163,7 @@ export class OverseerrGetterService {
             }
           }
           case 'amountRequested': {
-            return (dataType === 'season' || dataType === 'episode')
+            return dataType === 'season' || dataType === 'episode'
               ? this.getSeasonRequests(origLibItem, tvMediaResponse).length
               : mediaResponse?.mediaInfo.requests.length;
           }
@@ -210,8 +210,7 @@ export class OverseerrGetterService {
               )[0];
               if (season && season.media) {
                 if (
-                  season.media.status >=
-                  RequestMediaStatus.PARTIALLY_AVAILABLE
+                  season.media.status >= RequestMediaStatus.PARTIALLY_AVAILABLE
                 ) {
                   return new Date(season.media.updatedAt);
                 }
@@ -232,8 +231,7 @@ export class OverseerrGetterService {
               )[0];
               if (season && season.media) {
                 if (
-                  season.media.status >=
-                  RequestMediaStatus.PARTIALLY_AVAILABLE
+                  season.media.status >= RequestMediaStatus.PARTIALLY_AVAILABLE
                 ) {
                   return new Date(season.media.mediaAddedAt);
                 }
@@ -314,7 +312,9 @@ export class OverseerrGetterService {
    * - userType 1 (or other): Plex user - looks up in media server users by ID
    */
   private async resolveRequestUsername(
-    request: { requestedBy?: { userType?: number; username?: string; plexId?: number } },
+    request: {
+      requestedBy?: { userType?: number; username?: string; plexId?: number };
+    },
     cachedUsers: MediaUser[] | null,
     fetchUsers: () => Promise<MediaUser[]>,
   ): Promise<string | undefined> {

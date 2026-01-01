@@ -165,7 +165,7 @@ export class JellyseerrGetterService {
             }
           }
           case 'amountRequested': {
-            return (dataType === 'season' || dataType === 'episode')
+            return dataType === 'season' || dataType === 'episode'
               ? this.getSeasonRequests(origLibItem, tvMediaResponse).length
               : mediaResponse?.mediaInfo.requests.length;
           }
@@ -212,8 +212,7 @@ export class JellyseerrGetterService {
               )[0];
               if (season && season.media) {
                 if (
-                  season.media.status >=
-                  RequestMediaStatus.PARTIALLY_AVAILABLE
+                  season.media.status >= RequestMediaStatus.PARTIALLY_AVAILABLE
                 ) {
                   return new Date(season.media.updatedAt);
                 }
@@ -234,8 +233,7 @@ export class JellyseerrGetterService {
               )[0];
               if (season && season.media) {
                 if (
-                  season.media.status >=
-                  RequestMediaStatus.PARTIALLY_AVAILABLE
+                  season.media.status >= RequestMediaStatus.PARTIALLY_AVAILABLE
                 ) {
                   return new Date(season.media.mediaAddedAt);
                 }
@@ -317,7 +315,14 @@ export class JellyseerrGetterService {
    * - userType 1 (or other): Plex user - looks up in media server users by ID
    */
   private async resolveRequestUsername(
-    request: { requestedBy?: { userType?: number; username?: string; jellyfinUsername?: string; plexId?: number } },
+    request: {
+      requestedBy?: {
+        userType?: number;
+        username?: string;
+        jellyfinUsername?: string;
+        plexId?: number;
+      };
+    },
     cachedUsers: MediaUser[] | null,
     fetchUsers: () => Promise<MediaUser[]>,
   ): Promise<string | undefined> {

@@ -242,11 +242,7 @@ export class RuleConstants {
           humanName: '[list] Users that watch the show/season/episode',
           mediaType: MediaType.SHOW,
           type: RuleType.TEXT_LIST, // return usernames []
-          showType: [
-            'show',
-            'season',
-            'episode',
-          ],
+          showType: ['show', 'season', 'episode'],
         },
         {
           id: 19,
@@ -625,11 +621,7 @@ export class RuleConstants {
           humanName: 'Files - Disk size in MB ',
           mediaType: MediaType.SHOW,
           type: RuleType.NUMBER,
-          showType: [
-            'show',
-            'season',
-            'episode',
-          ],
+          showType: ['show', 'season', 'episode'],
         },
         {
           id: 2,
@@ -956,11 +948,7 @@ export class RuleConstants {
           humanName: '[list] Users that watch the show/season/episode',
           mediaType: MediaType.SHOW,
           type: RuleType.TEXT_LIST, // return usernames []
-          showType: [
-            'show',
-            'season',
-            'episode',
-          ],
+          showType: ['show', 'season', 'episode'],
         },
       ],
     },
@@ -1164,11 +1152,7 @@ export class RuleConstants {
           humanName: '[list] Users that watch the show/season/episode',
           mediaType: MediaType.SHOW,
           type: RuleType.TEXT_LIST, // return usernames []
-          showType: [
-            'show',
-            'season',
-            'episode',
-          ],
+          showType: ['show', 'season', 'episode'],
         },
         {
           id: 19,

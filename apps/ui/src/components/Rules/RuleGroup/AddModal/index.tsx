@@ -10,7 +10,7 @@ import {
   UploadIcon,
 } from '@heroicons/react/solid'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { MediaItemType } from '@maintainerr/contracts'
+import { Application, MediaItemType } from '@maintainerr/contracts'
 import { isValidCron } from 'cron-validator'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -22,7 +22,6 @@ import {
   MediaLibrary,
   useMediaServerLibraries,
 } from '../../../../api/media-server'
-import { Application } from '@maintainerr/contracts'
 import {
   RuleGroupCreatePayload,
   useCreateRuleGroup,
@@ -1311,7 +1310,7 @@ const AddModal = (props: AddModal) => {
                         : 2
                       : 0
                   }
-                  dataType={selectedType as MediaItemType || undefined}
+                  dataType={(selectedType as MediaItemType) || undefined}
                   editData={{ rules: rules }}
                   radarrSettingsId={radarrSettingsId}
                   sonarrSettingsId={sonarrSettingsId}

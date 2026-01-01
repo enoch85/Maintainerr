@@ -1,8 +1,4 @@
 import { TrashIcon } from '@heroicons/react/solid'
-import { cloneDeep } from 'lodash-es'
-import { FormEvent, useEffect, useState } from 'react'
-import { IRule } from '../'
-import { useRuleConstants } from '../../../../../api/rules'
 import {
   Application,
   type MediaItemType,
@@ -10,6 +6,10 @@ import {
   RulePossibility,
   RulePossibilityTranslations,
 } from '@maintainerr/contracts'
+import { cloneDeep } from 'lodash-es'
+import { FormEvent, useEffect, useState } from 'react'
+import { IRule } from '../'
+import { useRuleConstants } from '../../../../../api/rules'
 import { IProperty } from '../../../../../contexts/constants-context'
 import LoadingSpinner from '../../../../Common/LoadingSpinner'
 
