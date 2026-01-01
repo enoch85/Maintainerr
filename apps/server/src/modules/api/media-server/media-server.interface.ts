@@ -253,6 +253,25 @@ export interface IMediaServerService {
   deleteFromDisk(itemId: string): Promise<void>;
 
   // ============================================================
+  // CONTEXT-BASED ID RESOLUTION
+  // ============================================================
+
+  /**
+   * Get all media server IDs for a context action (add/remove from collection).
+   * Handles show→season→episode traversal based on collection type.
+   *
+   * @param collectionType - The type of the target collection (determines what IDs to return)
+   * @param context - The context item (what level the user is acting on)
+   * @param mediaId - The media item ID
+   * @returns Array of media server IDs to add/remove
+   */
+  getAllIdsForContextAction(
+    collectionType: MediaItemType | undefined,
+    context: { type: MediaItemType; id: string },
+    mediaId: string,
+  ): Promise<string[]>;
+
+  // ============================================================
   // CACHE MANAGEMENT
   // ============================================================
 

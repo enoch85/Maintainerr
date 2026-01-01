@@ -851,6 +851,39 @@ export class JellyfinService implements IMediaServerService {
   }
 
   // ============================================================
+  // CONTEXT ACTIONS
+  // ============================================================
+
+  async getAllIdsForContextAction(
+    collectionType: MediaItemType | undefined,
+    context: { type: MediaItemType; id: string },
+    mediaId: string,
+  ): Promise<string[]> {
+    // For shows: traverse show -> seasons -> episodes
+    // For seasons: traverse season -> episodes
+    // Otherwise just return the mediaId
+    if (context.type === 'show') {
+      const seasons = await this.getChildrenMetadata(context.id);
+      const allIds: string[] = [];
+
+      for (const season of seasons) {
+        const episodes = await this.getChildrenMetadata(season.id);
+        allIds.push(...episodes.map((ep) => ep.id));
+      }
+
+      return allIds;
+    }
+
+    if (context.type === 'season') {
+      const episodes = await this.getChildrenMetadata(context.id);
+      return episodes.map((ep) => ep.id);
+    }
+
+    // For movies or episodes, just return the single id
+    return [mediaId];
+  }
+
+  // ============================================================
   // ACTIONS
   // ============================================================
 

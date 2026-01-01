@@ -17,9 +17,7 @@ import { DataSource, LessThan, Repository } from 'typeorm';
 import { CollectionLog } from '../../modules/collections/entities/collection_log.entities';
 import { MediaServerFactory } from '../api/media-server/media-server.factory';
 import { IMediaServerService } from '../api/media-server/media-server.interface';
-import { PlexMapper } from '../api/media-server/plex/plex.mapper';
 import { BasicResponseDto } from '../api/plex-api/dto/basic-response.dto';
-import { PlexApiService } from '../api/plex-api/plex-api.service';
 import {
   TmdbMovieDetails,
   TmdbTvDetails,
@@ -65,7 +63,6 @@ export class CollectionsService {
     @InjectRepository(Exclusion)
     private readonly exclusionRepo: Repository<Exclusion>,
     private readonly connection: DataSource,
-    private readonly plexApi: PlexApiService,
     private readonly mediaServerFactory: MediaServerFactory,
     private readonly settingsService: SettingsService,
     private readonly tmdbApi: TmdbApiService,
@@ -328,7 +325,7 @@ export class CollectionsService {
         if (
           mediaServer.supportsFeature(EMediaServerFeature.COLLECTION_VISIBILITY)
         ) {
-          await this.plexApi.UpdateCollectionSettings({
+          await mediaServer.updateCollectionVisibility({
             libraryId: collection.libraryId,
             collectionId: mediaCollection.id,
             recommended: collection.visibleOnRecommended,
@@ -350,7 +347,7 @@ export class CollectionsService {
               EMediaServerFeature.COLLECTION_VISIBILITY,
             )
           ) {
-            await this.plexApi.UpdateCollectionSettings({
+            await mediaServer.updateCollectionVisibility({
               libraryId: collection.libraryId,
               collectionId: foundCollection.id,
               recommended: collection.visibleOnRecommended,
@@ -620,6 +617,7 @@ export class CollectionsService {
     media: AddRemoveCollectionMedia,
     action: 'add' | 'remove',
   ): Promise<Collection> {
+    const mediaServer = await this.getMediaServer();
     const collection =
       collectionDbId !== -1 && collectionDbId !== undefined
         ? await this.collectionRepo.findOne({
@@ -627,14 +625,14 @@ export class CollectionsService {
           })
         : undefined;
 
-    // get media - convert from Plex-specific { plexId: number } to { mediaServerId: string }
-    const plexMedia = await this.plexApi.getAllIdsForContextAction(
-      collection ? PlexMapper.toPlexDataType(collection.type) : undefined,
-      { type: PlexMapper.toPlexDataType(context.type), id: context.id },
-      { plexId: Number(media.mediaServerId) },
+    // get media - traverse show -> seasons -> episodes if needed
+    const ids = await mediaServer.getAllIdsForContextAction(
+      collection?.type,
+      { type: context.type, id: String(context.id) },
+      media.mediaServerId,
     );
-    const handleMedia: AddRemoveCollectionMedia[] = plexMedia.map((m) => ({
-      mediaServerId: String(m.plexId),
+    const handleMedia: AddRemoveCollectionMedia[] = ids.map((id) => ({
+      mediaServerId: id,
     }));
 
     if (handleMedia) {
@@ -702,7 +700,7 @@ export class CollectionsService {
                   EMediaServerFeature.COLLECTION_VISIBILITY,
                 )
               ) {
-                await this.plexApi.UpdateCollectionSettings({
+                await mediaServer.updateCollectionVisibility({
                   libraryId: collection.libraryId,
                   collectionId: collection.mediaServerId,
                   recommended: collection.visibleOnRecommended,

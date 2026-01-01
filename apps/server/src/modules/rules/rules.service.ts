@@ -12,8 +12,6 @@ import { DataSource, Repository } from 'typeorm';
 import cacheManager from '../api/lib/cache';
 import { MediaServerFactory } from '../api/media-server/media-server.factory';
 import { IMediaServerService } from '../api/media-server/media-server.interface';
-import { PlexMapper } from '../api/media-server/plex/plex.mapper';
-import { PlexApiService } from '../api/plex-api/plex-api.service';
 import { CollectionsService } from '../collections/collections.service';
 import { Collection } from '../collections/entities/collection.entities';
 import { CollectionMedia } from '../collections/entities/collection_media.entities';
@@ -72,9 +70,6 @@ export class RulesService {
     private readonly sonarrSettingsRepo: Repository<SonarrSettings>,
     private readonly collectionService: CollectionsService,
     private readonly mediaServerFactory: MediaServerFactory,
-    // PlexApiService kept for getAllIdsForContextAction() - complex show→season→episode traversal
-    // TODO: Abstract to IMediaServerService.getContextIds() in future phase
-    private readonly plexApi: PlexApiService,
     private readonly connection: DataSource,
     private readonly ruleYamlService: RuleYamlService,
     private readonly ruleComparatorServiceFactory: RuleComparatorServiceFactory,
@@ -562,6 +557,7 @@ export class RulesService {
     }
   }
   async setExclusion(data: ExclusionContextDto) {
+    const mediaServer = await this.getMediaServer();
     let handleMedia: AddRemoveCollectionMedia[] = [];
 
     if (data.collectionId) {
@@ -570,48 +566,35 @@ export class RulesService {
           collectionId: data.collectionId,
         },
       });
-      // get media - Plex API returns { plexId: number }[], convert to { mediaServerId: string }[]
-      const plexMedia = await this.plexApi.getAllIdsForContextAction(
-        group ? PlexMapper.toPlexDataType(group.dataType) : undefined,
+      // get media - traverse show -> seasons -> episodes if needed
+      const ids = await mediaServer.getAllIdsForContextAction(
+        group?.dataType,
         data.context
-          ? {
-              type: PlexMapper.toPlexDataType(data.context.type),
-              id: data.context.id,
-            }
-          : {
-              type: PlexMapper.toPlexDataType(group.dataType),
-              id: data.mediaId,
-            },
-        { plexId: data.mediaId },
+          ? { type: data.context.type, id: String(data.context.id) }
+          : { type: group.dataType, id: String(data.mediaId) },
+        String(data.mediaId),
       );
-      handleMedia = plexMedia.map((m) => ({
-        mediaServerId: m.plexId.toString(),
-      }));
+      handleMedia = ids.map((id) => ({ mediaServerId: id }));
       data.ruleGroupId = group.id;
     } else {
       // get type from metadata
-      const metaData = await this.plexApi.getMetadata(data.mediaId.toString());
-      const type: MediaItemType = metaData.type === 'movie' ? 'movie' : 'show';
+      const metaData = await mediaServer.getMetadata(String(data.mediaId));
+      const type: MediaItemType = metaData?.type === 'movie' ? 'movie' : 'show';
 
-      // get media - Plex API returns { plexId: number }[], convert to { mediaServerId: string }[]
-      const plexMedia = await this.plexApi.getAllIdsForContextAction(
+      // get media - traverse show -> seasons -> episodes if needed
+      const ids = await mediaServer.getAllIdsForContextAction(
         undefined,
         data.context
-          ? {
-              type: PlexMapper.toPlexDataType(data.context.type),
-              id: data.context.id,
-            }
-          : { type: PlexMapper.toPlexDataType(type), id: data.mediaId },
-        { plexId: data.mediaId },
+          ? { type: data.context.type, id: String(data.context.id) }
+          : { type: type, id: String(data.mediaId) },
+        String(data.mediaId),
       );
-      handleMedia = plexMedia.map((m) => ({
-        mediaServerId: m.plexId.toString(),
-      }));
+      handleMedia = ids.map((id) => ({ mediaServerId: id }));
     }
     try {
       // add all items
       for (const media of handleMedia) {
-        const metaData = await this.plexApi.getMetadata(media.mediaServerId);
+        const metaData = await mediaServer.getMetadata(media.mediaServerId);
 
         const old = await this.exclusionRepo.findOne({
           where: {
@@ -711,6 +694,7 @@ export class RulesService {
   }
 
   async removeExclusionWitData(data: ExclusionContextDto) {
+    const mediaServer = await this.getMediaServer();
     let handleMedia: AddRemoveCollectionMedia[] = [];
 
     if (data.collectionId) {
@@ -721,36 +705,23 @@ export class RulesService {
       });
 
       data.ruleGroupId = group.id;
-      // get media - Plex API returns { plexId: number }[], convert to { mediaServerId: string }[]
-      const plexMedia = await this.plexApi.getAllIdsForContextAction(
-        group ? PlexMapper.toPlexDataType(group.dataType) : undefined,
+      // get media - traverse show -> seasons -> episodes if needed
+      const ids = await mediaServer.getAllIdsForContextAction(
+        group?.dataType,
         data.context
-          ? {
-              type: PlexMapper.toPlexDataType(data.context.type),
-              id: data.context.id,
-            }
-          : {
-              type: PlexMapper.toPlexDataType(group.dataType),
-              id: data.mediaId,
-            },
-        { plexId: data.mediaId },
+          ? { type: data.context.type, id: String(data.context.id) }
+          : { type: group.dataType, id: String(data.mediaId) },
+        String(data.mediaId),
       );
-      handleMedia = plexMedia.map((m) => ({
-        mediaServerId: m.plexId.toString(),
-      }));
+      handleMedia = ids.map((id) => ({ mediaServerId: id }));
     } else {
-      // get type from metadata - Plex API returns { plexId: number }[], convert to { mediaServerId: string }[]
-      const plexMedia = await this.plexApi.getAllIdsForContextAction(
+      // get media - traverse show -> seasons -> episodes if needed
+      const ids = await mediaServer.getAllIdsForContextAction(
         undefined,
-        {
-          type: PlexMapper.toPlexDataType(data.context.type),
-          id: data.context.id,
-        },
-        { plexId: data.mediaId },
+        { type: data.context.type, id: String(data.context.id) },
+        String(data.mediaId),
       );
-      handleMedia = plexMedia.map((m) => ({
-        mediaServerId: m.plexId.toString(),
-      }));
+      handleMedia = ids.map((id) => ({ mediaServerId: id }));
     }
 
     try {
@@ -791,21 +762,20 @@ export class RulesService {
   }
 
   async removeAllExclusion(mediaServerId: string) {
+    const mediaServer = await this.getMediaServer();
     // get type from metadata
     let handleMedia: AddRemoveCollectionMedia[] = [];
 
-    const metaData = await this.plexApi.getMetadata(mediaServerId);
-    const type: MediaItemType = metaData.type === 'movie' ? 'movie' : 'show';
+    const metaData = await mediaServer.getMetadata(mediaServerId);
+    const type: MediaItemType = metaData?.type === 'movie' ? 'movie' : 'show';
 
-    // Plex API returns { plexId: number }[], convert to { mediaServerId: string }[]
-    const plexMedia = await this.plexApi.getAllIdsForContextAction(
+    // get media - traverse show -> seasons -> episodes if needed
+    const ids = await mediaServer.getAllIdsForContextAction(
       undefined,
-      { type: PlexMapper.toPlexDataType(type), id: +mediaServerId },
-      { plexId: +mediaServerId },
+      { type: type, id: mediaServerId },
+      mediaServerId,
     );
-    handleMedia = plexMedia.map((m) => ({
-      mediaServerId: m.plexId.toString(),
-    }));
+    handleMedia = ids.map((id) => ({ mediaServerId: id }));
 
     try {
       for (const media of handleMedia) {

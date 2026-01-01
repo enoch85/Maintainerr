@@ -338,6 +338,23 @@ export class PlexAdapterService implements IMediaServerService {
   }
 
   // ============================================================
+  // CONTEXT-BASED ID RESOLUTION
+  // ============================================================
+
+  async getAllIdsForContextAction(
+    collectionType: MediaItemType | undefined,
+    context: { type: MediaItemType; id: string },
+    mediaId: string,
+  ): Promise<string[]> {
+    const result = await this.plexApi.getAllIdsForContextAction(
+      collectionType ? PlexMapper.toPlexDataType(collectionType) : undefined,
+      { type: PlexMapper.toPlexDataType(context.type), id: Number(context.id) },
+      { plexId: Number(mediaId) },
+    );
+    return result.map((r) => String(r.plexId));
+  }
+
+  // ============================================================
   // CACHE MANAGEMENT
   // ============================================================
 
