@@ -1,13 +1,8 @@
-import {
-  MediaItem,
-  MediaItemType,
-} from '@maintainerr/contracts';
+import { MediaItem } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import { MediaServerFactory } from '../media-server/media-server.factory';
-import { PlexMetadata } from '../../../modules/api/plex-api/interfaces/media.interface';
 import { TmdbApiService } from '../../../modules/api/tmdb-api/tmdb.service';
 import { MaintainerrLogger } from '../../logging/logs.service';
-import { PlexLibraryItem } from '../plex-api/interfaces/library.interfaces';
 
 @Injectable()
 export class TmdbIdService {
@@ -91,67 +86,6 @@ export class TmdbIdService {
       }
       return {
         type: ['show', 'season', 'episode'].includes(item.type)
-          ? 'tv'
-          : 'movie',
-        id: id,
-      };
-    } catch (e) {
-      this.logger.warn(`Failed to fetch id : ${e.message}`);
-      this.logger.debug(e);
-      return undefined;
-    }
-  }
-
-  /**
-   * @deprecated Use getTmdbIdFromMediaItem instead. This method is kept for backward compatibility with Plex-specific code.
-   */
-  async getTmdbIdFromPlexData(
-    libItem: PlexMetadata | PlexLibraryItem,
-  ): Promise<{ type: 'movie' | 'tv'; id: number | undefined }> {
-    try {
-      let id: number = undefined;
-
-      if (libItem.Guid) {
-        if (libItem.Guid.find((el) => el.id.includes('tmdb'))) {
-          id = +libItem.Guid.find((el) => el.id.includes('tmdb')).id.split(
-            '://',
-          )[1];
-        }
-
-        if (!id && libItem.Guid.find((el) => el.id.includes('tvdb'))) {
-          const resp = await this.tmdbApi.getByExternalId({
-            externalId: +libItem.Guid.find((el) => el.id.includes('tvdb'))
-              ?.id.split('://')[1]
-              ?.split('?')[0],
-            type: 'tvdb',
-          });
-
-          if (resp) {
-            id =
-              resp.movie_results?.length > 0
-                ? resp.movie_results[0]?.id
-                : resp.tv_results[0]?.id;
-          }
-        }
-
-        if (!id && libItem.Guid.find((el) => el.id.includes('imdb'))) {
-          const resp = await this.tmdbApi.getByExternalId({
-            externalId: libItem.Guid.find((el) => el.id.includes('imdb'))
-              ?.id.split('://')[1]
-              ?.split('?')[0],
-            type: 'imdb',
-          });
-
-          if (resp) {
-            id =
-              resp.movie_results?.length > 0
-                ? resp.movie_results[0]?.id
-                : resp.tv_results[0]?.id;
-          }
-        }
-      }
-      return {
-        type: ['show', 'season', 'episode'].includes(libItem.type)
           ? 'tv'
           : 'movie',
         id: id,
