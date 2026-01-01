@@ -597,7 +597,7 @@ export class CollectionsService {
       // If we just linked/found it (originalMediaServerId was null), don't delete it -
       // the media server may not have finished processing recent additions yet.
       //
-      // Plex-only: Skip for Jellyfin because API lag causes false positives.
+      // Skip for Jellyfin because API lag causes false positives.
       // Jellyfin natively auto-deletes empty collections, so no manual cleanup needed.
       if (
         this.settingsService.media_server_type === MediaServerType.PLEX &&
