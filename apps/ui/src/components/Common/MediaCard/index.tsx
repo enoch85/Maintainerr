@@ -73,7 +73,7 @@ const MediaCard: React.FC<IMediaCard> = ({
 
   const getExclusions = () => {
     if (!collectionPage) {
-      GetApiHandler(`/rules/exclusion?plexId=${id}`).then((resp: []) =>
+      GetApiHandler(`/rules/exclusion?mediaServerId=${id}`).then((resp: []) =>
         resp.length > 0 ? setHasExclusion(true) : setHasExclusion(false),
       )
     }
@@ -88,7 +88,7 @@ const MediaCard: React.FC<IMediaCard> = ({
     <div className={'w-full'}>
       {excludeModal ? (
         <AddModal
-          plexId={id}
+          mediaServerId={id}
           {...(libraryId ? { libraryId: libraryId } : {})}
           {...(type ? { type: type } : {})}
           onSubmit={() => {
@@ -101,7 +101,7 @@ const MediaCard: React.FC<IMediaCard> = ({
 
       {addModal ? (
         <AddModal
-          plexId={id}
+          mediaServerId={id}
           {...(libraryId ? { libraryId: libraryId } : {})}
           {...(type ? { type: type } : {})}
           onSubmit={() => {

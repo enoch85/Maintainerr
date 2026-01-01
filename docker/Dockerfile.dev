@@ -19,7 +19,7 @@ FROM base AS builder
 WORKDIR /app
 
 # Build arguments for branch/repo selection
-ARG BRANCH=rules-engine-mediaitem-migration
+ARG BRANCH=remaining-issues/abstraction-cleanup
 ARG REPO=https://github.com/Maintainerr/Maintainerr.git
 
 # Install git and build tools for native modules (better-sqlite3, esbuild, etc.)

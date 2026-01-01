@@ -5,14 +5,14 @@ export interface IAddModal {
   onSubmit: () => void
   libraryId?: string
   type?: MediaItemType
-  plexId: number | string
+  mediaServerId: number | string
   modalType: 'add' | 'exclude'
 }
 
 export interface ICollectionMedia {
   media?: []
   id: number | string
-  plexId?: number | string
+  mediaServerId?: number | string
   libraryId?: string
   title: string
   description?: string

@@ -78,14 +78,14 @@ const AddModal = (props: IAddModal) => {
 
       if (props.modalType === 'add') {
         PostApiHandler(`/collections/media/add`, {
-          mediaId: props.plexId,
+          mediaId: props.mediaServerId,
           context: mediaDto,
           collectionId: selectedCollection,
           action: selectedAction,
         })
       } else {
         PostApiHandler('/rules/exclusion', {
-          mediaId: props.plexId,
+          mediaId: props.mediaServerId,
           context: mediaDto,
           collectionId:
             selectedCollection !== -1 ? selectedCollection : undefined,
@@ -103,7 +103,7 @@ const AddModal = (props: IAddModal) => {
     setForceRemovalCheck(false)
     if (props.modalType === 'add') {
       PostApiHandler(`/collections/media/add`, {
-        mediaId: props.plexId,
+        mediaId: props.mediaServerId,
         context: { id: -1, type: props.type },
         collectionId: undefined,
         action: 1,
@@ -118,7 +118,7 @@ const AddModal = (props: IAddModal) => {
 
     if (props.type && props.type === 'show') {
       // get seasons
-      GetApiHandler(`/media-server/meta/${props.plexId}/children`).then(
+      GetApiHandler(`/media-server/meta/${props.mediaServerId}/children`).then(
         (resp: { id: string; title: string }[]) => {
           setSeasonOptions([
             {

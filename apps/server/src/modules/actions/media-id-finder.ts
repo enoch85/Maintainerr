@@ -11,11 +11,11 @@ export class MediaIdFinder {
     private tmdbIdHelper: TmdbIdService,
   ) {}
 
-  public async findTvdbId(plexId: string | number, tmdbId?: number | null) {
+  public async findTvdbId(mediaServerId: string | number, tmdbId?: number | null) {
     let tvdbid = undefined;
-    if (!tmdbId && plexId) {
+    if (!tmdbId && mediaServerId) {
       tmdbId = (
-        await this.tmdbIdHelper.getTmdbIdFromPlexRatingKey(plexId.toString())
+        await this.tmdbIdHelper.getTmdbIdFromPlexRatingKey(mediaServerId.toString())
       )?.id;
     }
 
@@ -25,7 +25,7 @@ export class MediaIdFinder {
 
     if (!tmdbShow?.external_ids?.tvdb_id) {
       const mediaServer = await this.mediaServerFactory.getService();
-      let mediaData = await mediaServer.getMetadata(plexId.toString());
+      let mediaData = await mediaServer.getMetadata(mediaServerId.toString());
       // fetch correct record for seasons & episodes (go up to show level)
       mediaData = mediaData?.grandparentId
         ? await mediaServer.getMetadata(mediaData.grandparentId)
