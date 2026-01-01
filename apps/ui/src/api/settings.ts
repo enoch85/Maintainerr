@@ -1,4 +1,4 @@
-import { BasicResponseDto } from '@maintainerr/contracts'
+import { BasicResponseDto, MediaServerType } from '@maintainerr/contracts'
 import {
   useMutation,
   UseMutationOptions,
@@ -11,7 +11,6 @@ import GetApiHandler, {
   PatchApiHandler,
   PostApiHandler,
 } from '../utils/ApiHandler'
-import { MediaServerType } from '@maintainerr/contracts'
 
 interface ISettings {
   id: number

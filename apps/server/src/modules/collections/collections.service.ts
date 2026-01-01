@@ -2,13 +2,13 @@ import {
   CollectionLogMeta,
   ECollectionLogType,
   EMediaServerFeature,
-  MediaServerType,
   isMediaType,
   MaintainerrEvent,
   MediaCollection,
   MediaItem,
   MediaItemType,
   MediaItemWithParent,
+  MediaServerType,
 } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -202,7 +202,9 @@ export class CollectionsService {
       queryBuilder
         .where('exclusion.ruleGroupId = :groupId', { groupId })
         .orWhere('exclusion.ruleGroupId is null')
-        .andWhere('exclusion.type = :dataType', { dataType: rulegroup.dataType })
+        .andWhere('exclusion.type = :dataType', {
+          dataType: rulegroup.dataType,
+        })
         .orderBy('id', 'DESC')
         .skip(offset)
         .take(size);

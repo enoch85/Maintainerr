@@ -1,8 +1,8 @@
 import {
-  MediaServerType,
   JellyseerrSettingDto,
   MaintainerrEvent,
   MediaServerSwitchPreviewDto,
+  MediaServerType,
   OverseerrSettingDto,
   SwitchMediaServerRequestDto,
   SwitchMediaServerResponseDto,
@@ -398,7 +398,6 @@ export class SettingsService implements SettingDto {
       return { status: 'NOK', code: 0, message: 'Failed' };
     }
   }
-
 
   /**
    * Test connection to a Jellyfin server
