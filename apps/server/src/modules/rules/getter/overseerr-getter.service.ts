@@ -1,4 +1,4 @@
-import { MediaItem, MediaItemType } from '@maintainerr/contracts';
+import { MediaItem, MediaItemType, MediaUser } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import _ from 'lodash';
 import {
@@ -12,7 +12,6 @@ import {
 } from '../../api/overseerr-api/overseerr-api.service';
 import { MediaServerFactory } from '../../api/media-server/media-server.factory';
 import { IMediaServerService } from '../../api/media-server/media-server.interface';
-import { PlexApiService } from '../../api/plex-api/plex-api.service';
 import { TmdbIdService } from '../../api/tmdb-api/tmdb-id.service';
 import { TmdbApiService } from '../../api/tmdb-api/tmdb.service';
 import { MaintainerrLogger } from '../../logging/logs.service';
@@ -30,9 +29,6 @@ export class OverseerrGetterService {
     private readonly overseerrApi: OverseerrApiService,
     private readonly tmdbApi: TmdbApiService,
     private readonly mediaServerFactory: MediaServerFactory,
-    // PlexApiService kept for getCorrectedUsers() - Plex.tv user mapping
-    // TODO: Abstract to IMediaServerService.getUsers() in future phase
-    private readonly plexApi: PlexApiService,
     private readonly tmdbIdHelper: TmdbIdService,
     private readonly logger: MaintainerrLogger,
   ) {
@@ -103,9 +99,11 @@ export class OverseerrGetterService {
         switch (prop.name) {
           case 'addUser': {
             try {
-              const plexUsers = await this.plexApi.getCorrectedUsers();
               const userNames: string[] = [];
               if (mediaResponse.mediaInfo.requests) {
+                // Only fetch media server users if we need them (for Plex user lookup)
+                let mediaServerUsers: MediaUser[] | null = null;
+
                 for (const request of mediaResponse.mediaInfo.requests) {
                   // for seasons, only add if user requested the correct season
                   if (
@@ -119,30 +117,36 @@ export class OverseerrGetterService {
                         : origLibItem.parentIndex,
                     );
                     if (includesSeason) {
-                      if (request.requestedBy?.userType === 2) {
-                        userNames.push(request.requestedBy?.username);
-                      } else {
-                        const user = plexUsers.find(
-                          (u) => u.plexId === request.requestedBy?.plexId,
-                        )?.username;
-
-                        if (user) {
-                          userNames.push(user);
-                        }
+                      const username = await this.resolveRequestUsername(
+                        request,
+                        mediaServerUsers,
+                        async () => {
+                          if (!mediaServerUsers) {
+                            const mediaServer = await this.getMediaServer();
+                            mediaServerUsers = await mediaServer.getUsers();
+                          }
+                          return mediaServerUsers;
+                        },
+                      );
+                      if (username) {
+                        userNames.push(username);
                       }
                     }
                   } else {
                     // for shows and movies, add every request user
-                    if (request.requestedBy?.userType === 2) {
-                      userNames.push(request.requestedBy?.username);
-                    } else {
-                      const user = plexUsers.find(
-                        (u) => u.plexId === request.requestedBy?.plexId,
-                      )?.username;
-
-                      if (user) {
-                        userNames.push(user);
-                      }
+                    const username = await this.resolveRequestUsername(
+                      request,
+                      mediaServerUsers,
+                      async () => {
+                        if (!mediaServerUsers) {
+                          const mediaServer = await this.getMediaServer();
+                          mediaServerUsers = await mediaServer.getUsers();
+                        }
+                        return mediaServerUsers;
+                      },
+                    );
+                    if (username) {
+                      userNames.push(username);
                     }
                   }
                 }
@@ -297,5 +301,34 @@ export class OverseerrGetterService {
       (season) => season.seasonNumber === seasonNumber,
     );
     return season !== undefined;
+  }
+
+  /**
+   * Resolves the username from an Overseerr request.
+   * Handles different user types:
+   * - userType 2: Local user - uses username directly
+   * - userType 1 (or other): Plex user - looks up in media server users by ID
+   */
+  private async resolveRequestUsername(
+    request: { requestedBy?: { userType?: number; username?: string; plexId?: number } },
+    cachedUsers: MediaUser[] | null,
+    fetchUsers: () => Promise<MediaUser[]>,
+  ): Promise<string | undefined> {
+    const requestedBy = request.requestedBy;
+    if (!requestedBy) return undefined;
+
+    // Local user - use username directly
+    if (requestedBy.userType === 2) {
+      return requestedBy.username;
+    }
+
+    // Plex user - look up in media server users
+    if (requestedBy.plexId) {
+      const users = cachedUsers ?? (await fetchUsers());
+      const user = users.find((u) => u.id === String(requestedBy.plexId));
+      return user?.name;
+    }
+
+    return undefined;
   }
 }
