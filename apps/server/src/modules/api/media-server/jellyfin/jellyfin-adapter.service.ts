@@ -611,7 +611,7 @@ export class JellyfinService implements IMediaServerService {
         parentId: libraryId,
         includeItemTypes: [BaseItemKind.BoxSet],
         recursive: false,
-        fields: [ItemFields.Overview, ItemFields.DateCreated],
+        fields: [ItemFields.Overview, ItemFields.DateCreated, ItemFields.ChildCount],
       });
 
       return (response.data.Items || []).map(JellyfinMapper.toMediaCollection);
@@ -629,7 +629,7 @@ export class JellyfinService implements IMediaServerService {
     try {
       const response = await getItemsApi(this.api).getItems({
         ids: [collectionId],
-        fields: [ItemFields.Overview, ItemFields.DateCreated],
+        fields: [ItemFields.Overview, ItemFields.DateCreated, ItemFields.ChildCount],
       });
 
       const item = response.data.Items?.[0];
@@ -793,6 +793,11 @@ export class JellyfinService implements IMediaServerService {
     context: { type: MediaItemType; id: string },
     mediaId: string,
   ): Promise<string[]> {
+    // Handle -1 sentinel value (meaning "all" from UI) - just return the mediaId
+    if (context.id === '-1') {
+      return [mediaId];
+    }
+
     // For shows: traverse show -> seasons -> episodes
     // For seasons: traverse season -> episodes
     // Otherwise just return the mediaId

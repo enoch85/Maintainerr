@@ -590,16 +590,23 @@ export class CollectionsService {
       }
 
       // If the collection is empty, remove it. Otherwise issues when adding media
-      if (
-        serverColl &&
-        collection.mediaServerId !== null &&
-        serverColl.childCount <= 0
-      ) {
-        this.logger.debug(
-          `[checkAutomaticMediaServerLink] Deleting empty collection ${serverColl.id} (childCount=${serverColl.childCount})`,
-        );
-        await mediaServer.deleteCollection(serverColl.id);
-        serverColl = undefined;
+      // Note: We use getCollectionChildren instead of childCount because some media servers
+      // (like Jellyfin) don't update ChildCount metadata immediately after adding items
+      if (serverColl && collection.mediaServerId !== null) {
+        const children = await mediaServer.getCollectionChildren(serverColl.id);
+        const actualChildCount = children?.length ?? 0;
+
+        if (actualChildCount <= 0) {
+          this.logger.debug(
+            `[checkAutomaticMediaServerLink] Deleting empty collection ${serverColl.id} (actualChildCount=${actualChildCount})`,
+          );
+          await mediaServer.deleteCollection(serverColl.id);
+          serverColl = undefined;
+        } else {
+          this.logger.debug(
+            `[checkAutomaticMediaServerLink] Collection ${serverColl.id} has ${actualChildCount} children, keeping it`,
+          );
+        }
       }
 
       if (!serverColl) {
