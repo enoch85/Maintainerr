@@ -399,9 +399,6 @@ export class SettingsService implements SettingDto {
     }
   }
 
-  // ============================================================
-  // JELLYFIN SETTINGS
-  // ============================================================
 
   /**
    * Test connection to a Jellyfin server

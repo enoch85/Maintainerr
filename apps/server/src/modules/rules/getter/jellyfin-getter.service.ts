@@ -333,9 +333,6 @@ export class JellyfinGetterService {
     }
   }
 
-  // ============================================================
-  // HELPER METHODS
-  // ============================================================
 
   private async getLastViewedAt(itemId: string): Promise<Date | null> {
     const watchHistory = await this.jellyfinService.getWatchHistory(itemId);

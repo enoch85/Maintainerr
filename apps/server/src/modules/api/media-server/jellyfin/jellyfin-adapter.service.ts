@@ -74,9 +74,6 @@ export class JellyfinService implements IMediaServerService {
     this.cache = cacheManager.getCache('jellyfin');
   }
 
-  // ============================================================
-  // LIFECYCLE
-  // ============================================================
 
   async initialize(): Promise<void> {
     const settings = await this.settingsService.getSettings();
@@ -138,17 +135,11 @@ export class JellyfinService implements IMediaServerService {
     return EMediaServerType.JELLYFIN;
   }
 
-  // ============================================================
-  // FEATURE DETECTION
-  // ============================================================
 
   supportsFeature(feature: EMediaServerFeature): boolean {
     return supportsFeature(EMediaServerType.JELLYFIN, feature);
   }
 
-  // ============================================================
-  // SERVER INFO
-  // ============================================================
 
   async getStatus(): Promise<MediaServerStatus | undefined> {
     if (!this.api) return undefined;
@@ -188,9 +179,6 @@ export class JellyfinService implements IMediaServerService {
     }
   }
 
-  // ============================================================
-  // USERS
-  // ============================================================
 
   async getUsers(): Promise<MediaUser[]> {
     if (!this.api) return [];
@@ -232,9 +220,6 @@ export class JellyfinService implements IMediaServerService {
     }
   }
 
-  // ============================================================
-  // LIBRARIES
-  // ============================================================
 
   async getLibraries(): Promise<MediaLibrary[]> {
     if (!this.api) {
@@ -380,9 +365,6 @@ export class JellyfinService implements IMediaServerService {
     }
   }
 
-  // ============================================================
-  // METADATA
-  // ============================================================
 
   async getMetadata(itemId: string): Promise<MediaItem | undefined> {
     if (!this.api) return undefined;
@@ -463,9 +445,6 @@ export class JellyfinService implements IMediaServerService {
     }
   }
 
-  // ============================================================
-  // SEARCH
-  // ============================================================
 
   async searchContent(query: string): Promise<MediaItem[]> {
     if (!this.api) return [];
@@ -504,9 +483,6 @@ export class JellyfinService implements IMediaServerService {
     }
   }
 
-  // ============================================================
-  // WATCH HISTORY
-  // ============================================================
 
   async getWatchHistory(itemId: string): Promise<WatchRecord[]> {
     if (!this.api) return [];
@@ -626,9 +602,6 @@ export class JellyfinService implements IMediaServerService {
     );
   }
 
-  // ============================================================
-  // COLLECTIONS
-  // ============================================================
 
   async getCollections(libraryId: string): Promise<MediaCollection[]> {
     if (!this.api) return [];
@@ -771,9 +744,7 @@ export class JellyfinService implements IMediaServerService {
     }
   }
 
-  // ============================================================
   // COLLECTION METADATA UPDATE (Not supported on Jellyfin)
-  // ============================================================
 
   async updateCollection(
     _params: UpdateCollectionParams,
@@ -793,16 +764,11 @@ export class JellyfinService implements IMediaServerService {
     );
   }
 
-  // ============================================================
   // OPTIONAL: SERVER-SPECIFIC FEATURES (Not supported)
-  // ============================================================
 
   // getWatchlistForUser is not implemented for Jellyfin
   // as it doesn't have a watchlist API
 
-  // ============================================================
-  // PLAYLISTS
-  // ============================================================
 
   async getPlaylists(libraryId: string): Promise<MediaPlaylist[]> {
     if (!this.api) return [];
@@ -821,9 +787,6 @@ export class JellyfinService implements IMediaServerService {
     }
   }
 
-  // ============================================================
-  // CONTEXT ACTIONS
-  // ============================================================
 
   async getAllIdsForContextAction(
     collectionType: MediaItemType | undefined,
@@ -854,9 +817,6 @@ export class JellyfinService implements IMediaServerService {
     return [mediaId];
   }
 
-  // ============================================================
-  // ACTIONS
-  // ============================================================
 
   async deleteFromDisk(itemId: string): Promise<void> {
     if (!this.api) return;
@@ -870,9 +830,6 @@ export class JellyfinService implements IMediaServerService {
     }
   }
 
-  // ============================================================
-  // CACHE MANAGEMENT
-  // ============================================================
 
   resetMetadataCache(itemId?: string): void {
     if (itemId) {

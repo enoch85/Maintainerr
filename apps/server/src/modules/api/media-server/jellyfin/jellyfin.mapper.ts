@@ -38,9 +38,6 @@ import { JELLYFIN_TICKS_PER_MS } from './jellyfin.constants';
  * Mapper class for converting between Jellyfin SDK types and Maintainerr types.
  */
 export class JellyfinMapper {
-  // ============================================================
-  // TYPE CONVERSIONS
-  // ============================================================
 
   /**
    * Convert Jellyfin BaseItemKind to MediaItemType string.
@@ -93,9 +90,6 @@ export class JellyfinMapper {
     return types.map((type) => JellyfinMapper.toBaseItemKind(type));
   }
 
-  // ============================================================
-  // PROVIDER ID EXTRACTION
-  // ============================================================
 
   /**
    * Extract provider IDs from Jellyfin ProviderIds object.
@@ -128,9 +122,6 @@ export class JellyfinMapper {
     return result;
   }
 
-  // ============================================================
-  // MAIN CONVERTERS
-  // ============================================================
 
   /**
    * Convert a Jellyfin BaseItemDto to a MediaItem.
@@ -303,9 +294,6 @@ export class JellyfinMapper {
     };
   }
 
-  // ============================================================
-  // HELPER CONVERTERS
-  // ============================================================
 
   private static toMediaSources(
     sources?: MediaSourceInfo[] | null,

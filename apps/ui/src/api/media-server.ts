@@ -10,10 +10,6 @@ import GetApiHandler from '../utils/ApiHandler'
  * which one is active.
  */
 
-// ============================================================
-// TYPES
-// ============================================================
-
 /**
  * Unified library type that works across all media servers
  */
@@ -88,10 +84,6 @@ export interface MediaServerStatus {
   platform?: string
 }
 
-// ============================================================
-// QUERY KEYS
-// ============================================================
-
 export const mediaServerKeys = {
   all: ['media-server'] as const,
   status: () => [...mediaServerKeys.all, 'status'] as const,
@@ -115,10 +107,6 @@ export const mediaServerKeys = {
     [...mediaServerKeys.collection(id), 'children'] as const,
   search: (query: string) => [...mediaServerKeys.all, 'search', query] as const,
 }
-
-// ============================================================
-// HOOKS
-// ============================================================
 
 type UseMediaServerLibrariesQueryKey = ReturnType<
   typeof mediaServerKeys.libraries

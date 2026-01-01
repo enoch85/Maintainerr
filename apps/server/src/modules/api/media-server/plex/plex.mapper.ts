@@ -41,9 +41,6 @@ import { Media, PlexMetadata } from '../../plex-api/interfaces/media.interface';
  * - Media[] → mediaSources
  */
 export class PlexMapper {
-  // ============================================================
-  // TYPE CONVERSIONS
-  // ============================================================
 
   /**
    * Convert Plex type string to MediaItemType string.
@@ -106,9 +103,6 @@ export class PlexMapper {
     }
   }
 
-  // ============================================================
-  // PROVIDER ID EXTRACTION
-  // ============================================================
 
   /**
    * Extract provider IDs (IMDB, TMDB, TVDB) from Plex GUID format.
@@ -153,9 +147,6 @@ export class PlexMapper {
     return providerIds;
   }
 
-  // ============================================================
-  // MAIN CONVERTERS
-  // ============================================================
 
   /**
    * Convert a Plex library item to a MediaItem.
@@ -333,9 +324,6 @@ export class PlexMapper {
     };
   }
 
-  // ============================================================
-  // HELPER CONVERTERS
-  // ============================================================
 
   private static toMediaSources(media: Media[] | undefined): MediaSource[] {
     if (!media || !Array.isArray(media)) {

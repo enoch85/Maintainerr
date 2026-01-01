@@ -42,9 +42,6 @@ export class MediaServerController {
 
   constructor(private readonly mediaServerFactory: MediaServerFactory) {}
 
-  // ============================================================
-  // SERVER INFO
-  // ============================================================
 
   @Get()
   async getStatus(): Promise<MediaServerStatus | undefined> {
@@ -58,9 +55,6 @@ export class MediaServerController {
     return { type: mediaServer.getServerType() };
   }
 
-  // ============================================================
-  // LIBRARIES
-  // ============================================================
 
   @Get('libraries')
   async getLibraries(): Promise<MediaLibrary[]> {
@@ -106,9 +100,6 @@ export class MediaServerController {
     return mediaServer.getRecentlyAdded(id, { limit });
   }
 
-  // ============================================================
-  // USERS
-  // ============================================================
 
   @Get('users')
   async getUsers(): Promise<MediaUser[]> {
@@ -122,9 +113,6 @@ export class MediaServerController {
     return mediaServer.getUser(id);
   }
 
-  // ============================================================
-  // METADATA
-  // ============================================================
 
   @Get('meta/:id')
   async getMetadata(@Param('id') id: string): Promise<MediaItem | undefined> {
@@ -144,9 +132,6 @@ export class MediaServerController {
     return mediaServer.getWatchHistory(id);
   }
 
-  // ============================================================
-  // SEARCH
-  // ============================================================
 
   @Get('search/:query')
   async searchContent(@Param('query') query: string): Promise<MediaItem[]> {
@@ -154,9 +139,6 @@ export class MediaServerController {
     return mediaServer.searchContent(query);
   }
 
-  // ============================================================
-  // COLLECTIONS
-  // ============================================================
 
   @Get('library/:id/collections')
   async getCollections(@Param('id') id: string): Promise<MediaCollection[]> {
@@ -210,10 +192,8 @@ export class MediaServerController {
     return mediaServer.removeFromCollection(collectionId, itemId);
   }
 
-  // ============================================================
   // COLLECTION METADATA & VISIBILITY
   // These operations may not be supported on all media servers
-  // ============================================================
 
   /**
    * Update a collection's metadata (title, summary, etc.)

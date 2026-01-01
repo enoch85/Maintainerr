@@ -27,9 +27,6 @@ import {
  * - Cache management is implementation-specific but exposed via resetMetadataCache
  */
 export interface IMediaServerService {
-  // ============================================================
-  // LIFECYCLE
-  // ============================================================
 
   /**
    * Initialize the connection to the media server.
@@ -53,9 +50,6 @@ export interface IMediaServerService {
    */
   getServerType(): EMediaServerType;
 
-  // ============================================================
-  // FEATURE DETECTION
-  // ============================================================
 
   /**
    * Check if a specific feature is supported by this media server.
@@ -63,9 +57,6 @@ export interface IMediaServerService {
    */
   supportsFeature(feature: EMediaServerFeature): boolean;
 
-  // ============================================================
-  // SERVER INFO
-  // ============================================================
 
   /**
    * Get server status and version information.
@@ -73,9 +64,6 @@ export interface IMediaServerService {
    */
   getStatus(): Promise<MediaServerStatus | undefined>;
 
-  // ============================================================
-  // USERS
-  // ============================================================
 
   /**
    * Get all users with access to the media server.
@@ -87,9 +75,6 @@ export interface IMediaServerService {
    */
   getUser(id: string): Promise<MediaUser | undefined>;
 
-  // ============================================================
-  // LIBRARIES
-  // ============================================================
 
   /**
    * Get all libraries available on the media server.
@@ -121,9 +106,6 @@ export interface IMediaServerService {
     type?: MediaItemType,
   ): Promise<MediaItem[]>;
 
-  // ============================================================
-  // METADATA
-  // ============================================================
 
   /**
    * Get detailed metadata for a specific item.
@@ -143,18 +125,12 @@ export interface IMediaServerService {
     options?: RecentlyAddedOptions,
   ): Promise<MediaItem[]>;
 
-  // ============================================================
-  // SEARCH
-  // ============================================================
 
   /**
    * Search across all content on the server.
    */
   searchContent(query: string): Promise<MediaItem[]>;
 
-  // ============================================================
-  // WATCH HISTORY
-  // ============================================================
 
   /**
    * Get watch history for a specific item.
@@ -170,9 +146,6 @@ export interface IMediaServerService {
    */
   getItemSeenBy(itemId: string): Promise<string[]>;
 
-  // ============================================================
-  // COLLECTIONS
-  // ============================================================
 
   /**
    * Get all collections in a library.
@@ -223,9 +196,6 @@ export interface IMediaServerService {
     settings: CollectionVisibilitySettings,
   ): Promise<void>;
 
-  // ============================================================
-  // OPTIONAL: SERVER-SPECIFIC FEATURES
-  // ============================================================
 
   /**
    * Get watchlist items for a user.
@@ -233,18 +203,12 @@ export interface IMediaServerService {
    */
   getWatchlistForUser?(userId: string): Promise<string[]>;
 
-  // ============================================================
-  // PLAYLISTS
-  // ============================================================
 
   /**
    * Get playlists in a library.
    */
   getPlaylists(libraryId: string): Promise<MediaPlaylist[]>;
 
-  // ============================================================
-  // ACTIONS
-  // ============================================================
 
   /**
    * Delete an item from disk.
@@ -252,9 +216,6 @@ export interface IMediaServerService {
    */
   deleteFromDisk(itemId: string): Promise<void>;
 
-  // ============================================================
-  // CONTEXT-BASED ID RESOLUTION
-  // ============================================================
 
   /**
    * Get all media server IDs for a context action (add/remove from collection).
@@ -271,9 +232,6 @@ export interface IMediaServerService {
     mediaId: string,
   ): Promise<string[]>;
 
-  // ============================================================
-  // CACHE MANAGEMENT
-  // ============================================================
 
   /**
    * Reset metadata cache.

@@ -214,9 +214,6 @@ export class SettingsController {
     return this.settingsService.testOverseerr(payload);
   }
 
-  // ============================================================
-  // JELLYFIN SETTINGS
-  // ============================================================
 
   @Post('/jellyfin/test')
   testJellyfin(@Body() payload: JellyfinSettingDto): Promise<BasicResponseDto> {

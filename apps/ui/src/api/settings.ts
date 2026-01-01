@@ -157,10 +157,6 @@ export const useUpdatePlexAuth = (options?: UseUpdatePlexAuthOptions) => {
 
 export type UseUpdatePlexAuthResult = ReturnType<typeof useUpdatePlexAuth>
 
-// ============================================================
-// JELLYFIN SETTINGS
-// ============================================================
-
 type UseTestJellyfinOptions = Omit<
   UseMutationOptions<JellyfinTestResult, Error, JellyfinSettingsPayload>,
   'mutationFn' | 'mutationKey'
@@ -239,10 +235,6 @@ export const useDeleteJellyfinSettings = (
 export type UseDeleteJellyfinSettingsResult = ReturnType<
   typeof useDeleteJellyfinSettings
 >
-
-// ============================================================
-// MEDIA SERVER SWITCH
-// ============================================================
 
 export interface MediaServerSwitchPreview {
   currentServerType: MediaServerType

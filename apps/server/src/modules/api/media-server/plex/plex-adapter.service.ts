@@ -37,9 +37,6 @@ export class PlexAdapterService implements IMediaServerService {
     private readonly plexApi: PlexApiService,
   ) {}
 
-  // ============================================================
-  // LIFECYCLE
-  // ============================================================
 
   async initialize(): Promise<void> {
     await this.plexApi.initialize();
@@ -57,17 +54,11 @@ export class PlexAdapterService implements IMediaServerService {
     return EMediaServerType.PLEX;
   }
 
-  // ============================================================
-  // FEATURE DETECTION
-  // ============================================================
 
   supportsFeature(feature: EMediaServerFeature): boolean {
     return supportsFeature(EMediaServerType.PLEX, feature);
   }
 
-  // ============================================================
-  // SERVER INFO
-  // ============================================================
 
   async getStatus(): Promise<MediaServerStatus | undefined> {
     const status = await this.plexApi.getStatus();
@@ -75,9 +66,6 @@ export class PlexAdapterService implements IMediaServerService {
     return PlexMapper.toMediaServerStatus(status);
   }
 
-  // ============================================================
-  // USERS
-  // ============================================================
 
   async getUsers(): Promise<MediaUser[]> {
     const users = await this.plexApi.getUsers();
@@ -91,9 +79,6 @@ export class PlexAdapterService implements IMediaServerService {
     return PlexMapper.toMediaUser(user);
   }
 
-  // ============================================================
-  // LIBRARIES
-  // ============================================================
 
   async getLibraries(): Promise<MediaLibrary[]> {
     const libraries = await this.plexApi.getLibraries();
@@ -159,9 +144,6 @@ export class PlexAdapterService implements IMediaServerService {
     return results.map(PlexMapper.toMediaItem);
   }
 
-  // ============================================================
-  // METADATA
-  // ============================================================
 
   async getMetadata(itemId: string): Promise<MediaItem | undefined> {
     const metadata = await this.plexApi.getMetadata(itemId);
@@ -190,9 +172,6 @@ export class PlexAdapterService implements IMediaServerService {
     return limited.map(PlexMapper.toMediaItem);
   }
 
-  // ============================================================
-  // SEARCH
-  // ============================================================
 
   async searchContent(query: string): Promise<MediaItem[]> {
     const results = await this.plexApi.searchContent(query);
@@ -200,9 +179,6 @@ export class PlexAdapterService implements IMediaServerService {
     return results.map(PlexMapper.metadataToMediaItem);
   }
 
-  // ============================================================
-  // WATCH HISTORY
-  // ============================================================
 
   async getWatchHistory(itemId: string): Promise<WatchRecord[]> {
     const history = await this.plexApi.getWatchHistory(itemId);
@@ -217,9 +193,6 @@ export class PlexAdapterService implements IMediaServerService {
     return Array.from(userIds);
   }
 
-  // ============================================================
-  // COLLECTIONS
-  // ============================================================
 
   async getCollections(libraryId: string): Promise<MediaCollection[]> {
     const collections = await this.plexApi.getCollections(libraryId);
@@ -275,9 +248,7 @@ export class PlexAdapterService implements IMediaServerService {
     await this.plexApi.deleteChildFromCollection(collectionId, itemId);
   }
 
-  // ============================================================
   // PLEX-SPECIFIC: COLLECTION UPDATE & VISIBILITY
-  // ============================================================
 
   async updateCollection(
     params: UpdateCollectionParams,
@@ -306,9 +277,6 @@ export class PlexAdapterService implements IMediaServerService {
     });
   }
 
-  // ============================================================
-  // PLEX-SPECIFIC: WATCHLIST
-  // ============================================================
 
   async getWatchlistForUser(userId: string): Promise<string[]> {
     // PlexApiService.getWatchlistIdsForUser requires both userId and username
@@ -318,9 +286,6 @@ export class PlexAdapterService implements IMediaServerService {
     return [];
   }
 
-  // ============================================================
-  // PLAYLISTS
-  // ============================================================
 
   async getPlaylists(libraryId: string): Promise<MediaPlaylist[]> {
     const playlists = await this.plexApi.getPlaylists(libraryId);
@@ -328,17 +293,11 @@ export class PlexAdapterService implements IMediaServerService {
     return playlists.map(PlexMapper.toMediaPlaylist);
   }
 
-  // ============================================================
-  // ACTIONS
-  // ============================================================
 
   async deleteFromDisk(itemId: string): Promise<void> {
     await this.plexApi.deleteMediaFromDisk(itemId);
   }
 
-  // ============================================================
-  // CONTEXT-BASED ID RESOLUTION
-  // ============================================================
 
   async getAllIdsForContextAction(
     collectionType: MediaItemType | undefined,
@@ -353,9 +312,6 @@ export class PlexAdapterService implements IMediaServerService {
     return result.map((r) => String(r.plexId));
   }
 
-  // ============================================================
-  // CACHE MANAGEMENT
-  // ============================================================
 
   resetMetadataCache(itemId?: string): void {
     // PlexApiService uses cacheManager internally
