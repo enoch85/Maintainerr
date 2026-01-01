@@ -1,6 +1,8 @@
 import {
   IComparisonStatistics,
   MaintainerrEvent,
+  MediaItem,
+  MediaItemType,
   RuleHandlerFinishedEventDto,
   RuleHandlerStartedEventDto,
 } from '@maintainerr/contracts';
@@ -9,10 +11,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import cacheManager from '../../api/lib/cache';
 import { MediaServerFactory } from '../../api/media-server/media-server.factory';
 import { IMediaServerService } from '../../api/media-server/media-server.interface';
-import { PlexMapper } from '../../api/media-server/plex/plex.mapper';
-import { EPlexDataType } from '../../api/plex-api/enums/plex-data-type-enum';
-import { PlexLibraryItem } from '../../api/plex-api/interfaces/library.interfaces';
-import { PlexApiService } from '../../api/plex-api/plex-api.service';
 import { CollectionsService } from '../../collections/collections.service';
 import { Collection } from '../../collections/entities/collection.entities';
 import { AddRemoveCollectionMedia } from '../../collections/interfaces/collection-media.interface';
@@ -32,13 +30,12 @@ import { RuleExecutorProgressService } from './rule-executor-progress.service';
 
 /**
  * Paginated media data for rule processing.
- * Note: Uses PlexLibraryItem[] for now - see Phase C (PHASE_C_RULES_ENGINE.md section C.10)
- * for planned migration to MediaItem[].
+ * Uses server-agnostic MediaItem[] for compatibility with both Plex and Jellyfin.
  */
 interface MediaDataPage {
   page: number;
   finished: boolean;
-  data: PlexLibraryItem[];
+  data: MediaItem[];
 }
 
 @Injectable()
@@ -46,19 +43,16 @@ export class RuleExecutorService {
   ruleConstants: RuleConstants;
   userId: string;
   mediaData: MediaDataPage;
-  mediaDataType: EPlexDataType;
-  workerData: PlexLibraryItem[];
-  resultData: PlexLibraryItem[];
+  mediaDataType: MediaItemType | undefined;
+  workerData: MediaItem[];
+  resultData: MediaItem[];
   statisticsData: IComparisonStatistics[];
-  Data: PlexLibraryItem[];
+  Data: MediaItem[];
   startTime: Date;
 
   constructor(
     private readonly rulesService: RulesService,
     private readonly mediaServerFactory: MediaServerFactory,
-    // PlexApiService kept for getLibraryContents() - returns PlexLibraryItem[] used by internal data structures
-    // TODO: Refactor workerData/resultData to use MediaItem[] in future phase
-    private readonly plexApi: PlexApiService,
     private readonly collectionService: CollectionsService,
     private readonly settings: SettingsService,
     private readonly comparatorFactory: RuleComparatorServiceFactory,
@@ -140,9 +134,7 @@ export class RuleExecutorService {
           this.statisticsData = [];
           this.mediaData = { page: 0, finished: false, data: [] };
 
-          this.mediaDataType = ruleGroup.dataType
-            ? PlexMapper.toPlexDataType(ruleGroup.dataType)
-            : undefined;
+          this.mediaDataType = ruleGroup.dataType || undefined;
 
           // Run rules data chunks of 50
           while (!this.mediaData.finished) {
@@ -304,10 +296,10 @@ export class RuleExecutorService {
         }
       }
 
-      // filter exclusions out of results & get correct ratingKey
+      // filter exclusions out of results & get correct media item ID
       const desiredMediaServerIds = new Set<string>();
       for (const item of this.resultData ?? []) {
-        const mediaServerId = item.ratingKey.toString();
+        const mediaServerId = item.id;
         if (!excludedMediaServerIds.has(mediaServerId)) {
           desiredMediaServerIds.add(mediaServerId);
         }
@@ -510,15 +502,13 @@ export class RuleExecutorService {
 
   private async getMediaData(libraryId: string): Promise<void> {
     const size = 50;
-    const response = await this.plexApi.getLibraryContents(
-      libraryId,
-      {
-        offset: +this.mediaData.page * size,
-        size: size,
-      },
-      this.mediaDataType,
-      false, // avoid caching hundreds of paged responses during bulk scans
-    );
+    const mediaServer = await this.getMediaServer();
+    const response = await mediaServer.getLibraryContents(libraryId, {
+      offset: +this.mediaData.page * size,
+      limit: size,
+      type: this.mediaDataType,
+    });
+
     if (response) {
       this.mediaData.data = response.items ? response.items : [];
 

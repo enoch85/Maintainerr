@@ -6,7 +6,7 @@
 #   docker compose up -d
 #
 # Build from a specific branch:
-#   BRANCH=jellyfin-type-consolidation docker compose up -d --build
+#   BRANCH=rules-engine-mediaitem-migration docker compose up -d --build
 #
 # Build from a fork:
 #   REPO=https://github.com/yourfork/Maintainerr.git BRANCH=my-feature docker compose up -d --build
@@ -89,7 +89,7 @@ services:
       context: .
       dockerfile: Dockerfile.dev
       args:
-        BRANCH: ${BRANCH:-jellyfin-type-consolidation}
+        BRANCH: ${BRANCH:-rules-engine-mediaitem-migration}
         REPO: ${REPO:-https://github.com/enoch85/Maintainerr.git}
     container_name: maintainerr-test
     user: "1000:1000"

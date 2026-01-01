@@ -1,11 +1,11 @@
 import {
+  MediaItem,
   MediaItemType,
   IComparisonStatistics,
   IRuleComparisonResult,
   RuleValueType,
 } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
-import { PlexLibraryItem } from '../../api/plex-api/interfaces/library.interfaces';
 import { MaintainerrLogger } from '../../logging/logs.service';
 import { RuleConstanstService } from '../constants/constants.service';
 import {
@@ -20,7 +20,7 @@ import { ValueGetterService } from '../getter/getter.service';
 
 interface IComparatorReturnValue {
   stats: IComparisonStatistics[];
-  data: PlexLibraryItem[];
+  data: MediaItem[];
 }
 
 @Injectable()
@@ -42,9 +42,9 @@ export class RuleComparatorServiceFactory {
 
 @Injectable()
 export class RuleComparatorService {
-  workerData: PlexLibraryItem[];
-  resultData: PlexLibraryItem[];
-  plexData: PlexLibraryItem[];
+  workerData: MediaItem[];
+  resultData: MediaItem[];
+  plexData: MediaItem[];
   plexDataType: MediaItemType;
   statistics: IComparisonStatistics[];
   statisticWorker: IRuleComparisonResult[];
@@ -64,7 +64,7 @@ export class RuleComparatorService {
 
   public async executeRulesWithData(
     rulegroup: RulesDto,
-    plexData: PlexLibraryItem[],
+    plexData: MediaItem[],
     onRuleProgress?: (processingRule: number) => void,
     abortSignal?: AbortSignal,
   ): Promise<IComparatorReturnValue> {
@@ -178,7 +178,7 @@ export class RuleComparatorService {
   }
 
   private async executeRule(rule: RuleDto, ruleGroup: RulesDto) {
-    let data: PlexLibraryItem[];
+    let data: MediaItem[];
     let firstVal: RuleValueType;
     let secondVal: RuleValueType;
 
@@ -191,11 +191,11 @@ export class RuleComparatorService {
     // loop media items
     for (let i = data.length - 1; i >= 0; i--) {
       // fetch values
-      const plexItem = data[i];
-      const mediaId = plexItem.ratingKey;
+      const mediaItem = data[i];
+      const mediaId = mediaItem.id;
       firstVal = await this.valueGetter.get(
         rule.firstVal,
-        plexItem,
+        mediaItem,
         ruleGroup,
         this.plexDataType,
       );
@@ -203,7 +203,7 @@ export class RuleComparatorService {
 
       secondVal = await this.getSecondValue(
         rule,
-        plexItem,
+        mediaItem,
         ruleGroup,
         firstVal,
       );
@@ -235,7 +235,7 @@ export class RuleComparatorService {
             // add to workerdata if not yet available
             if (!this.workerIds.has(mediaId)) {
               this.workerIds.add(mediaId);
-              this.workerData.push(plexItem);
+              this.workerData.push(mediaItem);
             }
           }
         } else {
@@ -251,7 +251,7 @@ export class RuleComparatorService {
 
   private async getSecondValue(
     rule: RuleDto,
-    data: PlexLibraryItem,
+    data: MediaItem,
     rulegroup: RulesDto,
     firstVal: RuleValueType,
   ): Promise<RuleValueType> {
@@ -311,7 +311,7 @@ export class RuleComparatorService {
 
   private prepareStatistics() {
     this.plexData.forEach((data) => {
-      const mediaId = data.ratingKey;
+      const mediaId = data.id;
       const stat: IComparisonStatistics = {
         mediaServerId: mediaId,
         result: false,
@@ -365,7 +365,7 @@ export class RuleComparatorService {
     if (!sectionActionAnd) {
       // section action is OR, then push in result array
       for (const item of this.workerData) {
-        const mediaId = item.ratingKey;
+        const mediaId = item.id;
         if (!this.resultIds.has(mediaId)) {
           this.resultIds.add(mediaId);
           this.resultData.push(item);
@@ -374,13 +374,13 @@ export class RuleComparatorService {
     } else {
       // section action is AND, then filter media not in work array out of result array
       const idsInCurrentData = new Set<string>(
-        this.plexData.map((plexEl) => {
-          return plexEl.ratingKey;
+        this.plexData.map((mediaItem) => {
+          return mediaItem.id;
         }),
       );
 
       this.resultData = this.resultData.filter((el) => {
-        const mediaId = el.ratingKey;
+        const mediaId = el.id;
         // If in current data.. Otherwise we're removing previously added media
         if (idsInCurrentData.has(mediaId)) {
           return this.workerIds.has(mediaId);
@@ -392,7 +392,7 @@ export class RuleComparatorService {
 
       this.resultIds = new Set<string>(
         this.resultData.map((el) => {
-          return el.ratingKey;
+          return el.id;
         }),
       );
     }

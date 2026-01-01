@@ -1,4 +1,5 @@
 import {
+  MediaItem,
   MediaItemType,
   isMediaType,
   RuleValueType,
@@ -6,7 +7,6 @@ import {
 import { Injectable } from '@nestjs/common';
 import cacheManager, { Cache } from '../../api/lib/cache';
 import { JellyfinService } from '../../api/media-server/jellyfin/jellyfin-adapter.service';
-import { PlexLibraryItem } from '../../api/plex-api/interfaces/library.interfaces';
 import { MaintainerrLogger } from '../../logging/logs.service';
 import {
   Application,
@@ -47,7 +47,7 @@ export class JellyfinGetterService {
 
   async get(
     id: number,
-    libItem: PlexLibraryItem,
+    libItem: MediaItem,
     dataType?: MediaItemType,
     ruleGroup?: RulesDto,
   ): Promise<RuleValueType> {
@@ -64,14 +64,12 @@ export class JellyfinGetterService {
       }
 
       // Fetch full metadata from Jellyfin
-      // Note: libItem.ratingKey maps to Jellyfin item ID
-      const metadata = await this.jellyfinService.getMetadata(
-        libItem.ratingKey,
-      );
+      // Note: libItem.id maps to Jellyfin item ID
+      const metadata = await this.jellyfinService.getMetadata(libItem.id);
 
       if (!metadata) {
         this.logger.warn(
-          `Failed to get Jellyfin metadata for item ${libItem.ratingKey}`,
+          `Failed to get Jellyfin metadata for item ${libItem.id}`,
         );
         return null;
       }
@@ -328,7 +326,7 @@ export class JellyfinGetterService {
       }
     } catch (e) {
       this.logger.warn(
-        `Jellyfin-Getter - Action failed for '${libItem.title}' with id '${libItem.ratingKey}': ${e instanceof Error ? e.message : String(e)}`,
+        `Jellyfin-Getter - Action failed for '${libItem.title}' with id '${libItem.id}': ${e instanceof Error ? e.message : String(e)}`,
       );
       this.logger.debug(e);
       return undefined;

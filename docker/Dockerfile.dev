@@ -3,11 +3,11 @@
 # Builds Maintainerr from a specific branch for local testing with Jellyfin
 #
 # Build arguments:
-#   BRANCH - The git branch to build (default: jellyfin-phase-e)
+#   BRANCH - The git branch to build (default: jellyfin-type-consolidation)
 #   REPO   - The git repository URL (default: https://github.com/Maintainerr/Maintainerr.git)
 #
 # Usage:
-#   docker build -f Dockerfile.dev --build-arg BRANCH=jellyfin-phase-e -t maintainerr-dev .
+#   docker build -f Dockerfile.dev --build-arg BRANCH=jellyfin-type-consolidation -t maintainerr-dev .
 #   docker build -f Dockerfile.dev --build-arg BRANCH=main -t maintainerr-main .
 #   docker build -f Dockerfile.dev --build-arg REPO=https://github.com/yourfork/Maintainerr.git --build-arg BRANCH=my-feature -t maintainerr-feature .
 
@@ -19,7 +19,7 @@ FROM base AS builder
 WORKDIR /app
 
 # Build arguments for branch/repo selection
-ARG BRANCH=jellyfin-phase-e
+ARG BRANCH=rules-engine-mediaitem-migration
 ARG REPO=https://github.com/Maintainerr/Maintainerr.git
 
 # Install git and build tools for native modules (better-sqlite3, esbuild, etc.)

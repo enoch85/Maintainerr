@@ -1,5 +1,5 @@
+import { MediaItem } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
-import { PlexLibraryItem } from '../../api/plex-api/interfaces/library.interfaces';
 import { ServarrService } from '../../api/servarr-api/servarr.service';
 import { TmdbIdService } from '../../api/tmdb-api/tmdb-id.service';
 import { MaintainerrLogger } from '../../logging/logs.service';
@@ -25,7 +25,7 @@ export class RadarrGetterService {
     ).props;
   }
 
-  async get(id: number, libItem: PlexLibraryItem, ruleGroup?: RulesDto) {
+  async get(id: number, libItem: MediaItem, ruleGroup?: RulesDto) {
     if (!ruleGroup.collection?.radarrSettingsId) {
       this.logger.error(
         `No Radarr server configured for ${ruleGroup.collection?.title}`,
@@ -36,7 +36,7 @@ export class RadarrGetterService {
     try {
       const prop = this.plexProperties.find((el) => el.id === id);
       const tmdb = await this.tmdbIdHelper.getTmdbIdFromPlexRatingKey(
-        libItem.ratingKey,
+        libItem.id,
       );
 
       if (!tmdb || !tmdb.id) {
@@ -161,13 +161,13 @@ export class RadarrGetterService {
         }
       } else {
         this.logger.debug(
-          `Couldn't fetch Radarr metadata for media '${libItem.title}' with id '${libItem.ratingKey}'. As a result, no Radarr query could be made.`,
+          `Couldn't fetch Radarr metadata for media '${libItem.title}' with id '${libItem.id}'. As a result, no Radarr query could be made.`,
         );
         return null;
       }
     } catch (e) {
       this.logger.warn(
-        `Radarr-Getter - Action failed for '${libItem.title}' with id '${libItem.ratingKey}': ${e.message}`,
+        `Radarr-Getter - Action failed for '${libItem.title}' with id '${libItem.id}': ${e.message}`,
       );
       this.logger.debug(e);
       return undefined;

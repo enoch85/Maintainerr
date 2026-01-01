@@ -1,4 +1,4 @@
-import { MediaItemType } from '@maintainerr/contracts';
+import { MediaItem, MediaItemType } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import _ from 'lodash';
 import {
@@ -10,7 +10,6 @@ import {
   JellyseerrTVRequest,
   JellyseerrTVResponse,
 } from '../../api/jellyseerr-api/jellyseerr-api.service';
-import { PlexLibraryItem } from '../../api/plex-api/interfaces/library.interfaces';
 import { MediaServerFactory } from '../../api/media-server/media-server.factory';
 import { IMediaServerService } from '../../api/media-server/media-server.interface';
 import { PlexApiService } from '../../api/plex-api/plex-api.service';
@@ -48,9 +47,9 @@ export class JellyseerrGetterService {
     return this.mediaServerFactory.getService();
   }
 
-  async get(id: number, libItem: PlexLibraryItem, dataType?: MediaItemType) {
+  async get(id: number, libItem: MediaItem, dataType?: MediaItemType) {
     try {
-      let origLibItem = undefined;
+      let origLibItem: MediaItem = undefined;
       let seasonMediaResponse: JellyseerrSeasonResponse = undefined;
       let tvMediaResponse: JellyseerrTVResponse = undefined;
       let movieMediaResponse: JellyseerrMovieResponse = undefined;
@@ -59,15 +58,13 @@ export class JellyseerrGetterService {
       if (dataType === 'season' || dataType === 'episode') {
         origLibItem = _.cloneDeep(libItem);
         const mediaServer = await this.getMediaServer();
-        libItem = (await mediaServer.getMetadata(
-          dataType === 'season'
-            ? libItem.parentRatingKey
-            : libItem.grandparentRatingKey,
-        )) as unknown as PlexLibraryItem;
+        libItem = await mediaServer.getMetadata(
+          dataType === 'season' ? libItem.parentId : libItem.grandparentId,
+        );
       }
 
       const prop = this.appProperties.find((el) => el.id === id);
-      const tmdb = await this.tmdbIdHelper.getTmdbIdFromPlexData(libItem);
+      const tmdb = await this.tmdbIdHelper.getTmdbIdFromMediaItem(libItem);
       // const jellyseerrUsers = await this.jellyseerrApi.getUsers();
 
       if (tmdb && tmdb.id) {
@@ -80,26 +77,24 @@ export class JellyseerrGetterService {
             tmdb.id.toString(),
           );
           if (dataType === 'season' || dataType === 'episode') {
-            seasonMediaResponse = await this.jellyseerrApi.getSeason(
-              tmdb.id.toString(),
+            const seasonNumber =
               dataType === 'season'
                 ? origLibItem.index
-                : origLibItem.parentIndex,
+                : origLibItem.parentIndex;
+            seasonMediaResponse = await this.jellyseerrApi.getSeason(
+              tmdb.id.toString(),
+              seasonNumber?.toString(),
             );
             if (!seasonMediaResponse) {
               this.logger.debug(
-                `Couldn't fetch season data for '${libItem.title}' season ${
-                  dataType === 'season'
-                    ? origLibItem.index
-                    : origLibItem.parentIndex
-                } from Jellyseerr. As a result, unreliable results are expected.`,
+                `Couldn't fetch season data for '${libItem.title}' season ${seasonNumber} from Jellyseerr. As a result, unreliable results are expected.`,
               );
             }
           }
         }
       } else {
         this.logger.debug(
-          `Couldn't find tmdb id for media '${libItem.title}' with id '${libItem.ratingKey}'. As a result, no Jellyseerr query could be made.`,
+          `Couldn't find tmdb id for media '${libItem.title}' with id '${libItem.id}'. As a result, no Jellyseerr query could be made.`,
         );
       }
 
@@ -275,13 +270,13 @@ export class JellyseerrGetterService {
         }
       } else {
         this.logger.debug(
-          `Couldn't fetch Jellyseerr metadate for media '${libItem.title}' with id '${libItem.ratingKey}'. As a result, no Jellyseerr query could be made.`,
+          `Couldn't fetch Jellyseerr metadate for media '${libItem.title}' with id '${libItem.id}'. As a result, no Jellyseerr query could be made.`,
         );
         return null;
       }
     } catch (e) {
       this.logger.warn(
-        `Jellyseerr-Getter - Action failed for '${libItem.title}' with id '${libItem.ratingKey}': ${e.message}`,
+        `Jellyseerr-Getter - Action failed for '${libItem.title}' with id '${libItem.id}': ${e.message}`,
       );
       this.logger.debug(e);
       return undefined;
@@ -289,7 +284,7 @@ export class JellyseerrGetterService {
   }
 
   private getSeasonRequests(
-    libItem: PlexLibraryItem,
+    libItem: MediaItem,
     mediaResponse: JellyseerrTVResponse,
   ) {
     const seasonRequests: JellyseerrTVRequest[] = [];

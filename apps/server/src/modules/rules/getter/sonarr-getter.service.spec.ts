@@ -1,16 +1,15 @@
-import { MediaItemType } from '@maintainerr/contracts';
+import { MediaItem, MediaItemType } from '@maintainerr/contracts';
 import { Mocked, TestBed } from '@suites/unit';
 import {
   createCollectionMedia,
-  createPlexLibraryItem,
-  createPlexMetadata,
+  createMediaItem,
   createRulesDto,
   createSonarrEpisode,
   createSonarrEpisodeFile,
   createSonarrSeries,
 } from '../../../../test/utils/data';
-import { PlexLibraryItem } from '../../api/plex-api/interfaces/library.interfaces';
-import { PlexApiService } from '../../api/plex-api/plex-api.service';
+import { MediaServerFactory } from '../../api/media-server/media-server.factory';
+import { IMediaServerService } from '../../api/media-server/media-server.interface';
 import { SonarrApi } from '../../api/servarr-api/helpers/sonarr.helper';
 import { SonarrSeries } from '../../api/servarr-api/interfaces/sonarr.interface';
 import { ServarrService } from '../../api/servarr-api/servarr.service';
@@ -21,7 +20,10 @@ import { SonarrGetterService } from './sonarr-getter.service';
 describe('SonarrGetterService', () => {
   let sonarrGetterService: SonarrGetterService;
   let servarrService: Mocked<ServarrService>;
-  let plexApi: Mocked<PlexApiService>;
+  let mediaServerFactory: Mocked<MediaServerFactory>;
+  let mockMediaServer: {
+    getMetadata: jest.Mock<Promise<MediaItem>, [string]>;
+  };
   let logger: Mocked<MaintainerrLogger>;
 
   beforeEach(async () => {
@@ -31,8 +33,16 @@ describe('SonarrGetterService', () => {
     sonarrGetterService = unit;
 
     servarrService = unitRef.get(ServarrService);
-    plexApi = unitRef.get(PlexApiService);
+    mediaServerFactory = unitRef.get(MediaServerFactory);
     logger = unitRef.get(MaintainerrLogger);
+
+    // Create mock media server
+    mockMediaServer = {
+      getMetadata: jest.fn(),
+    };
+    mediaServerFactory.getService.mockResolvedValue(
+      mockMediaServer as unknown as IMediaServerService,
+    );
   });
 
   afterEach(() => {
@@ -54,8 +64,8 @@ describe('SonarrGetterService', () => {
         const collectionMedia = createCollectionMedia(type as MediaItemType);
         collectionMedia.collection.sonarrSettingsId = 1;
 
-        plexApi.getMetadata.mockResolvedValue(
-          createPlexMetadata({
+        mockMediaServer.getMetadata.mockResolvedValue(
+          createMediaItem({
             type: 'show',
           }),
         );
@@ -112,17 +122,15 @@ describe('SonarrGetterService', () => {
             return Promise.resolve([]);
           });
 
-        const plexLibraryItem = createPlexLibraryItem(
-          type == 'episode' ? 'episode' : 'season',
-          {
-            index: 1,
-            parentIndex: type == 'episode' ? 1 : undefined, // For episode, target parent (season)
-          },
-        );
+        const mediaItem = createMediaItem({
+          type: type == 'episode' ? 'episode' : 'season',
+          index: 1,
+          parentIndex: type == 'episode' ? 1 : undefined, // For episode, target parent (season)
+        });
 
         const response = await sonarrGetterService.get(
           13,
-          plexLibraryItem,
+          mediaItem,
           type as MediaItemType,
           createRulesDto({
             collection: collectionMedia.collection,
@@ -149,8 +157,8 @@ describe('SonarrGetterService', () => {
           const collectionMedia = createCollectionMedia(type as MediaItemType);
           collectionMedia.collection.sonarrSettingsId = 1;
 
-          plexApi.getMetadata.mockResolvedValue(
-            createPlexMetadata({
+          mockMediaServer.getMetadata.mockResolvedValue(
+            createMediaItem({
               type: 'show',
             }),
           );
@@ -207,17 +215,15 @@ describe('SonarrGetterService', () => {
               return Promise.resolve([]);
             });
 
-          const plexLibraryItem = createPlexLibraryItem(
-            type == 'episode' ? 'episode' : 'season',
-            {
-              index: 1,
-              parentIndex: type == 'episode' ? 1 : undefined, // For episode, target parent (season)
-            },
-          );
+          const mediaItem = createMediaItem({
+            type: type == 'episode' ? 'episode' : 'season',
+            index: 1,
+            parentIndex: type == 'episode' ? 1 : undefined, // For episode, target parent (season)
+          });
 
           const response = await sonarrGetterService.get(
             13,
-            plexLibraryItem,
+            mediaItem,
             type as MediaItemType,
             createRulesDto({
               collection: collectionMedia.collection,
@@ -235,19 +241,19 @@ describe('SonarrGetterService', () => {
     let collectionMedia: CollectionMedia;
     let mockedSonarrApi: SonarrApi;
     let series: SonarrSeries;
-    let plexLibraryItem: PlexLibraryItem;
+    let mediaItem: MediaItem;
 
     beforeEach(() => {
       collectionMedia = createCollectionMedia('episode');
       collectionMedia.collection.sonarrSettingsId = 1;
-      plexApi.getMetadata.mockResolvedValue(
-        createPlexMetadata({
+      mockMediaServer.getMetadata.mockResolvedValue(
+        createMediaItem({
           type: 'show',
         }),
       );
       series = createSonarrSeries();
       mockedSonarrApi = mockSonarrApi(series);
-      plexLibraryItem = createPlexLibraryItem('episode');
+      mediaItem = createMediaItem({ type: 'episode' });
     });
 
     it('should return true when the cut off is met', async () => {
@@ -264,7 +270,7 @@ describe('SonarrGetterService', () => {
 
       const response = await sonarrGetterService.get(
         23,
-        plexLibraryItem,
+        mediaItem,
         'episode',
         createRulesDto({
           collection: collectionMedia.collection,
@@ -289,7 +295,7 @@ describe('SonarrGetterService', () => {
 
       const response = await sonarrGetterService.get(
         23,
-        plexLibraryItem,
+        mediaItem,
         'episode',
         createRulesDto({
           collection: collectionMedia.collection,
@@ -305,7 +311,7 @@ describe('SonarrGetterService', () => {
 
       const response = await sonarrGetterService.get(
         23,
-        plexLibraryItem,
+        mediaItem,
         'episode',
         createRulesDto({
           collection: collectionMedia.collection,
@@ -321,19 +327,19 @@ describe('SonarrGetterService', () => {
     let collectionMedia: CollectionMedia;
     let mockedSonarrApi: SonarrApi;
     let series: SonarrSeries;
-    let plexLibraryItem: PlexLibraryItem;
+    let mediaItem: MediaItem;
 
     beforeEach(() => {
       collectionMedia = createCollectionMedia('episode');
       collectionMedia.collection.sonarrSettingsId = 1;
-      plexApi.getMetadata.mockResolvedValue(
-        createPlexMetadata({
+      mockMediaServer.getMetadata.mockResolvedValue(
+        createMediaItem({
           type: 'show',
         }),
       );
       series = createSonarrSeries();
       mockedSonarrApi = mockSonarrApi(series);
-      plexLibraryItem = createPlexLibraryItem('episode');
+      mediaItem = createMediaItem({ type: 'episode' });
     });
 
     it('should return quality name', async () => {
@@ -357,7 +363,7 @@ describe('SonarrGetterService', () => {
 
       const response = await sonarrGetterService.get(
         24,
-        plexLibraryItem,
+        mediaItem,
         'episode',
         createRulesDto({
           collection: collectionMedia.collection,
@@ -373,7 +379,7 @@ describe('SonarrGetterService', () => {
 
       const response = await sonarrGetterService.get(
         24,
-        plexLibraryItem,
+        mediaItem,
         'episode',
         createRulesDto({
           collection: collectionMedia.collection,
@@ -401,12 +407,12 @@ describe('SonarrGetterService', () => {
       async ({ type }: { type: string }) => {
         const collectionMedia = createCollectionMedia('episode');
         collectionMedia.collection.sonarrSettingsId = 1;
-        plexApi.getMetadata.mockResolvedValue(
-          createPlexMetadata({
+        mockMediaServer.getMetadata.mockResolvedValue(
+          createMediaItem({
             type: 'show',
           }),
         );
-        const plexLibraryItem = createPlexLibraryItem(type as MediaItemType);
+        const mediaItem = createMediaItem({ type: type as MediaItemType });
         const series = createSonarrSeries({
           qualityProfileId: 2,
         });
@@ -426,7 +432,7 @@ describe('SonarrGetterService', () => {
 
         const response = await sonarrGetterService.get(
           25,
-          plexLibraryItem,
+          mediaItem,
           type as MediaItemType,
           createRulesDto({
             collection: collectionMedia.collection,
@@ -443,19 +449,19 @@ describe('SonarrGetterService', () => {
     let collectionMedia: CollectionMedia;
     let mockedSonarrApi: SonarrApi;
     let series: SonarrSeries;
-    let plexLibraryItem: PlexLibraryItem;
+    let mediaItem: MediaItem;
 
     beforeEach(() => {
       collectionMedia = createCollectionMedia('episode');
       collectionMedia.collection.sonarrSettingsId = 1;
-      plexApi.getMetadata.mockResolvedValue(
-        createPlexMetadata({
+      mockMediaServer.getMetadata.mockResolvedValue(
+        createMediaItem({
           type: 'show',
         }),
       );
       series = createSonarrSeries();
       mockedSonarrApi = mockSonarrApi(series);
-      plexLibraryItem = createPlexLibraryItem('episode');
+      mediaItem = createMediaItem({ type: 'episode' });
     });
 
     it('should return audio languages', async () => {
@@ -472,7 +478,7 @@ describe('SonarrGetterService', () => {
 
       const response = await sonarrGetterService.get(
         26,
-        plexLibraryItem,
+        mediaItem,
         'episode',
         createRulesDto({
           collection: collectionMedia.collection,
@@ -488,7 +494,7 @@ describe('SonarrGetterService', () => {
 
       const response = await sonarrGetterService.get(
         26,
-        plexLibraryItem,
+        mediaItem,
         'episode',
         createRulesDto({
           collection: collectionMedia.collection,
@@ -513,7 +519,7 @@ describe('SonarrGetterService', () => {
 
       const response = await sonarrGetterService.get(
         26,
-        plexLibraryItem,
+        mediaItem,
         'episode',
         createRulesDto({
           collection: collectionMedia.collection,

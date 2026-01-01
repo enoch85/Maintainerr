@@ -1,7 +1,6 @@
-import { MediaItemType, RuleValueType } from '@maintainerr/contracts';
+import { MediaItem, MediaItemType, RuleValueType } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import {
-  PlexLibraryItem,
   PlexSeenBy,
   SimplePlexUser,
 } from '../../..//modules/api/plex-api/interfaces/library.interfaces';
@@ -34,7 +33,7 @@ export class PlexGetterService {
 
   async get(
     id: number,
-    libItem: PlexLibraryItem,
+    libItem: MediaItem,
     dataType?: MediaItemType,
     ruleGroup?: RulesDto,
   ): Promise<RuleValueType> {
@@ -42,9 +41,8 @@ export class PlexGetterService {
       const prop = this.plexProperties.find((el) => el.id === id);
 
       // fetch metadata, parent & grandparent from cache, this data is more complete
-      const metadata: PlexMetadata = await this.plexApi.getMetadata(
-        libItem.ratingKey,
-      );
+      // libItem.id maps to Plex's ratingKey
+      const metadata: PlexMetadata = await this.plexApi.getMetadata(libItem.id);
 
       // Parent/grandparent metadata is only needed for some properties.
       // Lazy-load and memoize so we don't fetch unless a case uses it.
@@ -109,11 +107,9 @@ export class PlexGetterService {
         case 'labels': {
           const item =
             metadata.type === 'episode'
-              ? (((await getGrandparent()) as unknown as PlexLibraryItem) ??
-                metadata)
+              ? ((await getGrandparent()) ?? metadata)
               : metadata.type === 'season'
-                ? (((await getParent()) as unknown as PlexLibraryItem) ??
-                  metadata)
+                ? ((await getParent()) ?? metadata)
                 : metadata;
 
           return item.Label ? item.Label.map((l) => l.tag) : [];
@@ -275,11 +271,9 @@ export class PlexGetterService {
         case 'genre': {
           const item =
             metadata.type === 'episode'
-              ? (((await getGrandparent()) as unknown as PlexLibraryItem) ??
-                metadata)
+              ? ((await getGrandparent()) ?? metadata)
               : metadata.type === 'season'
-                ? (((await getParent()) as unknown as PlexLibraryItem) ??
-                  metadata)
+                ? ((await getParent()) ?? metadata)
                 : metadata;
           return item.Genre ? item.Genre.map((el) => el.tag) : null;
         }
@@ -774,7 +768,7 @@ export class PlexGetterService {
       }
     } catch (e) {
       this.logger.warn(
-        `Plex-Getter - Action failed for '${libItem.title}' with id '${libItem.ratingKey}': ${e.message}`,
+        `Plex-Getter - Action failed for '${libItem.title}' with id '${libItem.id}': ${e.message}`,
       );
       this.logger.debug(e);
       return undefined;

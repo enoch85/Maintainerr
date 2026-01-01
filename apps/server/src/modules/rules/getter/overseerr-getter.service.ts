@@ -1,4 +1,4 @@
-import { MediaItemType } from '@maintainerr/contracts';
+import { MediaItem, MediaItemType } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import _ from 'lodash';
 import {
@@ -10,7 +10,6 @@ import {
   OverseerrTVRequest,
   OverSeerrTVResponse,
 } from '../../api/overseerr-api/overseerr-api.service';
-import { PlexLibraryItem } from '../../api/plex-api/interfaces/library.interfaces';
 import { MediaServerFactory } from '../../api/media-server/media-server.factory';
 import { IMediaServerService } from '../../api/media-server/media-server.interface';
 import { PlexApiService } from '../../api/plex-api/plex-api.service';
@@ -48,9 +47,9 @@ export class OverseerrGetterService {
     return this.mediaServerFactory.getService();
   }
 
-  async get(id: number, libItem: PlexLibraryItem, dataType?: MediaItemType) {
+  async get(id: number, libItem: MediaItem, dataType?: MediaItemType) {
     try {
-      let origLibItem = undefined;
+      let origLibItem: MediaItem = undefined;
       let seasonMediaResponse: OverSeerrSeasonResponse = undefined;
       let tvMediaResponse: OverSeerrTVResponse = undefined;
       let movieMediaResponse: OverSeerrMovieResponse = undefined;
@@ -59,15 +58,13 @@ export class OverseerrGetterService {
       if (dataType === 'season' || dataType === 'episode') {
         origLibItem = _.cloneDeep(libItem);
         const mediaServer = await this.getMediaServer();
-        libItem = (await mediaServer.getMetadata(
-          dataType === 'season'
-            ? libItem.parentRatingKey
-            : libItem.grandparentRatingKey,
-        )) as unknown as PlexLibraryItem;
+        libItem = await mediaServer.getMetadata(
+          dataType === 'season' ? libItem.parentId : libItem.grandparentId,
+        );
       }
 
       const prop = this.appProperties.find((el) => el.id === id);
-      const tmdb = await this.tmdbIdHelper.getTmdbIdFromPlexData(libItem);
+      const tmdb = await this.tmdbIdHelper.getTmdbIdFromMediaItem(libItem);
       // const overseerrUsers = await this.overseerrApi.getUsers();
 
       if (tmdb && tmdb.id) {
@@ -78,26 +75,24 @@ export class OverseerrGetterService {
         } else {
           tvMediaResponse = await this.overseerrApi.getShow(tmdb.id.toString());
           if (dataType === 'season' || dataType === 'episode') {
-            seasonMediaResponse = await this.overseerrApi.getSeason(
-              tmdb.id.toString(),
+            const seasonNumber =
               dataType === 'season'
                 ? origLibItem.index
-                : origLibItem.parentIndex,
+                : origLibItem.parentIndex;
+            seasonMediaResponse = await this.overseerrApi.getSeason(
+              tmdb.id.toString(),
+              seasonNumber?.toString(),
             );
             if (!seasonMediaResponse) {
               this.logger.debug(
-                `Couldn't fetch season data for '${libItem.title}' season ${
-                  dataType === 'season'
-                    ? origLibItem.index
-                    : origLibItem.parentIndex
-                } from Overseerr. As a result, unreliable results are expected.`,
+                `Couldn't fetch season data for '${libItem.title}' season ${seasonNumber} from Overseerr. As a result, unreliable results are expected.`,
               );
             }
           }
         }
       } else {
         this.logger.debug(
-          `Couldn't find tmdb id for media '${libItem.title}' with id '${libItem.ratingKey}'. As a result, no Overseerr query could be made.`,
+          `Couldn't find tmdb id for media '${libItem.title}' with id '${libItem.id}'. As a result, no Overseerr query could be made.`,
         );
       }
 
@@ -263,13 +258,13 @@ export class OverseerrGetterService {
         }
       } else {
         this.logger.debug(
-          `Couldn't fetch Overseerr metadate for media '${libItem.title}' with id '${libItem.ratingKey}'. As a result, no Overseerr query could be made.`,
+          `Couldn't fetch Overseerr metadate for media '${libItem.title}' with id '${libItem.id}'. As a result, no Overseerr query could be made.`,
         );
         return null;
       }
     } catch (e) {
       this.logger.warn(
-        `Overseerr-Getter - Action failed for '${libItem.title}' with id '${libItem.ratingKey}': ${e.message}`,
+        `Overseerr-Getter - Action failed for '${libItem.title}' with id '${libItem.id}': ${e.message}`,
       );
       this.logger.debug(e);
       return undefined;
@@ -277,7 +272,7 @@ export class OverseerrGetterService {
   }
 
   private getSeasonRequests(
-    libItem: PlexLibraryItem,
+    libItem: MediaItem,
     mediaResponse: OverSeerrTVResponse,
   ) {
     const seasonRequests: OverseerrTVRequest[] = [];

@@ -13,7 +13,6 @@ import cacheManager from '../api/lib/cache';
 import { MediaServerFactory } from '../api/media-server/media-server.factory';
 import { IMediaServerService } from '../api/media-server/media-server.interface';
 import { PlexMapper } from '../api/media-server/plex/plex.mapper';
-import { PlexLibraryItem } from '../api/plex-api/interfaces/library.interfaces';
 import { PlexApiService } from '../api/plex-api/plex-api.service';
 import { CollectionsService } from '../collections/collections.service';
 import { Collection } from '../collections/entities/collection.entities';
@@ -1236,14 +1235,14 @@ export class RulesService {
       .getCachesByType('sonarr')
       .forEach((cache) => cache.data.flushAll());
 
-    const mediaResp = await this.plexApi.getMetadata(mediaId);
+    const mediaResp = await mediaServer.getMetadata(mediaId);
     const group = await this.getRuleGroupById(rulegroupId);
     if (group && mediaResp) {
       group.rules = await this.getRules(group.id);
       const ruleComparator = this.ruleComparatorServiceFactory.create();
       const result = await ruleComparator.executeRulesWithData(
         group as RulesDto,
-        [mediaResp as unknown as PlexLibraryItem],
+        [mediaResp],
       );
 
       if (result) {

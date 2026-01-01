@@ -7,11 +7,9 @@ import {
 } from '@maintainerr/contracts';
 import {
   createCollection,
-  createPlexLibraryItem,
   createRulesDto,
 } from '../../../../test/utils/data';
 
-import { PlexLibraryItem } from '../../api/plex-api/interfaces/library.interfaces';
 import { JellyfinService } from '../../api/media-server/jellyfin/jellyfin-adapter.service';
 import { MaintainerrLogger } from '../../logging/logs.service';
 import { JellyfinGetterService } from './jellyfin-getter.service';
@@ -90,11 +88,11 @@ describe('JellyfinGetterService', () => {
   describe('when Jellyfin is not configured', () => {
     it('should return null when Jellyfin service is not set up', async () => {
       jellyfinService.isSetup.mockReturnValue(false);
+      const mediaItem = createMediaItem({ type: 'movie' });
 
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const response = await jellyfinGetterService.get(
         0, // addDate
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -105,7 +103,6 @@ describe('JellyfinGetterService', () => {
 
   describe('addDate (id: 0)', () => {
     it('should return the addedAt date', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem({
         addedAt: new Date('2024-03-15'),
       });
@@ -113,7 +110,7 @@ describe('JellyfinGetterService', () => {
 
       const response = await jellyfinGetterService.get(
         0,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -122,7 +119,6 @@ describe('JellyfinGetterService', () => {
     });
 
     it('should return null when addedAt is missing', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem({
         addedAt: undefined as unknown as Date,
       });
@@ -130,7 +126,7 @@ describe('JellyfinGetterService', () => {
 
       const response = await jellyfinGetterService.get(
         0,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -141,7 +137,6 @@ describe('JellyfinGetterService', () => {
 
   describe('seenBy (id: 1)', () => {
     it('should return list of usernames who watched the item', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem();
       const users: MediaUser[] = [
         createMediaUser({ id: 'user-1', name: 'Alice' }),
@@ -154,7 +149,7 @@ describe('JellyfinGetterService', () => {
 
       const response = await jellyfinGetterService.get(
         1,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -163,7 +158,6 @@ describe('JellyfinGetterService', () => {
     });
 
     it('should return empty array when no one has watched', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem();
 
       jellyfinService.getMetadata.mockResolvedValue(mediaItem);
@@ -172,7 +166,7 @@ describe('JellyfinGetterService', () => {
 
       const response = await jellyfinGetterService.get(
         1,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -183,7 +177,6 @@ describe('JellyfinGetterService', () => {
 
   describe('releaseDate (id: 2)', () => {
     it('should return the originallyAvailableAt date', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem({
         originallyAvailableAt: new Date('2024-01-01'),
       });
@@ -191,7 +184,7 @@ describe('JellyfinGetterService', () => {
 
       const response = await jellyfinGetterService.get(
         2,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -202,13 +195,12 @@ describe('JellyfinGetterService', () => {
 
   describe('rating_user (id: 3)', () => {
     it('should return user rating', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem({ userRating: 8 });
       jellyfinService.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         3,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -217,13 +209,12 @@ describe('JellyfinGetterService', () => {
     });
 
     it('should return 0 when no user rating exists', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem({ userRating: undefined });
       jellyfinService.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         3,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -234,7 +225,6 @@ describe('JellyfinGetterService', () => {
 
   describe('people (id: 4)', () => {
     it('should return list of actor names', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem({
         actors: [{ name: 'Actor One' }, { name: 'Actor Two' }],
       });
@@ -242,7 +232,7 @@ describe('JellyfinGetterService', () => {
 
       const response = await jellyfinGetterService.get(
         4,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -251,13 +241,12 @@ describe('JellyfinGetterService', () => {
     });
 
     it('should return null when no actors exist', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem({ actors: undefined });
       jellyfinService.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         4,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -268,7 +257,6 @@ describe('JellyfinGetterService', () => {
 
   describe('viewCount (id: 5)', () => {
     it('should return total view count from watch history', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem();
       const watchHistory: WatchRecord[] = [
         createWatchRecord({ userId: 'user-1' }),
@@ -281,7 +269,7 @@ describe('JellyfinGetterService', () => {
 
       const response = await jellyfinGetterService.get(
         5,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -292,7 +280,6 @@ describe('JellyfinGetterService', () => {
 
   describe('lastViewedAt (id: 7)', () => {
     it('should return the most recent watch date', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem();
       const watchHistory: WatchRecord[] = [
         createWatchRecord({ watchedAt: new Date('2024-01-15') }),
@@ -305,7 +292,7 @@ describe('JellyfinGetterService', () => {
 
       const response = await jellyfinGetterService.get(
         7,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -314,7 +301,6 @@ describe('JellyfinGetterService', () => {
     });
 
     it('should return null when no watch history', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem();
 
       jellyfinService.getMetadata.mockResolvedValue(mediaItem);
@@ -322,7 +308,7 @@ describe('JellyfinGetterService', () => {
 
       const response = await jellyfinGetterService.get(
         7,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -333,13 +319,12 @@ describe('JellyfinGetterService', () => {
 
   describe('fileVideoResolution (id: 8)', () => {
     it('should return video resolution from media sources', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem();
       jellyfinService.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         8,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -348,13 +333,12 @@ describe('JellyfinGetterService', () => {
     });
 
     it('should return null when no media sources', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem({ mediaSources: [] });
       jellyfinService.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         8,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -365,13 +349,12 @@ describe('JellyfinGetterService', () => {
 
   describe('fileBitrate (id: 9)', () => {
     it('should return bitrate from media sources', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem();
       jellyfinService.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         9,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -382,13 +365,12 @@ describe('JellyfinGetterService', () => {
 
   describe('fileVideoCodec (id: 10)', () => {
     it('should return video codec from media sources', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem();
       jellyfinService.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         10,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -399,7 +381,6 @@ describe('JellyfinGetterService', () => {
 
   describe('genre (id: 11)', () => {
     it('should return list of genre names', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem({
         genres: [{ name: 'Action' }, { name: 'Comedy' }],
       });
@@ -407,7 +388,7 @@ describe('JellyfinGetterService', () => {
 
       const response = await jellyfinGetterService.get(
         11,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -418,13 +399,12 @@ describe('JellyfinGetterService', () => {
 
   describe('labels (id: 24)', () => {
     it('should return tags as labels', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem({ labels: ['tag1', 'tag2'] });
       jellyfinService.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         24,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -435,7 +415,6 @@ describe('JellyfinGetterService', () => {
 
   describe('rating_critics (id: 22)', () => {
     it('should return normalized critic rating (0-10 scale)', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem({
         ratings: [{ source: 'critic', value: 75, type: 'critic' }],
       });
@@ -443,7 +422,7 @@ describe('JellyfinGetterService', () => {
 
       const response = await jellyfinGetterService.get(
         22,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -452,13 +431,12 @@ describe('JellyfinGetterService', () => {
     });
 
     it('should return 0 when no critic rating', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem({ ratings: [] });
       jellyfinService.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         22,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -469,7 +447,6 @@ describe('JellyfinGetterService', () => {
 
   describe('rating_audience (id: 23)', () => {
     it('should return audience rating', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem({
         ratings: [{ source: 'audience', value: 8.5, type: 'audience' }],
       });
@@ -477,7 +454,7 @@ describe('JellyfinGetterService', () => {
 
       const response = await jellyfinGetterService.get(
         23,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -488,13 +465,12 @@ describe('JellyfinGetterService', () => {
 
   describe('unsupported properties', () => {
     it('should return null for unknown property IDs', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
       const mediaItem = createMediaItem();
       jellyfinService.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         999, // Unknown property ID
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -505,12 +481,12 @@ describe('JellyfinGetterService', () => {
 
   describe('error handling', () => {
     it('should return undefined when an error occurs', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
+      const mediaItem = createMediaItem({ type: 'movie' });
       jellyfinService.getMetadata.mockRejectedValue(new Error('API Error'));
 
       const response = await jellyfinGetterService.get(
         0,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
@@ -519,12 +495,12 @@ describe('JellyfinGetterService', () => {
     });
 
     it('should return null when metadata is not found', async () => {
-      const plexLibraryItem = createPlexLibraryItem('movie');
+      const mediaItem = createMediaItem({ type: 'movie' });
       jellyfinService.getMetadata.mockResolvedValue(undefined);
 
       const response = await jellyfinGetterService.get(
         0,
-        plexLibraryItem,
+        mediaItem,
         'movie',
         createRulesDto({ dataType: 'movie' }),
       );
