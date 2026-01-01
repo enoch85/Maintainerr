@@ -9,6 +9,7 @@ import {
 import {
   getCollectionApi,
   getItemsApi,
+  getItemUpdateApi,
   getLibraryApi,
   getSearchApi,
   getSystemApi,
@@ -743,15 +744,51 @@ export class JellyfinService implements IMediaServerService {
     }
   }
 
-  // COLLECTION METADATA UPDATE (Not supported on Jellyfin)
+  // COLLECTION METADATA UPDATE
 
   async updateCollection(
-    _params: UpdateCollectionParams,
+    params: UpdateCollectionParams,
   ): Promise<MediaCollection> {
-    throw new Error(
-      'Collection metadata update is not supported on Jellyfin. ' +
-        'Use the Jellyfin web interface to edit collection details.',
-    );
+    if (!this.api) {
+      throw new Error('Jellyfin client not initialized');
+    }
+
+    try {
+      // Update collection metadata using ItemUpdateApi
+      await getItemUpdateApi(this.api).updateItem({
+        itemId: params.collectionId,
+        baseItemDto: {
+          Id: params.collectionId,
+          Name: params.title,
+          Overview: params.summary,
+          ForcedSortName: params.sortTitle,
+        },
+      });
+
+      // Return updated collection info
+      const response = await getItemsApi(this.api).getItems({
+        ids: [params.collectionId],
+        includeItemTypes: [BaseItemKind.BoxSet],
+        fields: [
+          ItemFields.Overview,
+          ItemFields.DateCreated,
+          ItemFields.ChildCount,
+        ],
+      });
+
+      const collection = response.data.Items?.[0];
+      if (!collection) {
+        throw new Error(`Collection ${params.collectionId} not found`);
+      }
+
+      return JellyfinMapper.toMediaCollection(collection);
+    } catch (error) {
+      this.logger.error(
+        `Failed to update Jellyfin collection ${params.collectionId}`,
+        error,
+      );
+      throw error;
+    }
   }
 
   async updateCollectionVisibility(

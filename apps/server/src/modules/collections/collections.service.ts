@@ -433,13 +433,20 @@ export class CollectionsService {
           !collection.manualCollection &&
           collection.libraryId === dbCollection.libraryId // Library must match
         ) {
-          await mediaServer.updateCollection({
-            libraryId: collection.libraryId,
-            collectionId: dbCollection.mediaServerId,
-            title: collection.title,
-            summary: collection?.description,
-            sortTitle: sanitizedSortTitle ?? undefined,
-          });
+          // Update collection metadata on media server
+          try {
+            await mediaServer.updateCollection({
+              libraryId: collection.libraryId,
+              collectionId: dbCollection.mediaServerId,
+              title: collection.title,
+              summary: collection?.description,
+              sortTitle: sanitizedSortTitle ?? undefined,
+            });
+          } catch (error) {
+            this.logger.warn(
+              `Failed to update collection metadata on media server: ${error instanceof Error ? error.message : String(error)}`,
+            );
+          }
           // Handle visibility settings (Plex-only feature)
           if (
             mediaServer.supportsFeature(
