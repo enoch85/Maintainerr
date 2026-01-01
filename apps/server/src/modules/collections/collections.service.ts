@@ -592,8 +592,8 @@ export class CollectionsService {
         }
       }
 
-      // If the collection is empty, remove it. Otherwise issues when adding media
-      // ONLY check this if we already had a mediaServerId when entering this function.
+      // If the collection is empty, remove it. Otherwise issues when adding media.
+      // ONLY do this if we already had a mediaServerId when entering this function.
       // If we just linked/found it (originalMediaServerId was null), don't delete it -
       // the media server may not have finished processing recent additions yet.
       if (
@@ -601,19 +601,27 @@ export class CollectionsService {
         collection.mediaServerId !== null &&
         originalMediaServerId !== null
       ) {
-        const children = await mediaServer.getCollectionChildren(serverColl.id);
-        const actualChildCount = children?.length ?? 0;
+        let childCount = +serverColl.childCount;
 
-        if (actualChildCount <= 0) {
+        // For Jellyfin, the metadata childCount can be stale/delayed.
+        // Make a fresh API call to get the actual children count.
+        const settings = await this.settingsService.getSettings();
+        if (settings.mediaServerType === MediaServerType.JELLYFIN) {
+          const children = await mediaServer.getCollectionChildren(
+            serverColl.id,
+          );
+          childCount = children?.length ?? 0;
           this.logger.debug(
-            `[checkAutomaticMediaServerLink] Deleting empty collection ${serverColl.id} (actualChildCount=${actualChildCount})`,
+            `[checkAutomaticMediaServerLink] Jellyfin fresh children count: ${childCount}`,
+          );
+        }
+
+        if (childCount <= 0) {
+          this.logger.debug(
+            `[checkAutomaticMediaServerLink] Deleting empty collection ${serverColl.id} (childCount=${childCount})`,
           );
           await mediaServer.deleteCollection(serverColl.id);
           serverColl = undefined;
-        } else {
-          this.logger.debug(
-            `[checkAutomaticMediaServerLink] Collection ${serverColl.id} has ${actualChildCount} children, keeping it`,
-          );
         }
       }
 
