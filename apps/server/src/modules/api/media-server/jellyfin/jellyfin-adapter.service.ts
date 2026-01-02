@@ -952,9 +952,15 @@ export class JellyfinService implements IMediaServerService {
               break;
             // and context type is show - return all episodes in show
             default:
-              const allSeasons = await this.getChildrenMetadata(mediaId, 'season');
+              const allSeasons = await this.getChildrenMetadata(
+                mediaId,
+                'season',
+              );
               for (const season of allSeasons) {
-                const episodes = await this.getChildrenMetadata(season.id, 'episode');
+                const episodes = await this.getChildrenMetadata(
+                  season.id,
+                  'episode',
+                );
                 handleMedia.push(...episodes.map((ep) => ep.id));
               }
               break;
@@ -976,14 +982,20 @@ export class JellyfinService implements IMediaServerService {
           const showSeasons = await this.getChildrenMetadata(mediaId, 'season');
           for (const season of showSeasons) {
             handleMedia.push(season.id);
-            const episodes = await this.getChildrenMetadata(season.id, 'episode');
+            const episodes = await this.getChildrenMetadata(
+              season.id,
+              'episode',
+            );
             handleMedia.push(...episodes.map((ep) => ep.id));
           }
           break;
         case 'season':
           // For seasons, add the season + all its episodes
           handleMedia.push(context.id);
-          const seasonEps = await this.getChildrenMetadata(context.id, 'episode');
+          const seasonEps = await this.getChildrenMetadata(
+            context.id,
+            'episode',
+          );
           handleMedia.push(...seasonEps.map((ep) => ep.id));
           break;
         case 'episode':

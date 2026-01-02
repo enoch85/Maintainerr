@@ -57,7 +57,8 @@ const CollectionItem = (props: ICollectionItem) => {
               <p className="font-bold">Library</p>
               <p className="text-amber-500">
                 {libraries?.find(
-                  (lib) => String(lib.id) === String(props.collection.libraryId),
+                  (lib) =>
+                    String(lib.id) === String(props.collection.libraryId),
                 )?.title ?? <>&nbsp;</>}
               </p>
             </div>
