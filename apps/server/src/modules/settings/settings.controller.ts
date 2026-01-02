@@ -1,7 +1,12 @@
 import {
   BasicResponseDto,
+  MediaServerType,
+  JellyfinSettingDto,
   JellyseerrSettingDto,
+  MediaServerSwitchPreviewDto,
   OverseerrSettingDto,
+  SwitchMediaServerRequestDto,
+  SwitchMediaServerResponseDto,
   TautulliSettingDto,
 } from '@maintainerr/contracts';
 import {
@@ -209,6 +214,24 @@ export class SettingsController {
     return this.settingsService.testOverseerr(payload);
   }
 
+
+  @Post('/jellyfin/test')
+  testJellyfin(@Body() payload: JellyfinSettingDto): Promise<BasicResponseDto> {
+    return this.settingsService.testJellyfin(payload);
+  }
+
+  @Post('/jellyfin')
+  async saveJellyfinSettings(
+    @Body() payload: JellyfinSettingDto,
+  ): Promise<BasicResponseDto> {
+    return await this.settingsService.saveJellyfinSettings(payload);
+  }
+
+  @Delete('/jellyfin')
+  async removeJellyfinSettings(): Promise<BasicResponseDto> {
+    return await this.settingsService.removeJellyfinSettings();
+  }
+
   @Delete('/sonarr/:id')
   async deleteSonarrSetting(@Param('id', new ParseIntPipe()) id: number) {
     return await this.settingsService.deleteSonarrSetting(id);
@@ -229,5 +252,27 @@ export class SettingsController {
     return this.settingsService.cronIsValid(payload.schedule)
       ? { status: 'OK', code: 1, message: 'Success' }
       : { status: 'NOK', code: 0, message: 'Failure' };
+  }
+
+  /**
+   * Preview what data will be cleared when switching media servers
+   */
+  @Get('/media-server/switch/preview/:targetServerType')
+  async previewMediaServerSwitch(
+    @Param('targetServerType') targetServerType: MediaServerType,
+  ): Promise<MediaServerSwitchPreviewDto> {
+    return this.settingsService.previewMediaServerSwitch(targetServerType);
+  }
+
+  /**
+   * Switch media server type and clear media server-specific data
+   * Keeps: general settings, *arr settings, notification settings
+   * Clears: collections, collection media, exclusions, collection logs
+   */
+  @Post('/media-server/switch')
+  async switchMediaServer(
+    @Body() payload: SwitchMediaServerRequestDto,
+  ): Promise<SwitchMediaServerResponseDto> {
+    return this.settingsService.switchMediaServer(payload);
   }
 }

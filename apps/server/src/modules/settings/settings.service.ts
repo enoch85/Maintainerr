@@ -1,7 +1,11 @@
 import {
   JellyseerrSettingDto,
   MaintainerrEvent,
+  MediaServerSwitchPreviewDto,
+  MediaServerType,
   OverseerrSettingDto,
+  SwitchMediaServerRequestDto,
+  SwitchMediaServerResponseDto,
   TautulliSettingDto,
 } from '@maintainerr/contracts';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
@@ -13,11 +17,18 @@ import { Repository } from 'typeorm';
 import { BasicResponseDto } from '../api/external-api/dto/basic-response.dto';
 import { InternalApiService } from '../api/internal-api/internal-api.service';
 import { JellyseerrApiService } from '../api/jellyseerr-api/jellyseerr-api.service';
+import { JellyfinService } from '../api/media-server/jellyfin/jellyfin-adapter.service';
 import { OverseerrApiService } from '../api/overseerr-api/overseerr-api.service';
 import { PlexApiService } from '../api/plex-api/plex-api.service';
 import { ServarrService } from '../api/servarr-api/servarr.service';
 import { TautulliApiService } from '../api/tautulli-api/tautulli-api.service';
+import { Collection } from '../collections/entities/collection.entities';
+import { CollectionLog } from '../collections/entities/collection_log.entities';
+import { CollectionMedia } from '../collections/entities/collection_media.entities';
 import { MaintainerrLogger } from '../logging/logs.service';
+import { Exclusion } from '../rules/entities/exclusion.entities';
+import { RuleGroup } from '../rules/entities/rule-group.entities';
+import { Rules } from '../rules/entities/rules.entities';
 import {
   DeleteRadarrSettingResponseDto,
   RadarrSettingRawDto,
@@ -32,6 +43,7 @@ import {
 import { RadarrSettings } from './entities/radarr_settings.entities';
 import { Settings } from './entities/settings.entities';
 import { SonarrSettings } from './entities/sonarr_settings.entities';
+import { RuleMigrationService } from './rule-migration.service';
 
 @Injectable()
 export class SettingsService implements SettingDto {
@@ -47,6 +59,8 @@ export class SettingsService implements SettingDto {
 
   locale: string;
 
+  media_server_type?: MediaServerType;
+
   plex_name: string;
 
   plex_hostname: string;
@@ -56,6 +70,14 @@ export class SettingsService implements SettingDto {
   plex_ssl: number;
 
   plex_auth_token: string;
+
+  jellyfin_url?: string;
+
+  jellyfin_api_key?: string;
+
+  jellyfin_user_id?: string;
+
+  jellyfin_server_name?: string;
 
   overseerr_url: string;
 
@@ -76,6 +98,8 @@ export class SettingsService implements SettingDto {
   constructor(
     @Inject(forwardRef(() => PlexApiService))
     private readonly plexApi: PlexApiService,
+    @Inject(forwardRef(() => JellyfinService))
+    private readonly jellyfinService: JellyfinService,
     @Inject(forwardRef(() => ServarrService))
     private readonly servarr: ServarrService,
     @Inject(forwardRef(() => OverseerrApiService))
@@ -92,6 +116,19 @@ export class SettingsService implements SettingDto {
     private readonly radarrSettingsRepo: Repository<RadarrSettings>,
     @InjectRepository(SonarrSettings)
     private readonly sonarrSettingsRepo: Repository<SonarrSettings>,
+    @InjectRepository(Collection)
+    private readonly collectionRepo: Repository<Collection>,
+    @InjectRepository(CollectionMedia)
+    private readonly collectionMediaRepo: Repository<CollectionMedia>,
+    @InjectRepository(CollectionLog)
+    private readonly collectionLogRepo: Repository<CollectionLog>,
+    @InjectRepository(Exclusion)
+    private readonly exclusionRepo: Repository<Exclusion>,
+    @InjectRepository(RuleGroup)
+    private readonly ruleGroupRepo: Repository<RuleGroup>,
+    @InjectRepository(Rules)
+    private readonly rulesRepo: Repository<Rules>,
+    private readonly ruleMigrationService: RuleMigrationService,
     private readonly eventEmitter: EventEmitter2,
     private readonly logger: MaintainerrLogger,
   ) {
@@ -109,11 +146,16 @@ export class SettingsService implements SettingDto {
       this.applicationUrl = settingsDb?.applicationUrl;
       this.apikey = settingsDb?.apikey;
       this.locale = settingsDb?.locale;
+      this.media_server_type = settingsDb?.media_server_type;
       this.plex_name = settingsDb?.plex_name;
       this.plex_hostname = settingsDb?.plex_hostname;
       this.plex_port = settingsDb?.plex_port;
       this.plex_ssl = settingsDb?.plex_ssl;
       this.plex_auth_token = settingsDb?.plex_auth_token;
+      this.jellyfin_url = settingsDb?.jellyfin_url;
+      this.jellyfin_api_key = settingsDb?.jellyfin_api_key;
+      this.jellyfin_user_id = settingsDb?.jellyfin_user_id;
+      this.jellyfin_server_name = settingsDb?.jellyfin_server_name;
       this.overseerr_url = settingsDb?.overseerr_url;
       this.overseerr_api_key = settingsDb?.overseerr_api_key;
       this.tautulli_url = settingsDb?.tautulli_url;
@@ -353,6 +395,218 @@ export class SettingsService implements SettingDto {
       return { status: 'OK', code: 1, message: 'Success' };
     } catch (e) {
       this.logger.error('Error while updating Overseerr settings: ', e);
+      return { status: 'NOK', code: 0, message: 'Failed' };
+    }
+  }
+
+  /**
+   * Test connection to a Jellyfin server
+   */
+  public async testJellyfin(settings: {
+    jellyfin_url: string;
+    jellyfin_api_key: string;
+    jellyfin_user_id?: string;
+  }): Promise<BasicResponseDto & { serverName?: string; version?: string }> {
+    try {
+      // Import Jellyfin SDK dynamically to avoid circular dependencies
+      const { Jellyfin } = await import('@jellyfin/sdk');
+      const { getSystemApi, getUserApi } =
+        await import('@jellyfin/sdk/lib/utils/api');
+
+      const jellyfin = new Jellyfin({
+        clientInfo: { name: 'Maintainerr', version: '2.0.0' },
+        deviceInfo: { name: 'Maintainerr-Test', id: 'maintainerr-test' },
+      });
+
+      const api = jellyfin.createApi(
+        settings.jellyfin_url,
+        settings.jellyfin_api_key,
+      );
+
+      // Add timeout to prevent hanging on unreachable servers
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error('Connection timeout after 10 seconds')),
+          10000,
+        ),
+      );
+
+      // First get public system info to check if server is reachable
+      const systemInfo = await Promise.race([
+        getSystemApi(api).getPublicSystemInfo(),
+        timeoutPromise,
+      ]);
+
+      // Then verify API key by calling an authenticated endpoint (getUsers requires auth)
+      try {
+        await Promise.race([getUserApi(api).getUsers(), timeoutPromise]);
+      } catch (authError) {
+        this.logger.error('Jellyfin API key validation failed: ', authError);
+        return {
+          status: 'NOK',
+          code: 0,
+          message: 'Invalid API key - authentication failed',
+        };
+      }
+
+      this.logger.log(
+        `Jellyfin connection test successful: ${systemInfo.data.ServerName} (${systemInfo.data.Version})`,
+      );
+
+      return {
+        status: 'OK',
+        code: 1,
+        message: `Connected to ${systemInfo.data.ServerName}`,
+        serverName: systemInfo.data.ServerName || undefined,
+        version: systemInfo.data.Version || undefined,
+      };
+    } catch (e) {
+      this.logger.error('Jellyfin connection test failed: ', e);
+      const message = e instanceof Error ? e.message : 'Connection failed';
+      return { status: 'NOK', code: 0, message };
+    }
+  }
+
+  /**
+   * Save Jellyfin settings and initialize the service
+   */
+  public async saveJellyfinSettings(settings: {
+    jellyfin_url: string;
+    jellyfin_api_key: string;
+    jellyfin_user_id?: string;
+  }): Promise<BasicResponseDto> {
+    try {
+      const settingsDb = await this.settingsRepo.findOne({ where: {} });
+
+      // Test connection - block save on failure
+      const testResult = await this.testJellyfin(settings);
+      if (testResult.code !== 1) {
+        return {
+          status: 'NOK',
+          code: 0,
+          message: testResult.message || 'Connection test failed',
+        };
+      }
+
+      // Auto-detect admin user if not provided
+      let userId = settings.jellyfin_user_id;
+      if (!userId) {
+        userId = await this.autoDetectJellyfinAdminUser(settings);
+        if (userId) {
+          this.logger.log(`Auto-detected Jellyfin admin user ID: ${userId}`);
+        } else {
+          this.logger.warn(
+            'Could not auto-detect Jellyfin admin user. Some features may not work correctly.',
+          );
+        }
+      }
+
+      await this.saveSettings({
+        ...settingsDb,
+        jellyfin_url: settings.jellyfin_url,
+        jellyfin_api_key: settings.jellyfin_api_key,
+        jellyfin_user_id: userId || null,
+        jellyfin_server_name: testResult.serverName || null,
+        media_server_type: MediaServerType.JELLYFIN,
+      });
+
+      // Uninitialize service so it reinitializes with new credentials on next use
+      this.jellyfinService.uninitialize();
+
+      this.jellyfin_url = settings.jellyfin_url;
+      this.jellyfin_api_key = settings.jellyfin_api_key;
+      this.jellyfin_user_id = userId;
+      this.jellyfin_server_name = testResult.serverName;
+      this.media_server_type = MediaServerType.JELLYFIN;
+
+      this.logger.log('Jellyfin settings saved successfully');
+      return { status: 'OK', code: 1, message: 'Success' };
+    } catch (e) {
+      this.logger.error('Error while saving Jellyfin settings: ', e);
+      const message =
+        e instanceof Error ? e.message : 'Failed to save settings';
+      return { status: 'NOK', code: 0, message };
+    }
+  }
+
+  /**
+   * Auto-detect an admin user from Jellyfin
+   */
+  private async autoDetectJellyfinAdminUser(settings: {
+    jellyfin_url: string;
+    jellyfin_api_key: string;
+  }): Promise<string | undefined> {
+    try {
+      const { Jellyfin } = await import('@jellyfin/sdk');
+      const { getUserApi } = await import('@jellyfin/sdk/lib/utils/api');
+
+      const jellyfin = new Jellyfin({
+        clientInfo: { name: 'Maintainerr', version: '2.0.0' },
+        deviceInfo: {
+          name: 'Maintainerr-AutoDetect',
+          id: 'maintainerr-detect',
+        },
+      });
+
+      const api = jellyfin.createApi(
+        settings.jellyfin_url,
+        settings.jellyfin_api_key,
+      );
+
+      const response = await getUserApi(api).getUsers();
+      const users = response.data || [];
+
+      // Find first admin user
+      const adminUser = users.find((user) => user.Policy?.IsAdministrator);
+      if (adminUser?.Id) {
+        this.logger.debug(
+          `Found Jellyfin admin user: ${adminUser.Name} (${adminUser.Id})`,
+        );
+        return adminUser.Id;
+      }
+
+      // Fallback to first user if no admin found
+      if (users.length > 0 && users[0].Id) {
+        this.logger.debug(
+          `No admin user found, using first user: ${users[0].Name} (${users[0].Id})`,
+        );
+        return users[0].Id;
+      }
+
+      return undefined;
+    } catch (error) {
+      this.logger.error('Failed to auto-detect Jellyfin admin user: ', error);
+      return undefined;
+    }
+  }
+
+  /**
+   * Remove Jellyfin settings
+   */
+  public async removeJellyfinSettings(): Promise<BasicResponseDto> {
+    try {
+      const settingsDb = await this.settingsRepo.findOne({ where: {} });
+
+      await this.saveSettings({
+        ...settingsDb,
+        jellyfin_url: null,
+        jellyfin_api_key: null,
+        jellyfin_user_id: null,
+        jellyfin_server_name: null,
+      });
+
+      // Uninitialize service to clear credentials
+      this.jellyfinService.uninitialize();
+
+      this.jellyfin_url = undefined;
+      this.jellyfin_api_key = undefined;
+      this.jellyfin_user_id = undefined;
+      this.jellyfin_server_name = undefined;
+
+      this.logger.log('Jellyfin settings cleared');
+      return { status: 'OK', code: 1, message: 'Success' };
+    } catch (e) {
+      this.logger.error('Error removing Jellyfin settings: ', e);
       return { status: 'NOK', code: 0, message: 'Failed' };
     }
   }
@@ -749,10 +1003,37 @@ export class SettingsService implements SettingDto {
     }
   }
 
-  // Test if all configured applications are reachable. Plex is required.
+  // Test if all configured applications are reachable. Media server is required.
   public async testConnections(): Promise<boolean> {
     try {
-      const plexState = (await this.testPlex()).status === 'OK';
+      // Test the configured media server
+      let mediaServerState: boolean;
+
+      // If no media server type is configured, connections cannot be tested
+      if (!this.media_server_type) {
+        return false;
+      }
+
+      if (this.media_server_type === MediaServerType.JELLYFIN) {
+        // Test Jellyfin with current settings
+        if (this.jellyfin_url && this.jellyfin_api_key) {
+          mediaServerState =
+            (
+              await this.testJellyfin({
+                jellyfin_url: this.jellyfin_url,
+                jellyfin_api_key: this.jellyfin_api_key,
+                jellyfin_user_id: this.jellyfin_user_id,
+              })
+            ).status === 'OK';
+        } else {
+          mediaServerState = false;
+        }
+      } else if (this.media_server_type === MediaServerType.PLEX) {
+        mediaServerState = (await this.testPlex()).status === 'OK';
+      } else {
+        mediaServerState = false;
+      }
+
       let radarrState = true;
       let sonarrState = true;
       let overseerrState = true;
@@ -786,7 +1067,7 @@ export class SettingsService implements SettingDto {
       }
 
       if (
-        plexState &&
+        mediaServerState &&
         radarrState &&
         sonarrState &&
         overseerrState &&
@@ -818,13 +1099,27 @@ export class SettingsService implements SettingDto {
   // Test if all required settings are set.
   public async testSetup(): Promise<boolean> {
     try {
-      if (
-        this.plex_hostname &&
-        this.plex_name &&
-        this.plex_port &&
-        this.plex_auth_token
-      ) {
-        return true;
+      // If no media server type is selected, setup is not complete
+      if (!this.media_server_type) {
+        return false;
+      }
+
+      // Check based on configured media server type
+      if (this.media_server_type === MediaServerType.JELLYFIN) {
+        // Jellyfin requires URL and API key (user ID is optional, can be auto-detected later)
+        if (this.jellyfin_url && this.jellyfin_api_key) {
+          return true;
+        }
+      } else if (this.media_server_type === MediaServerType.PLEX) {
+        // Plex requires hostname, name, port, and auth token
+        if (
+          this.plex_hostname &&
+          this.plex_name &&
+          this.plex_port &&
+          this.plex_auth_token
+        ) {
+          return true;
+        }
       }
       return false;
     } catch (e) {
@@ -848,5 +1143,231 @@ export class SettingsService implements SettingDto {
 
   public async getPlexServers() {
     return await this.plexApi.getAvailableServers();
+  }
+
+  /**
+   * Preview what data will be cleared when switching media servers
+   */
+  public async previewMediaServerSwitch(
+    targetServerType: MediaServerType,
+  ): Promise<MediaServerSwitchPreviewDto> {
+    const currentServerType =
+      (this.media_server_type as MediaServerType) || MediaServerType.PLEX;
+
+    // Count media server-specific data
+    const collectionsCount = await this.collectionRepo.count();
+    const collectionMediaCount = await this.collectionMediaRepo.count();
+    const exclusionsCount = await this.exclusionRepo.count();
+    const collectionLogsCount = await this.collectionLogRepo.count();
+
+    // Count settings that will be kept
+    const radarrSettingsCount = await this.radarrSettingsRepo.count();
+    const sonarrSettingsCount = await this.sonarrSettingsRepo.count();
+
+    // Preview rule migration
+    const ruleMigrationPreview =
+      await this.ruleMigrationService.previewMigration(
+        currentServerType,
+        targetServerType,
+      );
+
+    return {
+      currentServerType,
+      targetServerType,
+      dataToBeCleared: {
+        collections: collectionsCount,
+        collectionMedia: collectionMediaCount,
+        exclusions: exclusionsCount,
+        collectionLogs: collectionLogsCount,
+      },
+      dataToBeKept: {
+        generalSettings: true,
+        radarrSettings: radarrSettingsCount,
+        sonarrSettings: sonarrSettingsCount,
+        overseerrSettings: this.overseerrConfigured(),
+        jellyseerrSettings: this.jellyseerrConfigured(),
+        tautulliSettings: this.tautulliConfigured(),
+        notificationSettings: true,
+      },
+      ruleMigration: ruleMigrationPreview,
+    };
+  }
+
+  /**
+   * Switch media server type and clear media server-specific data
+   * Keeps: general settings, *arr settings, notification settings
+   * Clears: collections, collection media, exclusions, collection logs
+   * Optionally migrates rules if migrateRules is true
+   */
+  public async switchMediaServer(
+    request: SwitchMediaServerRequestDto,
+  ): Promise<SwitchMediaServerResponseDto> {
+    const { targetServerType, confirmDataClear, migrateRules } = request;
+
+    // Require explicit confirmation
+    if (!confirmDataClear) {
+      return {
+        status: 'NOK',
+        code: 0,
+        message:
+          'Data clear confirmation required. Set confirmDataClear to true to proceed.',
+      };
+    }
+
+    // Get current server type - don't default to PLEX on fresh install
+    const currentServerType = this.media_server_type as MediaServerType | null;
+
+    // Check if already on target server type (only if currentServerType is actually set)
+    if (currentServerType && currentServerType === targetServerType) {
+      return {
+        status: 'NOK',
+        code: 0,
+        message: `Already using ${targetServerType} as media server`,
+      };
+    }
+
+    try {
+      this.logger.log(
+        currentServerType
+          ? `Switching media server from ${currentServerType} to ${targetServerType}${migrateRules ? ' (with rule migration)' : ''}`
+          : `Setting initial media server to ${targetServerType}`,
+      );
+
+      // Count data before clearing (for response)
+      const collectionsCount = await this.collectionRepo.count();
+      const collectionMediaCount = await this.collectionMediaRepo.count();
+      const exclusionsCount = await this.exclusionRepo.count();
+      const collectionLogsCount = await this.collectionLogRepo.count();
+
+      // Migrate rules if requested (BEFORE clearing data)
+      let ruleMigrationResult = undefined;
+      if (migrateRules) {
+        this.logger.log('Attempting rule migration...');
+        ruleMigrationResult = await this.ruleMigrationService.migrateRules(
+          currentServerType,
+          targetServerType,
+          true, // skipIncompatible
+        );
+        this.logger.log(
+          `Rule migration complete: ${ruleMigrationResult.migratedRules}/${ruleMigrationResult.totalRules} rules migrated`,
+        );
+      }
+
+      // Clear media server-specific data in correct order (respecting foreign keys)
+      // 1. Collection media (references collections)
+      await this.collectionMediaRepo.clear();
+      this.logger.log(`Cleared ${collectionMediaCount} collection media items`);
+
+      // 2. Collection logs (references collections)
+      await this.collectionLogRepo.clear();
+      this.logger.log(`Cleared ${collectionLogsCount} collection logs`);
+
+      // 3. Exclusions (references rule groups)
+      await this.exclusionRepo.clear();
+      this.logger.log(`Cleared ${exclusionsCount} exclusions`);
+
+      // If NOT migrating rules, also clear rules and rule groups
+      if (!migrateRules) {
+        // 4. Rule groups (references collections via OneToOne) - cascades to rules
+        await this.ruleGroupRepo.clear();
+        this.logger.log(`Cleared rule groups and rules`);
+
+        // 5. Collections - only clear if not migrating
+        await this.collectionRepo.clear();
+        this.logger.log(`Cleared ${collectionsCount} collections`);
+      } else {
+        // When migrating rules, preserve collections but reset media server references
+        // 1. Reset libraryId on rule groups (will need to be re-assigned by user)
+        // 2. Keep collectionId linked so the collection metadata is preserved
+        await this.ruleGroupRepo
+          .createQueryBuilder()
+          .update(RuleGroup)
+          .set({
+            libraryId: '', // Mark as needing library assignment
+          })
+          .execute();
+
+        // 3. Reset media server ID on collections (the Plex/Jellyfin collection will be recreated)
+        // Also reset libraryId since library IDs differ between servers
+        await this.collectionRepo
+          .createQueryBuilder()
+          .update(Collection)
+          .set({
+            mediaServerId: null,
+            mediaServerType: targetServerType,
+            libraryId: '', // Will be updated when user assigns library
+          })
+          .execute();
+
+        this.logger.log(
+          `Preserved ${collectionsCount} collections, reset media server references`,
+        );
+      }
+
+      // Update media server type and clear old server credentials
+      const settingsDb = await this.settingsRepo.findOne({ where: {} });
+
+      const updatedSettings: Partial<Settings> = {
+        ...settingsDb,
+        media_server_type: targetServerType,
+      };
+
+      // Clear the credentials of the server we're switching FROM
+      if (currentServerType === MediaServerType.PLEX) {
+        updatedSettings.plex_name = null;
+        updatedSettings.plex_hostname = null;
+        updatedSettings.plex_port = null;
+        updatedSettings.plex_ssl = null;
+        updatedSettings.plex_auth_token = null;
+      } else if (currentServerType === MediaServerType.JELLYFIN) {
+        updatedSettings.jellyfin_url = null;
+        updatedSettings.jellyfin_api_key = null;
+        updatedSettings.jellyfin_user_id = null;
+        updatedSettings.jellyfin_server_name = null;
+      }
+
+      await this.settingsRepo.save(updatedSettings);
+      await this.init();
+
+      // Uninitialize old media server
+      if (currentServerType === MediaServerType.PLEX) {
+        this.plexApi.uninitialize();
+      } else if (currentServerType === MediaServerType.JELLYFIN) {
+        this.jellyfinService.uninitialize();
+      }
+
+      this.logger.log(
+        `Successfully switched media server to ${targetServerType}`,
+      );
+
+      const response: SwitchMediaServerResponseDto = {
+        status: 'OK',
+        code: 1,
+        message: currentServerType
+          ? migrateRules
+            ? `Successfully switched from ${currentServerType} to ${targetServerType}. ${ruleMigrationResult?.migratedRules || 0} rules migrated. Rule groups need library re-assignment.`
+            : `Successfully switched from ${currentServerType} to ${targetServerType}`
+          : `Successfully set ${targetServerType} as media server`,
+        clearedData: {
+          collections: collectionsCount,
+          collectionMedia: collectionMediaCount,
+          exclusions: exclusionsCount,
+          collectionLogs: collectionLogsCount,
+        },
+      };
+
+      if (ruleMigrationResult) {
+        response.ruleMigration = ruleMigrationResult;
+      }
+
+      return response;
+    } catch (error) {
+      this.logger.error(`Error switching media server: ${error}`);
+      return {
+        status: 'NOK',
+        code: 0,
+        message: `Failed to switch media server: ${error.message || error}`,
+      };
+    }
   }
 }
