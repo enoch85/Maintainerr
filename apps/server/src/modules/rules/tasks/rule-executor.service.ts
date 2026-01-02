@@ -332,7 +332,11 @@ export class RuleExecutorService {
         const isGrandparentExcluded =
           item.grandparentId && excludedParentIds.has(item.grandparentId);
 
-        if (!isDirectlyExcluded && !isParentExcluded && !isGrandparentExcluded) {
+        if (
+          !isDirectlyExcluded &&
+          !isParentExcluded &&
+          !isGrandparentExcluded
+        ) {
           desiredMediaServerIds.add(mediaServerId);
         }
       }
