@@ -69,10 +69,15 @@ export class JellyfinMapper {
    * Only includes valid media types (Movie, Series, Season, Episode).
    * Filters out Folders, BoxSets, CollectionFolders, etc.
    */
-  static filterAndMapItems(items: BaseItemDto[] | undefined | null): MediaItem[] {
+  static filterAndMapItems(
+    items: BaseItemDto[] | undefined | null,
+  ): MediaItem[] {
     if (!items) return [];
     return items
-      .filter((item) => JellyfinMapper.toMediaItemTypeOrUndefined(item.Type) !== undefined)
+      .filter(
+        (item) =>
+          JellyfinMapper.toMediaItemTypeOrUndefined(item.Type) !== undefined,
+      )
       .map(JellyfinMapper.toMediaItem);
   }
 
@@ -80,8 +85,13 @@ export class JellyfinMapper {
    * Map a single Jellyfin item if it's a valid media type.
    * Returns undefined for non-media types (Folders, BoxSets, etc.)
    */
-  static toMediaItemOrUndefined(item: BaseItemDto | undefined): MediaItem | undefined {
-    if (!item || JellyfinMapper.toMediaItemTypeOrUndefined(item.Type) === undefined) {
+  static toMediaItemOrUndefined(
+    item: BaseItemDto | undefined,
+  ): MediaItem | undefined {
+    if (
+      !item ||
+      JellyfinMapper.toMediaItemTypeOrUndefined(item.Type) === undefined
+    ) {
       return undefined;
     }
     return JellyfinMapper.toMediaItem(item);
@@ -123,7 +133,6 @@ export class JellyfinMapper {
     return types.map((type) => JellyfinMapper.toBaseItemKind(type));
   }
 
-
   /**
    * Extract provider IDs from Jellyfin ProviderIds object.
    *
@@ -154,7 +163,6 @@ export class JellyfinMapper {
 
     return result;
   }
-
 
   /**
    * Convert a Jellyfin BaseItemDto to a MediaItem.
@@ -326,7 +334,6 @@ export class JellyfinMapper {
       url: url || undefined,
     };
   }
-
 
   private static toMediaSources(
     sources?: MediaSourceInfo[] | null,
