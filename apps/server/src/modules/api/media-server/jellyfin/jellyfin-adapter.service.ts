@@ -288,6 +288,7 @@ export class JellyfinService implements IMediaServerService {
             ? SortOrder.Descending
             : SortOrder.Ascending,
         ],
+        filters: [ItemFilter.IsNotFolder],
       });
 
       const items = (response.data.Items || []).map(JellyfinMapper.toMediaItem);
@@ -403,10 +404,11 @@ export class JellyfinService implements IMediaServerService {
           ItemFields.DateCreated,
         ],
         enableUserData: true,
-        // Filter by item type to exclude folders and other non-media items
+        // Filter by item type when specified (e.g., 'season' or 'episode')
         includeItemTypes: childType
           ? JellyfinMapper.toBaseItemKinds([childType])
           : undefined,
+        filters: [ItemFilter.IsNotFolder],
       });
 
       return (response.data.Items || []).map(JellyfinMapper.toMediaItem);
@@ -438,6 +440,7 @@ export class JellyfinService implements IMediaServerService {
           ItemFields.DateCreated,
         ],
         enableUserData: true,
+        filters: [ItemFilter.IsNotFolder],
       });
 
       return (response.data.Items || []).map(JellyfinMapper.toMediaItem);
