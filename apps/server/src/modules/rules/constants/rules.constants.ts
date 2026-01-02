@@ -1232,6 +1232,21 @@ export class RuleConstants {
           type: RuleType.DATE,
           showType: ['episode'],
         },
+        {
+          id: 30,
+          name: 'playCount',
+          humanName: 'Total play attempts (including unfinished)',
+          mediaType: MediaType.MOVIE,
+          type: RuleType.NUMBER,
+        },
+        {
+          id: 31,
+          name: 'sw_playCount',
+          humanName: 'Total play attempts (including unfinished)',
+          mediaType: MediaType.SHOW,
+          type: RuleType.NUMBER,
+          showType: ['episode'],
+        },
       ],
     },
   ];

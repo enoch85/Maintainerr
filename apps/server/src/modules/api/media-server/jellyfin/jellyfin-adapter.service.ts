@@ -534,6 +534,47 @@ export class JellyfinService implements IMediaServerService {
   }
 
   /**
+   * Get total play count for an item across all users.
+   * This includes partial/unfinished plays (PlayCount > 0 but Played = false).
+   * Only meaningful for Movies and Episodes (Series/Seasons always return 0).
+   */
+  async getTotalPlayCount(itemId: string): Promise<number> {
+    if (!this.api) return 0;
+
+    try {
+      const users = await this.getUsers();
+      let totalPlayCount = 0;
+
+      // Batch users to avoid overwhelming the API
+      for (
+        let i = 0;
+        i < users.length;
+        i += JELLYFIN_BATCH_SIZE.USER_WATCH_HISTORY
+      ) {
+        const batch = users.slice(
+          i,
+          i + JELLYFIN_BATCH_SIZE.USER_WATCH_HISTORY,
+        );
+
+        const results = await Promise.all(
+          batch.map((user) => this.getItemUserData(itemId, user.id)),
+        );
+
+        results.forEach((userData) => {
+          if (userData?.PlayCount) {
+            totalPlayCount += userData.PlayCount;
+          }
+        });
+      }
+
+      return totalPlayCount;
+    } catch (error) {
+      this.logger.error(`Failed to get play count for ${itemId}`, error);
+      return 0;
+    }
+  }
+
+  /**
    * Get user data for a specific item.
    */
   private async getItemUserData(itemId: string, userId: string) {

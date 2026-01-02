@@ -145,6 +145,11 @@ export class JellyfinGetterService {
           return watchHistory.length;
         }
 
+        case 'playCount': {
+          // Get total play attempts across all users (includes unfinished views)
+          return await this.jellyfinService.getTotalPlayCount(metadata.id);
+        }
+
         case 'labels': {
           // Jellyfin Tags = Plex Labels
           return metadata.labels ?? [];
@@ -211,6 +216,11 @@ export class JellyfinGetterService {
 
         case 'sw_amountOfViews': {
           return await this.getTotalShowViews(metadata.id, metadata.type);
+        }
+
+        case 'sw_playCount': {
+          // For episodes, get total play attempts (includes unfinished views)
+          return await this.jellyfinService.getTotalPlayCount(metadata.id);
         }
 
         case 'sw_watchers': {
