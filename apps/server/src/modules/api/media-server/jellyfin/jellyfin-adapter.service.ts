@@ -864,28 +864,92 @@ export class JellyfinService implements IMediaServerService {
       return [mediaId];
     }
 
-    // For shows: traverse show -> seasons -> episodes
-    // For seasons: traverse season -> episodes
-    // Otherwise just return the mediaId
-    if (context.type === 'show') {
-      const seasons = await this.getChildrenMetadata(context.id);
-      const allIds: string[] = [];
+    const handleMedia: string[] = [];
 
-      for (const season of seasons) {
-        const episodes = await this.getChildrenMetadata(season.id);
-        allIds.push(...episodes.map((ep) => ep.id));
+    // If we have a collection type, use it to determine what IDs to return
+    if (collectionType) {
+      switch (collectionType) {
+        // When collection type is seasons
+        case 'season':
+          switch (context.type) {
+            // and context type is seasons - return just the season
+            case 'season':
+              handleMedia.push(context.id);
+              break;
+            // and context type is episodes - not allowed
+            case 'episode':
+              this.logger.warn(
+                'Tried to add episodes to a collection of type season. This is not allowed.',
+              );
+              break;
+            // and context type is show - return all seasons
+            default:
+              const seasons = await this.getChildrenMetadata(mediaId);
+              handleMedia.push(...seasons.map((s) => s.id));
+              break;
+          }
+          break;
+
+        // When collection type is episodes
+        case 'episode':
+          switch (context.type) {
+            // and context type is seasons - return all episodes in season
+            case 'season':
+              const eps = await this.getChildrenMetadata(context.id);
+              handleMedia.push(...eps.map((ep) => ep.id));
+              break;
+            // and context type is episodes - return just the episode
+            case 'episode':
+              handleMedia.push(context.id);
+              break;
+            // and context type is show - return all episodes in show
+            default:
+              const allSeasons = await this.getChildrenMetadata(mediaId);
+              for (const season of allSeasons) {
+                const episodes = await this.getChildrenMetadata(season.id);
+                handleMedia.push(...episodes.map((ep) => ep.id));
+              }
+              break;
+          }
+          break;
+
+        // When collection type is show or movie - just return the media item
+        default:
+          handleMedia.push(mediaId);
+          break;
       }
-
-      return allIds;
+    }
+    // For global exclusions (no collection type), return hierarchically
+    else {
+      switch (context.type) {
+        case 'show':
+          // For shows, add the show + all seasons + all episodes
+          handleMedia.push(mediaId);
+          const showSeasons = await this.getChildrenMetadata(mediaId);
+          for (const season of showSeasons) {
+            handleMedia.push(season.id);
+            const episodes = await this.getChildrenMetadata(season.id);
+            handleMedia.push(...episodes.map((ep) => ep.id));
+          }
+          break;
+        case 'season':
+          // For seasons, add the season + all its episodes
+          handleMedia.push(context.id);
+          const seasonEps = await this.getChildrenMetadata(context.id);
+          handleMedia.push(...seasonEps.map((ep) => ep.id));
+          break;
+        case 'episode':
+          // Just the episode
+          handleMedia.push(context.id);
+          break;
+        default:
+          // Movies or unknown - just the item
+          handleMedia.push(mediaId);
+          break;
+      }
     }
 
-    if (context.type === 'season') {
-      const episodes = await this.getChildrenMetadata(context.id);
-      return episodes.map((ep) => ep.id);
-    }
-
-    // For movies or episodes, just return the single id
-    return [mediaId];
+    return handleMedia;
   }
 
   async deleteFromDisk(itemId: string): Promise<void> {

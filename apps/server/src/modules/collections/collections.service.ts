@@ -197,14 +197,21 @@ export class CollectionsService {
 
       const groupId = rulegroup.id;
 
+      // Determine which exclusion types to show based on collection dataType
+      // Parent type exclusions should be shown (show exclusion appears in season collection)
+      const validTypes: string[] = [rulegroup.dataType];
+      if (rulegroup.dataType === 'season') {
+        validTypes.push('show');
+      } else if (rulegroup.dataType === 'episode') {
+        validTypes.push('show', 'season');
+      }
+
       const queryBuilder = this.exclusionRepo.createQueryBuilder('exclusion');
 
       queryBuilder
         .where('exclusion.ruleGroupId = :groupId', { groupId })
         .orWhere('exclusion.ruleGroupId is null')
-        .andWhere('exclusion.type = :dataType', {
-          dataType: rulegroup.dataType,
-        })
+        .andWhere('exclusion.type IN (:...validTypes)', { validTypes })
         .orderBy('id', 'DESC')
         .skip(offset)
         .take(size);

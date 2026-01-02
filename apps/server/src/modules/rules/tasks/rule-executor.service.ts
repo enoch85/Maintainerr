@@ -305,10 +305,12 @@ export class RuleExecutorService {
 
       const exclusions = await this.rulesService.getExclusions(rulegroup.id);
 
+      // Build sets of excluded IDs - both direct mediaServerId and parent IDs
       const excludedMediaServerIds = new Set<string>(
-        exclusions.map((e) => {
-          return e.mediaServerId;
-        }),
+        exclusions.map((e) => e.mediaServerId),
+      );
+      const excludedParentIds = new Set<string>(
+        exclusions.filter((e) => e.parent).map((e) => e.parent),
       );
 
       const statsByMediaServerId = new Map<string, IComparisonStatistics>();
@@ -320,10 +322,17 @@ export class RuleExecutorService {
       }
 
       // filter exclusions out of results & get correct media item ID
+      // Check both direct exclusion and parent exclusion (e.g., show excluded -> all seasons excluded)
       const desiredMediaServerIds = new Set<string>();
       for (const item of this.resultData ?? []) {
         const mediaServerId = item.id;
-        if (!excludedMediaServerIds.has(mediaServerId)) {
+        const isDirectlyExcluded = excludedMediaServerIds.has(mediaServerId);
+        const isParentExcluded =
+          item.parentId && excludedParentIds.has(item.parentId);
+        const isGrandparentExcluded =
+          item.grandparentId && excludedParentIds.has(item.grandparentId);
+
+        if (!isDirectlyExcluded && !isParentExcluded && !isGrandparentExcluded) {
           desiredMediaServerIds.add(mediaServerId);
         }
       }

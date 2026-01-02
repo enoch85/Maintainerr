@@ -190,11 +190,11 @@ export class JellyfinGetterService {
         }
 
         case 'sw_allEpisodesSeenBy': {
-          return await this.getAllEpisodesSeenBy(metadata.id);
+          return await this.getAllEpisodesSeenBy(metadata.id, metadata.type);
         }
 
         case 'sw_lastWatched': {
-          return await this.getLastWatchedShowDate(metadata.id);
+          return await this.getLastWatchedShowDate(metadata.id, metadata.type);
         }
 
         case 'sw_episodes': {
@@ -346,17 +346,27 @@ export class JellyfinGetterService {
       : null;
   }
 
-  private async getAllEpisodesSeenBy(showId: string): Promise<string[]> {
+  private async getAllEpisodesSeenBy(
+    itemId: string,
+    type: MediaItemType,
+  ): Promise<string[]> {
     const users = await this.jellyfinService.getUsers();
-    const seasons = await this.jellyfinService.getChildrenMetadata(showId);
 
-    // Get all episodes across all seasons
+    // Get all episodes - handle both shows and seasons
     const allEpisodes: string[] = [];
-    for (const season of seasons) {
-      const episodes = await this.jellyfinService.getChildrenMetadata(
-        season.id,
-      );
+    if (type === 'season') {
+      // For seasons, get episodes directly (children of season)
+      const episodes = await this.jellyfinService.getChildrenMetadata(itemId);
       allEpisodes.push(...episodes.map((e) => e.id));
+    } else {
+      // For shows, get seasons first, then episodes from each season
+      const seasons = await this.jellyfinService.getChildrenMetadata(itemId);
+      for (const season of seasons) {
+        const episodes = await this.jellyfinService.getChildrenMetadata(
+          season.id,
+        );
+        allEpisodes.push(...episodes.map((e) => e.id));
+      }
     }
 
     if (allEpisodes.length === 0) return [];
@@ -377,18 +387,33 @@ export class JellyfinGetterService {
     return usersWhoWatchedAll.map((id) => userMap.get(id) || id);
   }
 
-  private async getLastWatchedShowDate(showId: string): Promise<Date | null> {
-    const seasons = await this.jellyfinService.getChildrenMetadata(showId);
+  private async getLastWatchedShowDate(
+    itemId: string,
+    type: MediaItemType,
+  ): Promise<Date | null> {
     let latestDate: Date | null = null;
 
-    for (const season of seasons) {
-      const episodes = await this.jellyfinService.getChildrenMetadata(
-        season.id,
-      );
+    if (type === 'season') {
+      // For seasons, get episodes directly
+      const episodes = await this.jellyfinService.getChildrenMetadata(itemId);
       for (const episode of episodes) {
         const lastViewed = await this.getLastViewedAt(episode.id);
         if (lastViewed && (!latestDate || lastViewed > latestDate)) {
           latestDate = lastViewed;
+        }
+      }
+    } else {
+      // For shows, iterate through seasons first
+      const seasons = await this.jellyfinService.getChildrenMetadata(itemId);
+      for (const season of seasons) {
+        const episodes = await this.jellyfinService.getChildrenMetadata(
+          season.id,
+        );
+        for (const episode of episodes) {
+          const lastViewed = await this.getLastViewedAt(episode.id);
+          if (lastViewed && (!latestDate || lastViewed > latestDate)) {
+            latestDate = lastViewed;
+          }
         }
       }
     }
