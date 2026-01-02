@@ -310,7 +310,7 @@ export class RuleExecutorService {
         exclusions.map((e) => e.mediaServerId),
       );
       const excludedParentIds = new Set<string>(
-        exclusions.filter((e) => e.parent).map((e) => e.parent),
+        exclusions.filter((e) => e.parent).map((e) => String(e.parent)),
       );
 
       const statsByMediaServerId = new Map<string, IComparisonStatistics>();
