@@ -290,7 +290,7 @@ export class JellyfinService implements IMediaServerService {
         ],
       });
 
-      const items = JellyfinMapper.filterAndMapItems(response.data.Items);
+      const items = (response.data.Items || []).map(JellyfinMapper.toMediaItem);
 
       return {
         items,
@@ -354,7 +354,7 @@ export class JellyfinService implements IMediaServerService {
         enableUserData: true,
       });
 
-      return JellyfinMapper.filterAndMapItems(response.data.Items);
+      return (response.data.Items || []).map(JellyfinMapper.toMediaItem);
     } catch (error) {
       this.logger.error(`Failed to search library ${libraryId}`, error);
       return [];
@@ -381,7 +381,7 @@ export class JellyfinService implements IMediaServerService {
       });
 
       const item = response.data.Items?.[0];
-      return JellyfinMapper.toMediaItemOrUndefined(item);
+      return item ? JellyfinMapper.toMediaItem(item) : undefined;
     } catch (error) {
       this.logger.warn(`Failed to get metadata for ${itemId}`, error);
       return undefined;
@@ -403,13 +403,13 @@ export class JellyfinService implements IMediaServerService {
           ItemFields.DateCreated,
         ],
         enableUserData: true,
-        // Filter by item type when specified (e.g., 'season' or 'episode')
+        // Filter by item type - defaults to all media types if not specified
         includeItemTypes: childType
           ? JellyfinMapper.toBaseItemKinds([childType])
-          : undefined,
+          : [BaseItemKind.Movie, BaseItemKind.Series, BaseItemKind.Season, BaseItemKind.Episode],
       });
 
-      return JellyfinMapper.filterAndMapItems(response.data.Items);
+      return (response.data.Items || []).map(JellyfinMapper.toMediaItem);
     } catch (error) {
       this.logger.error(`Failed to get children for ${parentId}`, error);
       return [];
@@ -440,7 +440,7 @@ export class JellyfinService implements IMediaServerService {
         enableUserData: true,
       });
 
-      return JellyfinMapper.filterAndMapItems(response.data.Items);
+      return (response.data.Items || []).map(JellyfinMapper.toMediaItem);
     } catch (error) {
       this.logger.error(`Failed to get recently added for ${libraryId}`, error);
       return [];
@@ -745,7 +745,7 @@ export class JellyfinService implements IMediaServerService {
         enableUserData: true,
       });
 
-      return JellyfinMapper.filterAndMapItems(response.data.Items);
+      return (response.data.Items || []).map(JellyfinMapper.toMediaItem);
     } catch (error) {
       this.logger.error(
         `Failed to get collection children for ${collectionId}`,
