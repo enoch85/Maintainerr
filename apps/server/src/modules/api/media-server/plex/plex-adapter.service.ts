@@ -1,22 +1,22 @@
 import {
   CollectionVisibilitySettings,
   CreateCollectionParams,
-  MediaServerFeature,
-  MediaServerType,
   LibraryQueryOptions,
   MediaCollection,
   MediaItem,
   MediaItemType,
   MediaLibrary,
   MediaPlaylist,
+  MediaServerFeature,
   MediaServerStatus,
+  MediaServerType,
   MediaUser,
   PagedResult,
   RecentlyAddedOptions,
   UpdateCollectionParams,
   WatchRecord,
 } from '@maintainerr/contracts';
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { EPlexDataType } from '../../plex-api/enums/plex-data-type-enum';
 import { PlexApiService } from '../../plex-api/plex-api.service';
 import { supportsFeature } from '../media-server.constants';
@@ -32,11 +32,12 @@ import { PlexMapper } from './plex.mapper';
  */
 @Injectable()
 export class PlexAdapterService implements IMediaServerService {
+  private readonly logger = new Logger(PlexAdapterService.name);
+
   constructor(
     @Inject(forwardRef(() => PlexApiService))
     private readonly plexApi: PlexApiService,
   ) {}
-
 
   async initialize(): Promise<void> {
     await this.plexApi.initialize();
@@ -54,18 +55,15 @@ export class PlexAdapterService implements IMediaServerService {
     return MediaServerType.PLEX;
   }
 
-
   supportsFeature(feature: MediaServerFeature): boolean {
     return supportsFeature(MediaServerType.PLEX, feature);
   }
-
 
   async getStatus(): Promise<MediaServerStatus | undefined> {
     const status = await this.plexApi.getStatus();
     if (!status) return undefined;
     return PlexMapper.toMediaServerStatus(status);
   }
-
 
   async getUsers(): Promise<MediaUser[]> {
     const users = await this.plexApi.getUsers();
@@ -79,7 +77,6 @@ export class PlexAdapterService implements IMediaServerService {
     return PlexMapper.toMediaUser(user);
   }
 
-
   async getLibraries(): Promise<MediaLibrary[]> {
     const libraries = await this.plexApi.getLibraries();
     if (!libraries) return [];
@@ -90,6 +87,15 @@ export class PlexAdapterService implements IMediaServerService {
     libraryId: string,
     options?: LibraryQueryOptions,
   ): Promise<PagedResult<MediaItem>> {
+    // Check for migration issue: Jellyfin uses 32-char hex UUIDs, Plex uses numeric IDs
+    const isJellyfinId = /^[a-f0-9]{32}$/i.test(libraryId);
+    if (!libraryId || libraryId.trim() === '' || isJellyfinId) {
+      this.logger.warn(
+        `Library '${libraryId || '(empty)'}' appears to be from a different media server. Please update the library setting in your rules.`,
+      );
+      return { items: [], totalSize: 0, offset: 0, limit: 50 };
+    }
+
     const plexType = options?.type
       ? PlexMapper.toPlexDataType(options.type)
       : undefined;
@@ -144,7 +150,6 @@ export class PlexAdapterService implements IMediaServerService {
     return results.map(PlexMapper.toMediaItem);
   }
 
-
   async getMetadata(itemId: string): Promise<MediaItem | undefined> {
     const metadata = await this.plexApi.getMetadata(itemId);
     if (!metadata) return undefined;
@@ -172,13 +177,11 @@ export class PlexAdapterService implements IMediaServerService {
     return limited.map(PlexMapper.toMediaItem);
   }
 
-
   async searchContent(query: string): Promise<MediaItem[]> {
     const results = await this.plexApi.searchContent(query);
     if (!results) return [];
     return results.map(PlexMapper.metadataToMediaItem);
   }
-
 
   async getWatchHistory(itemId: string): Promise<WatchRecord[]> {
     const history = await this.plexApi.getWatchHistory(itemId);
@@ -192,7 +195,6 @@ export class PlexAdapterService implements IMediaServerService {
     const userIds = new Set(history.map((record) => record.userId));
     return Array.from(userIds);
   }
-
 
   async getCollections(libraryId: string): Promise<MediaCollection[]> {
     const collections = await this.plexApi.getCollections(libraryId);
@@ -277,7 +279,6 @@ export class PlexAdapterService implements IMediaServerService {
     });
   }
 
-
   async getWatchlistForUser(userId: string): Promise<string[]> {
     // PlexApiService.getWatchlistIdsForUser requires both userId and username
     // but returns PlexCommunityWatchList[] with id, key, title, type
@@ -286,18 +287,15 @@ export class PlexAdapterService implements IMediaServerService {
     return [];
   }
 
-
   async getPlaylists(libraryId: string): Promise<MediaPlaylist[]> {
     const playlists = await this.plexApi.getPlaylists(libraryId);
     if (!playlists) return [];
     return playlists.map(PlexMapper.toMediaPlaylist);
   }
 
-
   async deleteFromDisk(itemId: string): Promise<void> {
     await this.plexApi.deleteMediaFromDisk(itemId);
   }
-
 
   async getAllIdsForContextAction(
     collectionType: MediaItemType | undefined,
@@ -311,7 +309,6 @@ export class PlexAdapterService implements IMediaServerService {
     );
     return result.map((r) => String(r.plexId));
   }
-
 
   resetMetadataCache(itemId?: string): void {
     // PlexApiService uses cacheManager internally

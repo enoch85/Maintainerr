@@ -595,9 +595,12 @@ export class CollectionsService {
           collection.libraryId,
         );
 
-        this.logger.debug(
-          `[checkAutomaticMediaServerLink] findMediaServerCollection("${collection.title}") returned: ${foundColl ? `id=${foundColl.id}, childCount=${foundColl.childCount}` : 'undefined'}`,
-        );
+        // Only log if we expected to find it (had a previous link) or if we actually found one
+        if (foundColl || collection.mediaServerId) {
+          this.logger.debug(
+            `[checkAutomaticMediaServerLink] findMediaServerCollection("${collection.title}") returned: ${foundColl ? `id=${foundColl.id}, childCount=${foundColl.childCount}` : 'undefined'}`,
+          );
+        }
 
         if (foundColl) {
           collection.mediaServerId = foundColl.id;

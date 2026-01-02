@@ -299,10 +299,22 @@ export class JellyfinService implements IMediaServerService {
         limit: options?.limit || JELLYFIN_BATCH_SIZE.DEFAULT_PAGE_SIZE,
       };
     } catch (error) {
-      this.logger.error(
-        `Failed to get library contents for ${libraryId}`,
-        error,
-      );
+      // Check if this looks like a migration issue:
+      // - Empty/null library ID
+      // - Plex-style numeric ID (Jellyfin uses 32-char hex UUIDs)
+      const isMigrationIssue =
+        !libraryId || libraryId.trim() === '' || /^\d+$/.test(libraryId); // Plex uses numeric IDs like "1", "15"
+
+      if (isMigrationIssue) {
+        this.logger.warn(
+          `Library '${libraryId || '(empty)'}' appears to be from a different media server. Please update the library setting in your rules.`,
+        );
+      } else {
+        this.logger.error(
+          `Failed to get library contents for ${libraryId}`,
+          error,
+        );
+      }
       return { items: [], totalSize: 0, offset: 0, limit: 50 };
     }
   }
@@ -325,7 +337,19 @@ export class JellyfinService implements IMediaServerService {
 
       return response.data.TotalRecordCount || 0;
     } catch (error) {
-      this.logger.error(`Failed to get library count for ${libraryId}`, error);
+      const isMigrationIssue =
+        !libraryId || libraryId.trim() === '' || /^\d+$/.test(libraryId);
+
+      if (isMigrationIssue) {
+        this.logger.warn(
+          `Library '${libraryId || '(empty)'}' appears to be from a different media server. Please update the library setting in your rules.`,
+        );
+      } else {
+        this.logger.error(
+          `Failed to get library count for ${libraryId}`,
+          error,
+        );
+      }
       return 0;
     }
   }
@@ -356,7 +380,16 @@ export class JellyfinService implements IMediaServerService {
 
       return (response.data.Items || []).map(JellyfinMapper.toMediaItem);
     } catch (error) {
-      this.logger.error(`Failed to search library ${libraryId}`, error);
+      const isMigrationIssue =
+        !libraryId || libraryId.trim() === '' || /^\d+$/.test(libraryId);
+
+      if (isMigrationIssue) {
+        this.logger.warn(
+          `Library '${libraryId || '(empty)'}' appears to be from a different media server. Please update the library setting in your rules.`,
+        );
+      } else {
+        this.logger.error(`Failed to search library ${libraryId}`, error);
+      }
       return [];
     }
   }
@@ -406,7 +439,12 @@ export class JellyfinService implements IMediaServerService {
         // Filter by item type - defaults to all media types if not specified
         includeItemTypes: childType
           ? JellyfinMapper.toBaseItemKinds([childType])
-          : [BaseItemKind.Movie, BaseItemKind.Series, BaseItemKind.Season, BaseItemKind.Episode],
+          : [
+              BaseItemKind.Movie,
+              BaseItemKind.Series,
+              BaseItemKind.Season,
+              BaseItemKind.Episode,
+            ],
       });
 
       return (response.data.Items || []).map(JellyfinMapper.toMediaItem);
@@ -442,7 +480,19 @@ export class JellyfinService implements IMediaServerService {
 
       return (response.data.Items || []).map(JellyfinMapper.toMediaItem);
     } catch (error) {
-      this.logger.error(`Failed to get recently added for ${libraryId}`, error);
+      const isMigrationIssue =
+        !libraryId || libraryId.trim() === '' || /^\d+$/.test(libraryId);
+
+      if (isMigrationIssue) {
+        this.logger.warn(
+          `Library '${libraryId || '(empty)'}' appears to be from a different media server. Please update the library setting in your rules.`,
+        );
+      } else {
+        this.logger.error(
+          `Failed to get recently added for ${libraryId}`,
+          error,
+        );
+      }
       return [];
     }
   }
