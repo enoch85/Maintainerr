@@ -791,7 +791,6 @@ export class JellyfinService implements IMediaServerService {
           Studios: existingCollection.Studios ?? [],
           People: existingCollection.People ?? [],
           GenreItems: existingCollection.GenreItems ?? [],
-          TagItems: existingCollection.TagItems ?? [],
           RemoteTrailers: existingCollection.RemoteTrailers ?? [],
           ProviderIds: existingCollection.ProviderIds ?? {},
           LockedFields: existingCollection.LockedFields ?? [],
