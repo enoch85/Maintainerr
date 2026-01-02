@@ -1,3 +1,4 @@
+import { MediaServerType, MediaItemType } from '@maintainerr/contracts';
 import {
   Column,
   Entity,
@@ -7,7 +8,6 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { EPlexDataType } from '../../api/plex-api/enums/plex-data-type-enum';
 import { CollectionLog } from '../../collections/entities/collection_log.entities';
 import { RulesDto } from '../../rules/dtos/rules.dto';
 import { RuleGroup } from '../../rules/entities/rule-group.entities';
@@ -20,11 +20,16 @@ export class Collection {
   @PrimaryGeneratedColumn()
   id: number;
 
+  /** Media server collection ID (Plex ratingKey or Jellyfin GUID) */
   @Column({ nullable: true })
-  plexId: number;
+  mediaServerId: string;
 
-  @Column()
-  libraryId: number;
+  /** Which media server this collection belongs to */
+  @Column({ type: 'varchar', default: MediaServerType.PLEX })
+  mediaServerType: MediaServerType;
+
+  @Column({ type: 'varchar' })
+  libraryId: string;
 
   @Column()
   title: string;
@@ -59,8 +64,8 @@ export class Collection {
   @Column({ nullable: false, default: false })
   forceOverseerr: boolean;
 
-  @Column({ nullable: false, default: 1 })
-  type: EPlexDataType;
+  @Column({ nullable: false, default: 'movie' })
+  type: MediaItemType;
 
   @Column({ nullable: false, default: 6 })
   keepLogsForMonths: number;

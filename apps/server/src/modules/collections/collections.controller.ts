@@ -1,4 +1,4 @@
-import { ECollectionLogType } from '@maintainerr/contracts';
+import { ECollectionLogType, MediaItemType } from '@maintainerr/contracts';
 import {
   Body,
   Controller,
@@ -93,8 +93,8 @@ export class CollectionsController {
 
   @Get()
   getCollections(
-    @Query('libraryId') libraryId: number,
-    @Query('typeId') typeId: 1 | 2 | 3 | 4,
+    @Query('libraryId') libraryId: string,
+    @Query('typeId') typeId: MediaItemType,
   ) {
     if (libraryId) {
       return this.collectionService.getCollections(libraryId, undefined);
@@ -124,7 +124,7 @@ export class CollectionsController {
     return this.collectionService.MediaCollectionActionWithContext(
       request.collectionId,
       request.context,
-      { plexId: request.mediaId },
+      { mediaServerId: request.mediaId.toString() },
       request.action === 0 ? 'add' : 'remove',
     );
   }
@@ -133,14 +133,15 @@ export class CollectionsController {
     @Query('mediaId') mediaId: number,
     @Query('collectionId') collectionId: number,
   ) {
-    if (!collectionId) {
+    const collId = Number(collectionId);
+    if (!collId) {
       return this.collectionService.removeFromAllCollections([
-        { plexId: mediaId },
+        { mediaServerId: mediaId.toString() },
       ]);
     } else {
-      return this.collectionService.removeFromCollection(collectionId, [
+      return this.collectionService.removeFromCollection(collId, [
         {
-          plexId: mediaId,
+          mediaServerId: mediaId.toString(),
         },
       ]);
     }

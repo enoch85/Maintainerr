@@ -1,11 +1,14 @@
-import { EPlexDataType } from '../../api/plex-api/enums/plex-data-type-enum';
+import { MediaServerType, MediaItemType } from '@maintainerr/contracts';
 import { CollectionMedia } from '../entities/collection_media.entities';
 
 export interface ICollection {
   id?: number;
-  type: EPlexDataType;
-  plexId?: number;
-  libraryId: number;
+  type: MediaItemType;
+  /** Media server collection ID (Plex ratingKey or Jellyfin GUID) */
+  mediaServerId?: string;
+  /** Which media server this collection belongs to */
+  mediaServerType?: MediaServerType;
+  libraryId: string;
   title: string;
   description?: string;
   isActive: boolean;
