@@ -4,9 +4,11 @@ import {
   Inject,
   Injectable,
   Logger,
+  Optional,
 } from '@nestjs/common';
 import { Settings } from '../../settings/entities/settings.entities';
 import { SettingsService } from '../../settings/settings.service';
+import { JellyfinService } from './jellyfin/jellyfin-adapter.service';
 import { IMediaServerService } from './media-server.interface';
 import { PlexAdapterService } from './plex/plex-adapter.service';
 
@@ -34,6 +36,7 @@ export class MediaServerFactory {
     @Inject(forwardRef(() => SettingsService))
     private readonly settingsService: SettingsService,
     private readonly plexAdapter: PlexAdapterService,
+    @Optional() private readonly jellyfinService?: JellyfinService,
   ) {}
 
   /**
@@ -63,8 +66,13 @@ export class MediaServerFactory {
   ): Promise<IMediaServerService> {
     switch (serverType) {
       case MediaServerType.JELLYFIN:
-        // Jellyfin support will be added in a future PR
-        throw new Error('Jellyfin service not yet implemented');
+        if (!this.jellyfinService) {
+          throw new Error('Jellyfin service not available');
+        }
+        if (!this.jellyfinService.isSetup()) {
+          await this.jellyfinService.initialize();
+        }
+        return this.jellyfinService;
 
       case MediaServerType.PLEX:
       default:
