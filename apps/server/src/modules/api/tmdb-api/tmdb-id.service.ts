@@ -1,15 +1,14 @@
+import { MediaItem } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
-import { PlexMetadata } from '../../../modules/api/plex-api/interfaces/media.interface';
-import { PlexApiService } from '../../../modules/api/plex-api/plex-api.service';
+import { MediaServerFactory } from '../media-server/media-server.factory';
 import { TmdbApiService } from '../../../modules/api/tmdb-api/tmdb.service';
 import { MaintainerrLogger } from '../../logging/logs.service';
-import { PlexLibraryItem } from '../plex-api/interfaces/library.interfaces';
 
 @Injectable()
 export class TmdbIdService {
   constructor(
     private readonly tmdbApi: TmdbApiService,
-    private readonly plexApi: PlexApiService,
+    private readonly mediaServerFactory: MediaServerFactory,
     private readonly logger: MaintainerrLogger,
   ) {
     logger.setContext(TmdbIdService.name);
@@ -19,21 +18,20 @@ export class TmdbIdService {
     ratingKey: string,
   ): Promise<{ type: 'movie' | 'tv'; id: number | undefined }> {
     try {
-      let libItem: PlexMetadata = await this.plexApi.getMetadata(ratingKey);
-      if (libItem) {
+      const mediaServer = await this.mediaServerFactory.getService();
+      let mediaItem = await mediaServer.getMetadata(ratingKey);
+      if (mediaItem) {
         // fetch show in case of season / episode
-        libItem = libItem.grandparentRatingKey
-          ? await this.plexApi.getMetadata(
-              libItem.grandparentRatingKey.toString(),
-            )
-          : libItem.parentRatingKey
-            ? await this.plexApi.getMetadata(libItem.parentRatingKey.toString())
-            : libItem;
+        mediaItem = mediaItem.grandparentId
+          ? await mediaServer.getMetadata(mediaItem.grandparentId)
+          : mediaItem.parentId
+            ? await mediaServer.getMetadata(mediaItem.parentId)
+            : mediaItem;
 
-        return this.getTmdbIdFromPlexData(libItem);
+        return this.getTmdbIdFromMediaItem(mediaItem);
       } else {
         this.logger.warn(
-          `Failed to fetch metadata of Plex rating key : ${ratingKey}`,
+          `Failed to fetch metadata of media server item : ${ratingKey}`,
         );
       }
     } catch (e) {
@@ -43,24 +41,24 @@ export class TmdbIdService {
     }
   }
 
-  async getTmdbIdFromPlexData(
-    libItem: PlexMetadata | PlexLibraryItem,
+  /**
+   * Get TMDB ID from a MediaItem (server-agnostic)
+   */
+  async getTmdbIdFromMediaItem(
+    item: MediaItem,
   ): Promise<{ type: 'movie' | 'tv'; id: number | undefined }> {
     try {
       let id: number = undefined;
 
-      if (libItem.Guid) {
-        if (libItem.Guid.find((el) => el.id.includes('tmdb'))) {
-          id = +libItem.Guid.find((el) => el.id.includes('tmdb')).id.split(
-            '://',
-          )[1];
+      // Use providerIds from the abstraction layer
+      if (item.providerIds) {
+        if (item.providerIds.tmdb) {
+          id = +item.providerIds.tmdb;
         }
 
-        if (!id && libItem.Guid.find((el) => el.id.includes('tvdb'))) {
+        if (!id && item.providerIds.tvdb) {
           const resp = await this.tmdbApi.getByExternalId({
-            externalId: +libItem.Guid.find((el) => el.id.includes('tvdb'))
-              ?.id.split('://')[1]
-              ?.split('?')[0],
+            externalId: +item.providerIds.tvdb,
             type: 'tvdb',
           });
 
@@ -72,11 +70,9 @@ export class TmdbIdService {
           }
         }
 
-        if (!id && libItem.Guid.find((el) => el.id.includes('imdb'))) {
+        if (!id && item.providerIds.imdb) {
           const resp = await this.tmdbApi.getByExternalId({
-            externalId: libItem.Guid.find((el) => el.id.includes('imdb'))
-              ?.id.split('://')[1]
-              ?.split('?')[0],
+            externalId: item.providerIds.imdb,
             type: 'imdb',
           });
 
@@ -89,7 +85,7 @@ export class TmdbIdService {
         }
       }
       return {
-        type: ['show', 'season', 'episode'].includes(libItem.type)
+        type: ['show', 'season', 'episode'].includes(item.type)
           ? 'tv'
           : 'movie',
         id: id,
