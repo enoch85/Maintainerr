@@ -38,12 +38,14 @@ import { JELLYFIN_TICKS_PER_MS } from './jellyfin.constants';
  * Mapper class for converting between Jellyfin SDK types and Maintainerr types.
  */
 export class JellyfinMapper {
-
   /**
    * Convert Jellyfin BaseItemKind to MediaItemType string.
-   * This is what the API returns to the frontend.
+   * Returns undefined for non-media types (Folders, BoxSets, etc.)
+   * This is the single source of truth for valid Jellyfin media types.
    */
-  static toMediaItemType(kind?: BaseItemKind | string): MediaItemType {
+  private static toMediaItemTypeOrUndefined(
+    kind: BaseItemKind | string | undefined,
+  ): MediaItemType | undefined {
     switch (kind) {
       case BaseItemKind.Movie:
       case 'Movie':
@@ -58,8 +60,39 @@ export class JellyfinMapper {
       case 'Episode':
         return 'episode';
       default:
-        return 'movie';
+        return undefined;
     }
+  }
+
+  /**
+   * Filter and map Jellyfin items to MediaItems in one operation.
+   * Only includes valid media types (Movie, Series, Season, Episode).
+   * Filters out Folders, BoxSets, CollectionFolders, etc.
+   */
+  static filterAndMapItems(items: BaseItemDto[] | undefined | null): MediaItem[] {
+    if (!items) return [];
+    return items
+      .filter((item) => JellyfinMapper.toMediaItemTypeOrUndefined(item.Type) !== undefined)
+      .map(JellyfinMapper.toMediaItem);
+  }
+
+  /**
+   * Map a single Jellyfin item if it's a valid media type.
+   * Returns undefined for non-media types (Folders, BoxSets, etc.)
+   */
+  static toMediaItemOrUndefined(item: BaseItemDto | undefined): MediaItem | undefined {
+    if (!item || JellyfinMapper.toMediaItemTypeOrUndefined(item.Type) === undefined) {
+      return undefined;
+    }
+    return JellyfinMapper.toMediaItem(item);
+  }
+
+  /**
+   * Convert Jellyfin BaseItemKind to MediaItemType string.
+   * Defaults to 'movie' for unknown types.
+   */
+  static toMediaItemType(kind?: BaseItemKind | string): MediaItemType {
+    return JellyfinMapper.toMediaItemTypeOrUndefined(kind) ?? 'movie';
   }
 
   /**

@@ -6,6 +6,44 @@ import {
 import { JellyfinMapper } from './jellyfin.mapper';
 
 describe('JellyfinMapper', () => {
+  describe('filterAndMapItems', () => {
+    it('should filter out invalid media types (Folders, BoxSets, etc.)', () => {
+      const items: BaseItemDto[] = [
+        { Id: '1', Name: 'Valid Movie', Type: BaseItemKind.Movie },
+        { Id: '2', Name: 'Invalid Folder', Type: BaseItemKind.Folder },
+        { Id: '3', Name: 'Valid Series', Type: BaseItemKind.Series },
+        { Id: '4', Name: 'Invalid BoxSet', Type: BaseItemKind.BoxSet },
+        { Id: '5', Name: 'Valid Season', Type: BaseItemKind.Season },
+        { Id: '6', Name: 'Valid Episode', Type: BaseItemKind.Episode },
+      ];
+
+      const result = JellyfinMapper.filterAndMapItems(items);
+
+      expect(result).toHaveLength(4);
+      expect(result.map((i) => i.id)).toEqual(['1', '3', '5', '6']);
+    });
+
+    it('should return empty array for null/undefined', () => {
+      expect(JellyfinMapper.filterAndMapItems(null)).toEqual([]);
+      expect(JellyfinMapper.filterAndMapItems(undefined)).toEqual([]);
+    });
+  });
+
+  describe('toMediaItemOrUndefined', () => {
+    it('should return MediaItem for valid types', () => {
+      const movie: BaseItemDto = { Id: '1', Name: 'Test Movie', Type: BaseItemKind.Movie };
+      const result = JellyfinMapper.toMediaItemOrUndefined(movie);
+      expect(result).toBeDefined();
+      expect(result?.id).toBe('1');
+    });
+
+    it('should return undefined for invalid types', () => {
+      const folder: BaseItemDto = { Id: '1', Name: 'Folder', Type: BaseItemKind.Folder };
+      expect(JellyfinMapper.toMediaItemOrUndefined(folder)).toBeUndefined();
+      expect(JellyfinMapper.toMediaItemOrUndefined(undefined)).toBeUndefined();
+    });
+  });
+
   describe('toMediaItemType', () => {
     it('should map Movie type correctly', () => {
       expect(JellyfinMapper.toMediaItemType(BaseItemKind.Movie)).toBe(
