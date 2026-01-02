@@ -388,7 +388,10 @@ export class JellyfinService implements IMediaServerService {
     }
   }
 
-  async getChildrenMetadata(parentId: string): Promise<MediaItem[]> {
+  async getChildrenMetadata(
+    parentId: string,
+    childType?: MediaItemType,
+  ): Promise<MediaItem[]> {
     if (!this.api) return [];
 
     try {
@@ -400,6 +403,10 @@ export class JellyfinService implements IMediaServerService {
           ItemFields.DateCreated,
         ],
         enableUserData: true,
+        // Filter by item type to exclude folders and other non-media items
+        includeItemTypes: childType
+          ? JellyfinMapper.toBaseItemKinds([childType])
+          : undefined,
       });
 
       return (response.data.Items || []).map(JellyfinMapper.toMediaItem);
@@ -925,7 +932,7 @@ export class JellyfinService implements IMediaServerService {
               break;
             // and context type is show - return all seasons
             default:
-              const seasons = await this.getChildrenMetadata(mediaId);
+              const seasons = await this.getChildrenMetadata(mediaId, 'season');
               handleMedia.push(...seasons.map((s) => s.id));
               break;
           }
@@ -936,7 +943,7 @@ export class JellyfinService implements IMediaServerService {
           switch (context.type) {
             // and context type is seasons - return all episodes in season
             case 'season':
-              const eps = await this.getChildrenMetadata(context.id);
+              const eps = await this.getChildrenMetadata(context.id, 'episode');
               handleMedia.push(...eps.map((ep) => ep.id));
               break;
             // and context type is episodes - return just the episode
@@ -945,9 +952,9 @@ export class JellyfinService implements IMediaServerService {
               break;
             // and context type is show - return all episodes in show
             default:
-              const allSeasons = await this.getChildrenMetadata(mediaId);
+              const allSeasons = await this.getChildrenMetadata(mediaId, 'season');
               for (const season of allSeasons) {
-                const episodes = await this.getChildrenMetadata(season.id);
+                const episodes = await this.getChildrenMetadata(season.id, 'episode');
                 handleMedia.push(...episodes.map((ep) => ep.id));
               }
               break;
@@ -966,17 +973,17 @@ export class JellyfinService implements IMediaServerService {
         case 'show':
           // For shows, add the show + all seasons + all episodes
           handleMedia.push(mediaId);
-          const showSeasons = await this.getChildrenMetadata(mediaId);
+          const showSeasons = await this.getChildrenMetadata(mediaId, 'season');
           for (const season of showSeasons) {
             handleMedia.push(season.id);
-            const episodes = await this.getChildrenMetadata(season.id);
+            const episodes = await this.getChildrenMetadata(season.id, 'episode');
             handleMedia.push(...episodes.map((ep) => ep.id));
           }
           break;
         case 'season':
           // For seasons, add the season + all its episodes
           handleMedia.push(context.id);
-          const seasonEps = await this.getChildrenMetadata(context.id);
+          const seasonEps = await this.getChildrenMetadata(context.id, 'episode');
           handleMedia.push(...seasonEps.map((ep) => ep.id));
           break;
         case 'episode':
