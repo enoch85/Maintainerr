@@ -58,7 +58,7 @@ export class PlexMapper {
       case 'episode':
         return 'episode';
       case 'collection':
-        // Collections aren't really a media type, but map to movie for compatibility
+        // Collections don't have a dedicated MediaItemType - default to movie for API consistency
         return 'movie';
       default:
         return 'movie';

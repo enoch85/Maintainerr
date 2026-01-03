@@ -62,7 +62,6 @@ import type { JellyfinWatchedCacheEntry } from './jellyfin.types';
  */
 @Injectable()
 export class JellyfinAdapterService implements IMediaServerService {
-  private jellyfin: Jellyfin | undefined;
   private api: Api | undefined;
   private initialized = false;
   private readonly logger = new Logger(JellyfinAdapterService.name);
@@ -86,7 +85,7 @@ export class JellyfinAdapterService implements IMediaServerService {
       throw new Error('Jellyfin settings not configured');
     }
 
-    this.jellyfin = new Jellyfin({
+    const jellyfin = new Jellyfin({
       clientInfo: {
         name: JELLYFIN_CLIENT_INFO.name,
         version: JELLYFIN_CLIENT_INFO.version,
@@ -97,7 +96,7 @@ export class JellyfinAdapterService implements IMediaServerService {
       },
     });
 
-    this.api = this.jellyfin.createApi(
+    this.api = jellyfin.createApi(
       settings.jellyfin_url,
       settings.jellyfin_api_key,
     );
@@ -122,7 +121,6 @@ export class JellyfinAdapterService implements IMediaServerService {
   uninitialize(): void {
     this.initialized = false;
     this.api = undefined;
-    this.jellyfin = undefined;
     // Clear the cache when uninitializing
     this.cache.flush();
   }
