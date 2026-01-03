@@ -74,6 +74,62 @@ export class JellyfinAdapterService implements IMediaServerService {
     this.cache = cacheManager.getCache('jellyfin');
   }
 
+  /**
+   * Create a Jellyfin API client without modifying adapter state.
+   */
+  private createApiClient(
+    url: string,
+    apiKey: string,
+    deviceSuffix: string = 'default',
+  ): Api {
+    const jellyfin = new Jellyfin({
+      clientInfo: {
+        name: JELLYFIN_CLIENT_INFO.name,
+        version: JELLYFIN_CLIENT_INFO.version,
+      },
+      deviceInfo: {
+        name: JELLYFIN_DEVICE_INFO.name,
+        id: `${JELLYFIN_DEVICE_INFO.idPrefix}-${deviceSuffix}`,
+      },
+    });
+
+    return jellyfin.createApi(url, apiKey);
+  }
+
+  /**
+   * Verify connection to a Jellyfin server and return server info.
+   */
+  private async verifyConnection(api: Api): Promise<{
+    success: boolean;
+    serverName?: string;
+    version?: string;
+    error?: string;
+  }> {
+    try {
+      // First get public system info to check if server is reachable
+      const systemInfo = await getSystemApi(api).getPublicSystemInfo();
+
+      // Then verify API key by calling an authenticated endpoint
+      try {
+        await getUserApi(api).getUsers();
+      } catch (authError) {
+        return {
+          success: false,
+          error: 'Invalid API key - authentication failed',
+        };
+      }
+
+      return {
+        success: true,
+        serverName: systemInfo.data.ServerName || undefined,
+        version: systemInfo.data.Version || undefined,
+      };
+    } catch (e) {
+      const error = e instanceof Error ? e.message : 'Connection failed';
+      return { success: false, error };
+    }
+  }
+
   async initialize(): Promise<void> {
     const settings = await this.settingsService.getSettings();
 
@@ -85,37 +141,24 @@ export class JellyfinAdapterService implements IMediaServerService {
       throw new Error('Jellyfin settings not configured');
     }
 
-    const jellyfin = new Jellyfin({
-      clientInfo: {
-        name: JELLYFIN_CLIENT_INFO.name,
-        version: JELLYFIN_CLIENT_INFO.version,
-      },
-      deviceInfo: {
-        name: JELLYFIN_DEVICE_INFO.name,
-        id: `${JELLYFIN_DEVICE_INFO.idPrefix}-${settings.clientId || 'default'}`,
-      },
-    });
-
-    this.api = jellyfin.createApi(
+    const api = this.createApiClient(
       settings.jellyfin_url,
       settings.jellyfin_api_key,
+      settings.clientId || 'default',
     );
 
-    // Verify connection with an authenticated endpoint
-    try {
-      // Use getUsers() instead of getPublicSystemInfo() to validate API key
-      await getUserApi(this.api).getUsers();
-      const systemInfo = await getSystemApi(this.api).getPublicSystemInfo();
-      this.initialized = true;
-      this.logger.log(
-        `Jellyfin connection established: ${systemInfo.data.ServerName} (${systemInfo.data.Version})`,
-      );
-    } catch (error) {
+    const result = await this.verifyConnection(api);
+
+    if (!result.success) {
       this.initialized = false;
-      throw new Error(
-        `Failed to connect to Jellyfin: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      );
+      throw new Error(`Failed to connect to Jellyfin: ${result.error}`);
     }
+
+    this.api = api;
+    this.initialized = true;
+    this.logger.log(
+      `Jellyfin connection established: ${result.serverName} (${result.version})`,
+    );
   }
 
   uninitialize(): void {
@@ -127,6 +170,34 @@ export class JellyfinAdapterService implements IMediaServerService {
 
   isSetup(): boolean {
     return this.initialized && this.api !== undefined;
+  }
+
+  /**
+   * Test connection to a Jellyfin server with provided credentials.
+   * This method doesn't require the adapter to be initialized and doesn't
+   * modify the adapter's state - useful for testing credentials before saving.
+   */
+  async testConnection(
+    url: string,
+    apiKey: string,
+  ): Promise<{
+    success: boolean;
+    serverName?: string;
+    version?: string;
+    error?: string;
+  }> {
+    const api = this.createApiClient(url, apiKey, 'test');
+    const result = await this.verifyConnection(api);
+
+    if (result.success) {
+      this.logger.log(
+        `Jellyfin connection test successful: ${result.serverName} (${result.version})`,
+      );
+    } else {
+      this.logger.error(`Jellyfin connection test failed: ${result.error}`);
+    }
+
+    return result;
   }
 
   getServerType(): MediaServerType {

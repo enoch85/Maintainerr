@@ -384,63 +384,25 @@ export class SettingsService implements SettingDto {
     jellyfin_api_key: string;
     jellyfin_user_id?: string;
   }): Promise<BasicResponseDto & { serverName?: string; version?: string }> {
-    try {
-      // Import Jellyfin SDK dynamically to avoid circular dependencies
-      const { Jellyfin } = await import('@jellyfin/sdk');
-      const { getSystemApi, getUserApi } =
-        await import('@jellyfin/sdk/lib/utils/api');
+    const result = await this.jellyfinAdapter.testConnection(
+      settings.jellyfin_url,
+      settings.jellyfin_api_key,
+    );
 
-      const jellyfin = new Jellyfin({
-        clientInfo: { name: 'Maintainerr', version: '2.0.0' },
-        deviceInfo: { name: 'Maintainerr-Test', id: 'maintainerr-test' },
-      });
-
-      const api = jellyfin.createApi(
-        settings.jellyfin_url,
-        settings.jellyfin_api_key,
-      );
-
-      // Add timeout to prevent hanging on unreachable servers
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(
-          () => reject(new Error('Connection timeout after 10 seconds')),
-          10000,
-        ),
-      );
-
-      // First get public system info to check if server is reachable
-      const systemInfo = await Promise.race([
-        getSystemApi(api).getPublicSystemInfo(),
-        timeoutPromise,
-      ]);
-
-      // Then verify API key by calling an authenticated endpoint (getUsers requires auth)
-      try {
-        await Promise.race([getUserApi(api).getUsers(), timeoutPromise]);
-      } catch (authError) {
-        this.logger.error('Jellyfin API key validation failed: ', authError);
-        return {
-          status: 'NOK',
-          code: 0,
-          message: 'Invalid API key - authentication failed',
-        };
-      }
-
-      this.logger.log(
-        `Jellyfin connection test successful: ${systemInfo.data.ServerName} (${systemInfo.data.Version})`,
-      );
-
+    if (result.success) {
       return {
         status: 'OK',
         code: 1,
-        message: `Connected to ${systemInfo.data.ServerName}`,
-        serverName: systemInfo.data.ServerName || undefined,
-        version: systemInfo.data.Version || undefined,
+        message: `Connected to ${result.serverName}`,
+        serverName: result.serverName,
+        version: result.version,
       };
-    } catch (e) {
-      this.logger.error('Jellyfin connection test failed: ', e);
-      const message = e instanceof Error ? e.message : 'Connection failed';
-      return { status: 'NOK', code: 0, message };
+    } else {
+      return {
+        status: 'NOK',
+        code: 0,
+        message: result.error || 'Connection failed',
+      };
     }
   }
 
