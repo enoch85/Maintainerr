@@ -166,7 +166,9 @@ export const useMediaServerStatus = (options?: UseMediaServerStatusOptions) => {
   >({
     queryKey: mediaServerKeys.status(),
     queryFn: async () => {
-      const result = await GetApiHandler<MediaServerStatus | undefined>('/media-server')
+      const result = await GetApiHandler<MediaServerStatus | undefined>(
+        '/media-server',
+      )
       return result ?? null
     },
     staleTime: 30000, // 30 seconds
