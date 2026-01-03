@@ -26,11 +26,15 @@ import { SettingDto } from "./dto's/setting.dto";
 import { SonarrSettingRawDto } from "./dto's/sonarr-setting.dto";
 import { UpdateSettingDto } from "./dto's/update-setting.dto";
 import { Settings } from './entities/settings.entities';
+import { MediaServerSwitchService } from './media-server-switch.service';
 import { SettingsService } from './settings.service';
 
 @Controller('/api/settings')
 export class SettingsController {
-  constructor(private readonly settingsService: SettingsService) {}
+  constructor(
+    private readonly settingsService: SettingsService,
+    private readonly mediaServerSwitchService: MediaServerSwitchService,
+  ) {}
 
   @Get()
   getSettings() {
@@ -260,7 +264,7 @@ export class SettingsController {
   async previewMediaServerSwitch(
     @Param('targetServerType') targetServerType: MediaServerType,
   ): Promise<MediaServerSwitchPreviewDto> {
-    return this.settingsService.previewMediaServerSwitch(targetServerType);
+    return this.mediaServerSwitchService.previewSwitch(targetServerType);
   }
 
   /**
@@ -272,6 +276,6 @@ export class SettingsController {
   async switchMediaServer(
     @Body() payload: SwitchMediaServerRequestDto,
   ): Promise<SwitchMediaServerResponseDto> {
-    return this.settingsService.switchMediaServer(payload);
+    return this.mediaServerSwitchService.executeSwitch(payload);
   }
 }

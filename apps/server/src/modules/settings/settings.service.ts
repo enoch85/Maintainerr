@@ -1,11 +1,8 @@
 import {
   JellyseerrSettingDto,
   MaintainerrEvent,
-  MediaServerSwitchPreviewDto,
   MediaServerType,
   OverseerrSettingDto,
-  SwitchMediaServerRequestDto,
-  SwitchMediaServerResponseDto,
   TautulliSettingDto,
 } from '@maintainerr/contracts';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
@@ -22,13 +19,7 @@ import { OverseerrApiService } from '../api/overseerr-api/overseerr-api.service'
 import { PlexApiService } from '../api/plex-api/plex-api.service';
 import { ServarrService } from '../api/servarr-api/servarr.service';
 import { TautulliApiService } from '../api/tautulli-api/tautulli-api.service';
-import { Collection } from '../collections/entities/collection.entities';
-import { CollectionLog } from '../collections/entities/collection_log.entities';
-import { CollectionMedia } from '../collections/entities/collection_media.entities';
 import { MaintainerrLogger } from '../logging/logs.service';
-import { Exclusion } from '../rules/entities/exclusion.entities';
-import { RuleGroup } from '../rules/entities/rule-group.entities';
-import { Rules } from '../rules/entities/rules.entities';
 import {
   DeleteRadarrSettingResponseDto,
   RadarrSettingRawDto,
@@ -43,7 +34,6 @@ import {
 import { RadarrSettings } from './entities/radarr_settings.entities';
 import { Settings } from './entities/settings.entities';
 import { SonarrSettings } from './entities/sonarr_settings.entities';
-import { RuleMigrationService } from './rule-migration.service';
 
 @Injectable()
 export class SettingsService implements SettingDto {
@@ -116,19 +106,6 @@ export class SettingsService implements SettingDto {
     private readonly radarrSettingsRepo: Repository<RadarrSettings>,
     @InjectRepository(SonarrSettings)
     private readonly sonarrSettingsRepo: Repository<SonarrSettings>,
-    @InjectRepository(Collection)
-    private readonly collectionRepo: Repository<Collection>,
-    @InjectRepository(CollectionMedia)
-    private readonly collectionMediaRepo: Repository<CollectionMedia>,
-    @InjectRepository(CollectionLog)
-    private readonly collectionLogRepo: Repository<CollectionLog>,
-    @InjectRepository(Exclusion)
-    private readonly exclusionRepo: Repository<Exclusion>,
-    @InjectRepository(RuleGroup)
-    private readonly ruleGroupRepo: Repository<RuleGroup>,
-    @InjectRepository(Rules)
-    private readonly rulesRepo: Repository<Rules>,
-    private readonly ruleMigrationService: RuleMigrationService,
     private readonly eventEmitter: EventEmitter2,
     private readonly logger: MaintainerrLogger,
   ) {
@@ -1096,6 +1073,60 @@ export class SettingsService implements SettingDto {
     return this.jellyseerr_url !== null && this.jellyseerr_api_key !== null;
   }
 
+  /**
+   * Get the current media server type
+   */
+  public getMediaServerType(): MediaServerType | null {
+    return (this.media_server_type as MediaServerType) || null;
+  }
+
+  /**
+   * Get count of Radarr settings (for switch preview)
+   */
+  public async getRadarrSettingsCount(): Promise<number> {
+    return this.radarrSettingsRepo.count();
+  }
+
+  /**
+   * Get count of Sonarr settings (for switch preview)
+   */
+  public async getSonarrSettingsCount(): Promise<number> {
+    return this.sonarrSettingsRepo.count();
+  }
+
+  /**
+   * Update media server type and clear old server credentials.
+   * Called by MediaServerSwitchService during server switch.
+   */
+  public async updateMediaServerType(
+    targetServerType: MediaServerType,
+    currentServerType: MediaServerType | null,
+  ): Promise<void> {
+    const settingsDb = await this.settingsRepo.findOne({ where: {} });
+
+    const updatedSettings: Partial<Settings> = {
+      ...settingsDb,
+      media_server_type: targetServerType,
+    };
+
+    // Clear the credentials of the server we're switching FROM
+    if (currentServerType === MediaServerType.PLEX) {
+      updatedSettings.plex_name = null;
+      updatedSettings.plex_hostname = null;
+      updatedSettings.plex_port = null;
+      updatedSettings.plex_ssl = null;
+      updatedSettings.plex_auth_token = null;
+    } else if (currentServerType === MediaServerType.JELLYFIN) {
+      updatedSettings.jellyfin_url = null;
+      updatedSettings.jellyfin_api_key = null;
+      updatedSettings.jellyfin_user_id = null;
+      updatedSettings.jellyfin_server_name = null;
+    }
+
+    await this.settingsRepo.save(updatedSettings);
+    await this.init();
+  }
+
   // Test if all required settings are set.
   public async testSetup(): Promise<boolean> {
     try {
@@ -1143,231 +1174,5 @@ export class SettingsService implements SettingDto {
 
   public async getPlexServers() {
     return await this.plexApi.getAvailableServers();
-  }
-
-  /**
-   * Preview what data will be cleared when switching media servers
-   */
-  public async previewMediaServerSwitch(
-    targetServerType: MediaServerType,
-  ): Promise<MediaServerSwitchPreviewDto> {
-    const currentServerType =
-      (this.media_server_type as MediaServerType) || MediaServerType.PLEX;
-
-    // Count media server-specific data
-    const collectionsCount = await this.collectionRepo.count();
-    const collectionMediaCount = await this.collectionMediaRepo.count();
-    const exclusionsCount = await this.exclusionRepo.count();
-    const collectionLogsCount = await this.collectionLogRepo.count();
-
-    // Count settings that will be kept
-    const radarrSettingsCount = await this.radarrSettingsRepo.count();
-    const sonarrSettingsCount = await this.sonarrSettingsRepo.count();
-
-    // Preview rule migration
-    const ruleMigrationPreview =
-      await this.ruleMigrationService.previewMigration(
-        currentServerType,
-        targetServerType,
-      );
-
-    return {
-      currentServerType,
-      targetServerType,
-      dataToBeCleared: {
-        collections: collectionsCount,
-        collectionMedia: collectionMediaCount,
-        exclusions: exclusionsCount,
-        collectionLogs: collectionLogsCount,
-      },
-      dataToBeKept: {
-        generalSettings: true,
-        radarrSettings: radarrSettingsCount,
-        sonarrSettings: sonarrSettingsCount,
-        overseerrSettings: this.overseerrConfigured(),
-        jellyseerrSettings: this.jellyseerrConfigured(),
-        tautulliSettings: this.tautulliConfigured(),
-        notificationSettings: true,
-      },
-      ruleMigration: ruleMigrationPreview,
-    };
-  }
-
-  /**
-   * Switch media server type and clear media server-specific data
-   * Keeps: general settings, *arr settings, notification settings
-   * Clears: collections, collection media, exclusions, collection logs
-   * Optionally migrates rules if migrateRules is true
-   */
-  public async switchMediaServer(
-    request: SwitchMediaServerRequestDto,
-  ): Promise<SwitchMediaServerResponseDto> {
-    const { targetServerType, confirmDataClear, migrateRules } = request;
-
-    // Require explicit confirmation
-    if (!confirmDataClear) {
-      return {
-        status: 'NOK',
-        code: 0,
-        message:
-          'Data clear confirmation required. Set confirmDataClear to true to proceed.',
-      };
-    }
-
-    // Get current server type - don't default to PLEX on fresh install
-    const currentServerType = this.media_server_type as MediaServerType | null;
-
-    // Check if already on target server type (only if currentServerType is actually set)
-    if (currentServerType && currentServerType === targetServerType) {
-      return {
-        status: 'NOK',
-        code: 0,
-        message: `Already using ${targetServerType} as media server`,
-      };
-    }
-
-    try {
-      this.logger.log(
-        currentServerType
-          ? `Switching media server from ${currentServerType} to ${targetServerType}${migrateRules ? ' (with rule migration)' : ''}`
-          : `Setting initial media server to ${targetServerType}`,
-      );
-
-      // Count data before clearing (for response)
-      const collectionsCount = await this.collectionRepo.count();
-      const collectionMediaCount = await this.collectionMediaRepo.count();
-      const exclusionsCount = await this.exclusionRepo.count();
-      const collectionLogsCount = await this.collectionLogRepo.count();
-
-      // Migrate rules if requested (BEFORE clearing data)
-      let ruleMigrationResult = undefined;
-      if (migrateRules) {
-        this.logger.log('Attempting rule migration...');
-        ruleMigrationResult = await this.ruleMigrationService.migrateRules(
-          currentServerType,
-          targetServerType,
-          true, // skipIncompatible
-        );
-        this.logger.log(
-          `Rule migration complete: ${ruleMigrationResult.migratedRules}/${ruleMigrationResult.totalRules} rules migrated`,
-        );
-      }
-
-      // Clear media server-specific data in correct order (respecting foreign keys)
-      // 1. Collection media (references collections)
-      await this.collectionMediaRepo.clear();
-      this.logger.log(`Cleared ${collectionMediaCount} collection media items`);
-
-      // 2. Collection logs (references collections)
-      await this.collectionLogRepo.clear();
-      this.logger.log(`Cleared ${collectionLogsCount} collection logs`);
-
-      // 3. Exclusions (references rule groups)
-      await this.exclusionRepo.clear();
-      this.logger.log(`Cleared ${exclusionsCount} exclusions`);
-
-      // If NOT migrating rules, also clear rules and rule groups
-      if (!migrateRules) {
-        // 4. Rule groups (references collections via OneToOne) - cascades to rules
-        await this.ruleGroupRepo.clear();
-        this.logger.log(`Cleared rule groups and rules`);
-
-        // 5. Collections - only clear if not migrating
-        await this.collectionRepo.clear();
-        this.logger.log(`Cleared ${collectionsCount} collections`);
-      } else {
-        // When migrating rules, preserve collections but reset media server references
-        // 1. Reset libraryId on rule groups (will need to be re-assigned by user)
-        // 2. Keep collectionId linked so the collection metadata is preserved
-        await this.ruleGroupRepo
-          .createQueryBuilder()
-          .update(RuleGroup)
-          .set({
-            libraryId: '', // Mark as needing library assignment
-          })
-          .execute();
-
-        // 3. Reset media server ID on collections (the Plex/Jellyfin collection will be recreated)
-        // Also reset libraryId since library IDs differ between servers
-        await this.collectionRepo
-          .createQueryBuilder()
-          .update(Collection)
-          .set({
-            mediaServerId: null,
-            mediaServerType: targetServerType,
-            libraryId: '', // Will be updated when user assigns library
-          })
-          .execute();
-
-        this.logger.log(
-          `Preserved ${collectionsCount} collections, reset media server references`,
-        );
-      }
-
-      // Update media server type and clear old server credentials
-      const settingsDb = await this.settingsRepo.findOne({ where: {} });
-
-      const updatedSettings: Partial<Settings> = {
-        ...settingsDb,
-        media_server_type: targetServerType,
-      };
-
-      // Clear the credentials of the server we're switching FROM
-      if (currentServerType === MediaServerType.PLEX) {
-        updatedSettings.plex_name = null;
-        updatedSettings.plex_hostname = null;
-        updatedSettings.plex_port = null;
-        updatedSettings.plex_ssl = null;
-        updatedSettings.plex_auth_token = null;
-      } else if (currentServerType === MediaServerType.JELLYFIN) {
-        updatedSettings.jellyfin_url = null;
-        updatedSettings.jellyfin_api_key = null;
-        updatedSettings.jellyfin_user_id = null;
-        updatedSettings.jellyfin_server_name = null;
-      }
-
-      await this.settingsRepo.save(updatedSettings);
-      await this.init();
-
-      // Uninitialize old media server
-      if (currentServerType === MediaServerType.PLEX) {
-        this.plexApi.uninitialize();
-      } else if (currentServerType === MediaServerType.JELLYFIN) {
-        this.jellyfinAdapter.uninitialize();
-      }
-
-      this.logger.log(
-        `Successfully switched media server to ${targetServerType}`,
-      );
-
-      const response: SwitchMediaServerResponseDto = {
-        status: 'OK',
-        code: 1,
-        message: currentServerType
-          ? migrateRules
-            ? `Successfully switched from ${currentServerType} to ${targetServerType}. ${ruleMigrationResult?.migratedRules || 0} rules migrated. Rule groups need library re-assignment.`
-            : `Successfully switched from ${currentServerType} to ${targetServerType}`
-          : `Successfully set ${targetServerType} as media server`,
-        clearedData: {
-          collections: collectionsCount,
-          collectionMedia: collectionMediaCount,
-          exclusions: exclusionsCount,
-          collectionLogs: collectionLogsCount,
-        },
-      };
-
-      if (ruleMigrationResult) {
-        response.ruleMigration = ruleMigrationResult;
-      }
-
-      return response;
-    } catch (error) {
-      this.logger.error(`Error switching media server: ${error}`);
-      return {
-        status: 'NOK',
-        code: 0,
-        message: `Failed to switch media server: ${error.message || error}`,
-      };
-    }
   }
 }

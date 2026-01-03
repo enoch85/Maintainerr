@@ -16,6 +16,7 @@ import { Rules } from '../rules/entities/rules.entities';
 import { RadarrSettings } from './entities/radarr_settings.entities';
 import { Settings } from './entities/settings.entities';
 import { SonarrSettings } from './entities/sonarr_settings.entities';
+import { MediaServerSwitchService } from './media-server-switch.service';
 import { RuleMigrationService } from './rule-migration.service';
 import { SettingsController } from './settings.controller';
 import { SettingsService } from './settings.service';
@@ -42,7 +43,7 @@ import { SettingsService } from './settings.service';
       Rules,
     ]),
   ],
-  providers: [SettingsService, RuleMigrationService],
+  providers: [SettingsService, RuleMigrationService, MediaServerSwitchService],
   exports: [SettingsService, RuleMigrationService],
   controllers: [SettingsController],
 })
