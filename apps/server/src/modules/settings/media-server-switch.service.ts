@@ -6,7 +6,7 @@ import {
 } from '@maintainerr/contracts';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { JellyfinAdapterService } from '../api/media-server/jellyfin/jellyfin-adapter.service';
 import { PlexApiService } from '../api/plex-api/plex-api.service';
 import { Collection } from '../collections/entities/collection.entities';
@@ -44,6 +44,7 @@ export class MediaServerSwitchService {
     private readonly exclusionRepo: Repository<Exclusion>,
     @InjectRepository(RuleGroup)
     private readonly ruleGroupRepo: Repository<RuleGroup>,
+    private readonly connection: DataSource,
     private readonly ruleMigrationService: RuleMigrationService,
     private readonly logger: MaintainerrLogger,
   ) {
@@ -197,7 +198,8 @@ export class MediaServerSwitchService {
   }
 
   /**
-   * Clear media server-specific data in the correct order (respecting foreign keys)
+   * Clear media server-specific data in the correct order (respecting foreign keys).
+   * All operations are wrapped in a transaction for atomicity.
    */
   private async clearMediaServerData(
     migrateRules: boolean,
@@ -209,56 +211,69 @@ export class MediaServerSwitchService {
       collectionLogsCount: number;
     },
   ): Promise<void> {
-    // 1. Collection media (references collections)
-    await this.collectionMediaRepo.clear();
-    this.logger.log(
-      `Cleared ${counts.collectionMediaCount} collection media items`,
-    );
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    // 2. Collection logs (references collections)
-    await this.collectionLogRepo.clear();
-    this.logger.log(`Cleared ${counts.collectionLogsCount} collection logs`);
-
-    // 3. Exclusions (references rule groups)
-    await this.exclusionRepo.clear();
-    this.logger.log(`Cleared ${counts.exclusionsCount} exclusions`);
-
-    // If NOT migrating rules, also clear rules and rule groups
-    if (!migrateRules) {
-      // 4. Rule groups (references collections via OneToOne) - cascades to rules
-      await this.ruleGroupRepo.clear();
-      this.logger.log(`Cleared rule groups and rules`);
-
-      // 5. Collections - only clear if not migrating
-      await this.collectionRepo.clear();
-      this.logger.log(`Cleared ${counts.collectionsCount} collections`);
-    } else {
-      // When migrating rules, preserve collections but reset media server references
-      // 1. Reset libraryId on rule groups (will need to be re-assigned by user)
-      // 2. Keep collectionId linked so the collection metadata is preserved
-      await this.ruleGroupRepo
-        .createQueryBuilder()
-        .update(RuleGroup)
-        .set({
-          libraryId: '', // Mark as needing library assignment
-        })
-        .execute();
-
-      // 3. Reset media server ID on collections (the Plex/Jellyfin collection will be recreated)
-      // Also reset libraryId since library IDs differ between servers
-      await this.collectionRepo
-        .createQueryBuilder()
-        .update(Collection)
-        .set({
-          mediaServerId: null,
-          mediaServerType: targetServerType,
-          libraryId: '', // Will be updated when user assigns library
-        })
-        .execute();
-
+    try {
+      // 1. Collection media (references collections)
+      await queryRunner.manager.clear(CollectionMedia);
       this.logger.log(
-        `Preserved ${counts.collectionsCount} collections, reset media server references`,
+        `Cleared ${counts.collectionMediaCount} collection media items`,
       );
+
+      // 2. Collection logs (references collections)
+      await queryRunner.manager.clear(CollectionLog);
+      this.logger.log(`Cleared ${counts.collectionLogsCount} collection logs`);
+
+      // 3. Exclusions (references rule groups)
+      await queryRunner.manager.clear(Exclusion);
+      this.logger.log(`Cleared ${counts.exclusionsCount} exclusions`);
+
+      // If NOT migrating rules, also clear rules and rule groups
+      if (!migrateRules) {
+        // 4. Rule groups (references collections via OneToOne) - cascades to rules
+        await queryRunner.manager.clear(RuleGroup);
+        this.logger.log(`Cleared rule groups and rules`);
+
+        // 5. Collections - only clear if not migrating
+        await queryRunner.manager.clear(Collection);
+        this.logger.log(`Cleared ${counts.collectionsCount} collections`);
+      } else {
+        // When migrating rules, preserve collections but reset media server references
+        // 1. Reset libraryId on rule groups (will need to be re-assigned by user)
+        // 2. Keep collectionId linked so the collection metadata is preserved
+        await queryRunner.manager
+          .createQueryBuilder()
+          .update(RuleGroup)
+          .set({
+            libraryId: '', // Mark as needing library assignment
+          })
+          .execute();
+
+        // 3. Reset media server ID on collections (the Plex/Jellyfin collection will be recreated)
+        // Also reset libraryId since library IDs differ between servers
+        await queryRunner.manager
+          .createQueryBuilder()
+          .update(Collection)
+          .set({
+            mediaServerId: null,
+            mediaServerType: targetServerType,
+            libraryId: '', // Will be updated when user assigns library
+          })
+          .execute();
+
+        this.logger.log(
+          `Preserved ${counts.collectionsCount} collections, reset media server references`,
+        );
+      }
+
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 
