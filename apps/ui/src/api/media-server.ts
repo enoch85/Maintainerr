@@ -146,9 +146,9 @@ export const useMediaServerLibraries = (
 type UseMediaServerStatusQueryKey = ReturnType<typeof mediaServerKeys.status>
 type UseMediaServerStatusOptions = Omit<
   UseQueryOptions<
-    MediaServerStatus | undefined,
+    MediaServerStatus | null,
     Error,
-    MediaServerStatus | undefined,
+    MediaServerStatus | null,
     UseMediaServerStatusQueryKey
   >,
   'queryKey' | 'queryFn'
@@ -159,14 +159,15 @@ type UseMediaServerStatusOptions = Omit<
  */
 export const useMediaServerStatus = (options?: UseMediaServerStatusOptions) => {
   return useQuery<
-    MediaServerStatus | undefined,
+    MediaServerStatus | null,
     Error,
-    MediaServerStatus | undefined,
+    MediaServerStatus | null,
     UseMediaServerStatusQueryKey
   >({
     queryKey: mediaServerKeys.status(),
     queryFn: async () => {
-      return await GetApiHandler<MediaServerStatus | undefined>('/media-server')
+      const result = await GetApiHandler<MediaServerStatus | undefined>('/media-server')
+      return result ?? null
     },
     staleTime: 30000, // 30 seconds
     ...options,
@@ -241,9 +242,9 @@ type UseMediaServerMetadataQueryKey = ReturnType<
 >
 type UseMediaServerMetadataOptions = Omit<
   UseQueryOptions<
-    MediaItem | undefined,
+    MediaItem | null,
     Error,
-    MediaItem | undefined,
+    MediaItem | null,
     UseMediaServerMetadataQueryKey
   >,
   'queryKey' | 'queryFn'
@@ -257,16 +258,17 @@ export const useMediaServerMetadata = (
   options?: UseMediaServerMetadataOptions,
 ) => {
   return useQuery<
-    MediaItem | undefined,
+    MediaItem | null,
     Error,
-    MediaItem | undefined,
+    MediaItem | null,
     UseMediaServerMetadataQueryKey
   >({
     queryKey: mediaServerKeys.metadata(itemId),
     queryFn: async () => {
-      return await GetApiHandler<MediaItem | undefined>(
+      const result = await GetApiHandler<MediaItem | undefined>(
         `/media-server/meta/${itemId}`,
       )
+      return result ?? null
     },
     staleTime: 60000, // 1 minute
     enabled: !!itemId,
