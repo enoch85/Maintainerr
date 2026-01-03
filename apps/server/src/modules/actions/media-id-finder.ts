@@ -18,7 +18,7 @@ export class MediaIdFinder {
     let tvdbid = undefined;
     if (!tmdbId && mediaServerId) {
       tmdbId = (
-        await this.tmdbIdHelper.getTmdbIdFromPlexRatingKey(
+        await this.tmdbIdHelper.getTmdbIdFromMediaServerId(
           mediaServerId.toString(),
         )
       )?.id;

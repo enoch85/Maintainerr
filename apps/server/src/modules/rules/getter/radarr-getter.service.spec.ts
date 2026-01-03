@@ -44,7 +44,7 @@ describe('RadarrGetterService', () => {
       collectionMedia = createCollectionMedia('movie');
       collectionMedia.collection.radarrSettingsId = 1;
       mediaItem = createMediaItem({ type: 'movie' });
-      tmdbIdService.getTmdbIdFromPlexRatingKey.mockResolvedValue({
+      tmdbIdService.getTmdbIdFromMediaServerId.mockResolvedValue({
         type: 'movie',
         id: 1,
       });
@@ -117,7 +117,7 @@ describe('RadarrGetterService', () => {
       collectionMedia = createCollectionMedia('movie');
       collectionMedia.collection.radarrSettingsId = 1;
       mediaItem = createMediaItem({ type: 'movie' });
-      tmdbIdService.getTmdbIdFromPlexRatingKey.mockResolvedValue({
+      tmdbIdService.getTmdbIdFromMediaServerId.mockResolvedValue({
         type: 'movie',
         id: 1,
       });
@@ -174,7 +174,7 @@ describe('RadarrGetterService', () => {
       collectionMedia = createCollectionMedia('movie');
       collectionMedia.collection.radarrSettingsId = 1;
       mediaItem = createMediaItem({ type: 'movie' });
-      tmdbIdService.getTmdbIdFromPlexRatingKey.mockResolvedValue({
+      tmdbIdService.getTmdbIdFromMediaServerId.mockResolvedValue({
         type: 'movie',
         id: 1,
       });

@@ -51,13 +51,13 @@ describe('RadarrActionHandler', () => {
       tmdbId: undefined,
     });
 
-    tmdbIdService.getTmdbIdFromPlexRatingKey.mockResolvedValue(undefined);
+    tmdbIdService.getTmdbIdFromMediaServerId.mockResolvedValue(undefined);
 
     const mockedRadarrApi = mockRadarrApi();
 
     await radarrActionHandler.handleAction(collection, collectionMedia);
 
-    expect(tmdbIdService.getTmdbIdFromPlexRatingKey).toHaveBeenCalled();
+    expect(tmdbIdService.getTmdbIdFromMediaServerId).toHaveBeenCalled();
     validateNoRadarrActionsTaken(mockedRadarrApi);
   });
 

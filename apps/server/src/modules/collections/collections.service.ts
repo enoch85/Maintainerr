@@ -1012,7 +1012,7 @@ export class CollectionsService {
       const mediaServer = await this.getMediaServer();
       this.infoLogger(`Adding media with id ${childId} to collection..`);
 
-      const tmdb = await this.tmdbIdHelper.getTmdbIdFromPlexRatingKey(childId);
+      const tmdb = await this.tmdbIdHelper.getTmdbIdFromMediaServerId(childId);
 
       let tmdbMedia: TmdbTvDetails | TmdbMovieDetails;
       switch (tmdb.type) {

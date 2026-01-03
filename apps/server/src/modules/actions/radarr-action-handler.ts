@@ -30,7 +30,7 @@ export class RadarrActionHandler {
     const tmdbid = media.tmdbId
       ? media.tmdbId
       : (
-          await this.tmdbIdService.getTmdbIdFromPlexRatingKey(
+          await this.tmdbIdService.getTmdbIdFromMediaServerId(
             media.mediaServerId,
           )
         )?.id;

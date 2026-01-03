@@ -44,7 +44,7 @@ export class SonarrActionHandler {
         media.tmdbId = media.tmdbId
           ? media.tmdbId
           : (
-              await this.tmdbIdService.getTmdbIdFromPlexRatingKey(
+              await this.tmdbIdService.getTmdbIdFromMediaServerId(
                 mediaData?.parentId,
               )
             )?.id;
@@ -58,7 +58,7 @@ export class SonarrActionHandler {
         media.tmdbId = media.tmdbId
           ? media.tmdbId
           : (
-              await this.tmdbIdService.getTmdbIdFromPlexRatingKey(
+              await this.tmdbIdService.getTmdbIdFromMediaServerId(
                 mediaData?.grandparentId,
               )
             )?.id;
@@ -71,7 +71,7 @@ export class SonarrActionHandler {
         media.tmdbId = media.tmdbId
           ? media.tmdbId
           : (
-              await this.tmdbIdService.getTmdbIdFromPlexRatingKey(
+              await this.tmdbIdService.getTmdbIdFromMediaServerId(
                 media.mediaServerId,
               )
             )?.id;

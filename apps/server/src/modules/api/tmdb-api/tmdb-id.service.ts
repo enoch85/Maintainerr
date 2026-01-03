@@ -14,12 +14,12 @@ export class TmdbIdService {
     logger.setContext(TmdbIdService.name);
   }
 
-  async getTmdbIdFromPlexRatingKey(
-    ratingKey: string,
+  async getTmdbIdFromMediaServerId(
+    mediaServerId: string,
   ): Promise<{ type: 'movie' | 'tv'; id: number | undefined }> {
     try {
       const mediaServer = await this.mediaServerFactory.getService();
-      let mediaItem = await mediaServer.getMetadata(ratingKey);
+      let mediaItem = await mediaServer.getMetadata(mediaServerId);
       if (mediaItem) {
         // fetch show in case of season / episode
         mediaItem = mediaItem.grandparentId
@@ -31,7 +31,7 @@ export class TmdbIdService {
         return this.getTmdbIdFromMediaItem(mediaItem);
       } else {
         this.logger.warn(
-          `Failed to fetch metadata of media server item : ${ratingKey}`,
+          `Failed to fetch metadata of media server item : ${mediaServerId}`,
         );
       }
     } catch (e) {
