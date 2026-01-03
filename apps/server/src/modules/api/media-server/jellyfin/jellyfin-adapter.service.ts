@@ -568,7 +568,6 @@ export class JellyfinAdapterService implements IMediaServerService {
                 userData.LastPlayedDate
                   ? new Date(userData.LastPlayedDate)
                   : undefined,
-                userData.PlayCount || 0,
               ),
             );
           }
@@ -920,8 +919,12 @@ export class JellyfinAdapterService implements IMediaServerService {
   }
 
   async updateCollectionVisibility(
-    _settings: CollectionVisibilitySettings,
+    settings: CollectionVisibilitySettings,
   ): Promise<void> {
+    this.logger.warn(
+      `Attempted to update collection visibility for collection ${settings.collectionId} in library ${settings.libraryId}, ` +
+        'but Jellyfin does not support hub/recommendation visibility features.',
+    );
     throw new Error(
       'Collection visibility settings are not supported on Jellyfin. ' +
         'Jellyfin does not have hub/recommendation visibility features.',
@@ -937,7 +940,10 @@ export class JellyfinAdapterService implements IMediaServerService {
     if (!this.api) return [];
 
     try {
+      // Jellyfin playlists are not library-specific, but we filter by parentId
+      // to maintain consistency with the interface contract
       const response = await getItemsApi(this.api).getItems({
+        parentId: libraryId,
         includeItemTypes: [BaseItemKind.Playlist],
         recursive: true,
         fields: [ItemFields.Overview, ItemFields.DateCreated],
@@ -945,7 +951,7 @@ export class JellyfinAdapterService implements IMediaServerService {
 
       return (response.data.Items || []).map(JellyfinMapper.toMediaPlaylist);
     } catch (error) {
-      this.logger.error('Failed to get Jellyfin playlists', error);
+      this.logger.error(`Failed to get Jellyfin playlists for library ${libraryId}`, error);
       return [];
     }
   }

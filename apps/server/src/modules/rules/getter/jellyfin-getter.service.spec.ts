@@ -8,7 +8,6 @@ import { Mocked, TestBed } from '@suites/unit';
 import { createRulesDto } from '../../../../test/utils/data';
 
 import { JellyfinAdapterService } from '../../api/media-server/jellyfin/jellyfin-adapter.service';
-import { MaintainerrLogger } from '../../logging/logs.service';
 import { JellyfinGetterService } from './jellyfin-getter.service';
 
 // Helper to create mock MediaItem
@@ -63,7 +62,6 @@ const createWatchRecord = (
 describe('JellyfinGetterService', () => {
   let jellyfinGetterService: JellyfinGetterService;
   let jellyfinAdapter: Mocked<JellyfinAdapterService>;
-  let logger: Mocked<MaintainerrLogger>;
 
   beforeEach(async () => {
     const { unit, unitRef } = await TestBed.solitary(
@@ -72,7 +70,6 @@ describe('JellyfinGetterService', () => {
 
     jellyfinGetterService = unit;
     jellyfinAdapter = unitRef.get(JellyfinAdapterService);
-    logger = unitRef.get(MaintainerrLogger);
 
     // Default: Jellyfin is set up
     jellyfinAdapter.isSetup.mockReturnValue(true);

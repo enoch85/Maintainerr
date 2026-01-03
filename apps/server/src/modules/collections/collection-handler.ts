@@ -1,4 +1,3 @@
-import { MediaItemType } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import { RadarrActionHandler } from '../actions/radarr-action-handler';
 import { SonarrActionHandler } from '../actions/sonarr-action-handler';

@@ -374,7 +374,6 @@ describe('JellyfinMapper', () => {
         'user123',
         'item456',
         new Date('2021-01-01T00:00:00.000Z'),
-        5,
       );
 
       expect(result.userId).toBe('user123');
@@ -389,7 +388,6 @@ describe('JellyfinMapper', () => {
         'user123',
         'item456',
         undefined,
-        1,
       );
       const after = new Date();
 

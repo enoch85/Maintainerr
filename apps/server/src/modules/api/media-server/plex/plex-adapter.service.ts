@@ -282,8 +282,10 @@ export class PlexAdapterService implements IMediaServerService {
   async getWatchlistForUser(userId: string): Promise<string[]> {
     // PlexApiService.getWatchlistIdsForUser requires both userId and username
     // but returns PlexCommunityWatchList[] with id, key, title, type
-    // For now, we can't call this without username
-    // This method will need enhancement in the future
+    // For now, we can't call this without username - log for debugging
+    this.logger.debug(
+      `getWatchlistForUser called for user ${userId}, but this method requires username which is not available`,
+    );
     return [];
   }
 

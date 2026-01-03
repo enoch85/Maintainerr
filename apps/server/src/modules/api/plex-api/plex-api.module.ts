@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { SettingsModule } from '../../../modules/settings/settings.module';
 import { PlexApiService } from './plex-api.service';
 
@@ -9,7 +9,7 @@ import { PlexApiService } from './plex-api.service';
  * HTTP endpoints are handled by MediaServerController in MediaServerModule.
  */
 @Module({
-  imports: [SettingsModule],
+  imports: [forwardRef(() => SettingsModule)],
   providers: [PlexApiService],
   exports: [PlexApiService],
 })

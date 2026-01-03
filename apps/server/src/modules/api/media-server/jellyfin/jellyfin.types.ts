@@ -10,11 +10,11 @@ import type {
 } from '@jellyfin/sdk/lib/generated-client/models';
 
 /**
- * Extended BaseItemDto with additional computed fields used by Maintainerr
+ * Extended BaseItemDto with additional computed fields used by Maintainerr.
+ * Currently inherits all properties from BaseItemDto without additions.
  */
-export interface JellyfinMediaItem extends BaseItemDto {
-  // Original properties are inherited
-}
+ 
+export type JellyfinMediaItem = BaseItemDto;
 
 /**
  * User item data with additional context
@@ -25,11 +25,11 @@ export interface JellyfinUserItemData extends UserItemDataDto {
 }
 
 /**
- * Jellyfin user representation with Maintainerr context
+ * Jellyfin user representation with Maintainerr context.
+ * Currently inherits all properties from UserDto without additions.
  */
-export interface JellyfinUser extends UserDto {
-  // Original properties are inherited
-}
+ 
+export type JellyfinUser = UserDto;
 
 /**
  * Library folder response structure

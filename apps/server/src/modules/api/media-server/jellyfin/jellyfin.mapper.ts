@@ -225,7 +225,6 @@ export class JellyfinMapper {
     userId: string,
     itemId: string,
     lastPlayedDate?: Date,
-    playCount?: number,
   ): WatchRecord {
     return {
       userId,
