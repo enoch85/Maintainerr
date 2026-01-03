@@ -42,7 +42,6 @@ export class MediaServerController {
 
   constructor(private readonly mediaServerFactory: MediaServerFactory) {}
 
-
   @Get()
   async getStatus(): Promise<MediaServerStatus | undefined> {
     const mediaServer = await this.mediaServerFactory.getService();
@@ -54,7 +53,6 @@ export class MediaServerController {
     const mediaServer = await this.mediaServerFactory.getService();
     return { type: mediaServer.getServerType() };
   }
-
 
   @Get('libraries')
   async getLibraries(): Promise<MediaLibrary[]> {
@@ -100,7 +98,6 @@ export class MediaServerController {
     return mediaServer.getRecentlyAdded(id, { limit });
   }
 
-
   @Get('users')
   async getUsers(): Promise<MediaUser[]> {
     const mediaServer = await this.mediaServerFactory.getService();
@@ -112,7 +109,6 @@ export class MediaServerController {
     const mediaServer = await this.mediaServerFactory.getService();
     return mediaServer.getUser(id);
   }
-
 
   @Get('meta/:id')
   async getMetadata(@Param('id') id: string): Promise<MediaItem | undefined> {
@@ -132,13 +128,11 @@ export class MediaServerController {
     return mediaServer.getWatchHistory(id);
   }
 
-
   @Get('search/:query')
   async searchContent(@Param('query') query: string): Promise<MediaItem[]> {
     const mediaServer = await this.mediaServerFactory.getService();
     return mediaServer.searchContent(query);
   }
-
 
   @Get('library/:id/collections')
   async getCollections(@Param('id') id: string): Promise<MediaCollection[]> {

@@ -183,9 +183,7 @@ describe('JellyfinService', () => {
     });
 
     it('should NOT support WATCHLIST feature', () => {
-      expect(service.supportsFeature(MediaServerFeature.WATCHLIST)).toBe(
-        false,
-      );
+      expect(service.supportsFeature(MediaServerFeature.WATCHLIST)).toBe(false);
     });
 
     it('should NOT support CENTRAL_WATCH_HISTORY feature', () => {

@@ -1,4 +1,8 @@
-import { MediaItem, MediaItemType, RuleValueType } from '@maintainerr/contracts';
+import {
+  MediaItem,
+  MediaItemType,
+  RuleValueType,
+} from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import { Application } from '../constants/rules.constants';
 import { RulesDto } from '../dtos/rules.dto';

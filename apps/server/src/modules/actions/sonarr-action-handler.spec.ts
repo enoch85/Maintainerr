@@ -172,13 +172,7 @@ describe('SonarrActionHandler', () => {
     },
   ])(
     'should delete $title in Plex if not found in Sonarr and action is $action',
-    async ({
-      type,
-      action,
-    }: {
-      type: string;
-      action: ServarrAction;
-    }) => {
+    async ({ type, action }: { type: string; action: ServarrAction }) => {
       const collection = createCollection({
         arrAction: action,
         sonarrSettingsId: 1,
