@@ -5,6 +5,7 @@ import {
   SonarrEpisode,
   SonarrEpisodeFile,
   SonarrSeason,
+  SonarrSeries,
 } from '../../../modules/api/servarr-api/interfaces/sonarr.interface';
 import { ServarrService } from '../../../modules/api/servarr-api/servarr.service';
 import { TmdbIdService } from '../../../modules/api/tmdb-api/tmdb-id.service';
@@ -73,9 +74,9 @@ export class SonarrGetterService {
         );
       }
 
-      const tvdbId = await this.findTvdbidFromMediaItem(libItem);
+      const tvdbIds = await this.findAllTvdbIdsFromMediaItem(libItem);
 
-      if (!tvdbId) {
+      if (!tvdbIds || tvdbIds.length === 0) {
         this.logger.warn(
           `[TVDB] Failed to fetch tvdb id for '${libItem.title}' with id '${libItem.id}. As a result, no Sonarr query could be made.`,
         );
@@ -86,9 +87,18 @@ export class SonarrGetterService {
         ruleGroup.collection.sonarrSettingsId,
       );
 
-      const showResponse = await sonarrApiClient.getSeriesByTvdbId(tvdbId);
+      let showResponse: SonarrSeries | undefined;
+      for (const tvdbId of tvdbIds) {
+        showResponse = await sonarrApiClient.getSeriesByTvdbId(tvdbId);
+        if (showResponse?.id) {
+          break;
+        }
+      }
 
       if (!showResponse?.id) {
+        this.logger.warn(
+          `[TVDB] None of the TVDB IDs [${tvdbIds.join(', ')}] for '${libItem.title}' matched a series in Sonarr.`,
+        );
         return null;
       }
 
@@ -409,36 +419,43 @@ export class SonarrGetterService {
     return undefined;
   }
 
-  /**
-   * Finds the TVDB ID from a MediaItem.
-   * First checks the providerIds, then falls back to metadata lookup and TMDB.
-   */
-  public async findTvdbidFromMediaItem(libItem: MediaItem): Promise<number | undefined> {
-    // First check if providerIds already has tvdb
+  public async findAllTvdbIdsFromMediaItem(libItem: MediaItem): Promise<number[]> {
+    const tvdbIds: number[] = [];
+
     if (libItem.providerIds?.tvdb) {
-      return Number(libItem.providerIds.tvdb);
-    }
-
-    // Fall back to getting full metadata from media server
-    const mediaServer = await this.getMediaServer();
-    const metadata = await mediaServer.getMetadata(libItem.id);
-    if (metadata?.providerIds?.tvdb) {
-      return Number(metadata.providerIds.tvdb);
-    }
-
-    // Last resort: try to get TVDB via TMDB
-    const tmdbResp = await this.tmdbIdHelper.getTmdbIdFromMediaItem(libItem);
-    const tmdbId = tmdbResp?.id;
-    if (tmdbId) {
-      const tmdbShow = await this.tmdbApi.getTvShow({ tvId: tmdbId });
-      if (tmdbShow?.external_ids?.tvdb_id) {
-        return tmdbShow.external_ids.tvdb_id;
+      for (const tvdbId of libItem.providerIds.tvdb) {
+        const numId = Number(tvdbId);
+        if (numId && !tvdbIds.includes(numId)) {
+          tvdbIds.push(numId);
+        }
       }
     }
 
-    console.warn(
-      `Couldn't find tvdb id for '${libItem.title}', can not run Sonarr rules against this item`,
-    );
-    return undefined;
+    if (tvdbIds.length === 0) {
+      const mediaServer = await this.getMediaServer();
+      const metadata = await mediaServer.getMetadata(libItem.id);
+      if (metadata?.providerIds?.tvdb) {
+        for (const tvdbId of metadata.providerIds.tvdb) {
+          const numId = Number(tvdbId);
+          if (numId && !tvdbIds.includes(numId)) {
+            tvdbIds.push(numId);
+          }
+        }
+      }
+    }
+
+    // Last resort: try to get TVDB via TMDB
+    if (tvdbIds.length === 0) {
+      const tmdbResp = await this.tmdbIdHelper.getTmdbIdFromMediaItem(libItem);
+      const tmdbId = tmdbResp?.id;
+      if (tmdbId) {
+        const tmdbShow = await this.tmdbApi.getTvShow({ tvId: tmdbId });
+        if (tmdbShow?.external_ids?.tvdb_id) {
+          tvdbIds.push(tmdbShow.external_ids.tvdb_id);
+        }
+      }
+    }
+
+    return tvdbIds;
   }
 }

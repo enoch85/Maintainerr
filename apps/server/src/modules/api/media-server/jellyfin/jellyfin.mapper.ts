@@ -100,7 +100,11 @@ export class JellyfinMapper {
   static extractProviderIds(
     providerIds?: Record<string, string | null> | null,
   ): MediaProviderIds {
-    const result: MediaProviderIds = {};
+    const result: MediaProviderIds = {
+      imdb: [],
+      tmdb: [],
+      tvdb: [],
+    };
 
     if (!providerIds) {
       return result;
@@ -108,13 +112,13 @@ export class JellyfinMapper {
 
     // Jellyfin uses capitalized keys
     if (providerIds.Imdb) {
-      result.imdb = providerIds.Imdb;
+      result.imdb.push(providerIds.Imdb);
     }
     if (providerIds.Tmdb) {
-      result.tmdb = providerIds.Tmdb;
+      result.tmdb.push(providerIds.Tmdb);
     }
     if (providerIds.Tvdb) {
-      result.tvdb = providerIds.Tvdb;
+      result.tvdb.push(providerIds.Tvdb);
     }
 
     return result;

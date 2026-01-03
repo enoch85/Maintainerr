@@ -35,13 +35,12 @@ export class RadarrGetterService {
 
     try {
       const prop = this.plexProperties.find((el) => el.id === id);
-      const tmdb = await this.tmdbIdHelper.getTmdbIdFromPlexRatingKey(
-        libItem.id,
-      );
-
-      if (!tmdb || !tmdb.id) {
+      
+      const tmdbIds = libItem.providerIds?.tmdb || [];
+      
+      if (tmdbIds.length === 0) {
         this.logger.warn(
-          `[TMDb] Failed to fetch TMDb id for '${libItem.title}'`,
+          `[TMDb] No TMDb IDs found for '${libItem.title}'`,
         );
         return null;
       }
@@ -50,7 +49,24 @@ export class RadarrGetterService {
         ruleGroup.collection.radarrSettingsId,
       );
 
-      const movieResponse = await radarrApiClient.getMovieByTmdbId(tmdb.id);
+      let movieResponse;
+      for (const tmdbIdStr of tmdbIds) {
+        const tmdbId = Number(tmdbIdStr);
+        if (tmdbId) {
+          movieResponse = await radarrApiClient.getMovieByTmdbId(tmdbId);
+          if (movieResponse) {
+            break;
+          }
+        }
+      }
+
+      if (!movieResponse) {
+        this.logger.warn(
+          `[TMDb] None of the TMDB IDs [${tmdbIds.join(', ')}] for '${libItem.title}' matched a movie in Radarr.`,
+        );
+        return null;
+      }
+
       if (movieResponse) {
         switch (prop.name) {
           case 'addDate': {

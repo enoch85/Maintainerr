@@ -21,7 +21,7 @@ const createMediaItem = (overrides: Partial<MediaItem> = {}): MediaItem => ({
   type: 'movie' as MediaItemType,
   guid: 'jellyfin-guid-123',
   addedAt: new Date('2024-01-15'),
-  providerIds: { tmdb: '12345', imdb: 'tt1234567' },
+  providerIds: { tmdb: ['12345'], imdb: ['tt1234567'] },
   mediaSources: [
     {
       id: 'source-1',

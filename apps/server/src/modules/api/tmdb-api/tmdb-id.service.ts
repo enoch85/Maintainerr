@@ -50,37 +50,43 @@ export class TmdbIdService {
     try {
       let id: number = undefined;
 
-      // Use providerIds from the abstraction layer
       if (item.providerIds) {
-        if (item.providerIds.tmdb) {
-          id = +item.providerIds.tmdb;
+        for (const tmdbId of item.providerIds.tmdb || []) {
+          id = +tmdbId;
+          if (id) break;
         }
 
-        if (!id && item.providerIds.tvdb) {
-          const resp = await this.tmdbApi.getByExternalId({
-            externalId: +item.providerIds.tvdb,
-            type: 'tvdb',
-          });
+        if (!id) {
+          for (const tvdbId of item.providerIds.tvdb || []) {
+            const resp = await this.tmdbApi.getByExternalId({
+              externalId: +tvdbId,
+              type: 'tvdb',
+            });
 
-          if (resp) {
-            id =
-              resp.movie_results?.length > 0
-                ? resp.movie_results[0]?.id
-                : resp.tv_results[0]?.id;
+            if (resp) {
+              id =
+                resp.movie_results?.length > 0
+                  ? resp.movie_results[0]?.id
+                  : resp.tv_results[0]?.id;
+              if (id) break;
+            }
           }
         }
 
-        if (!id && item.providerIds.imdb) {
-          const resp = await this.tmdbApi.getByExternalId({
-            externalId: item.providerIds.imdb,
-            type: 'imdb',
-          });
+        if (!id) {
+          for (const imdbId of item.providerIds.imdb || []) {
+            const resp = await this.tmdbApi.getByExternalId({
+              externalId: imdbId,
+              type: 'imdb',
+            });
 
-          if (resp) {
-            id =
-              resp.movie_results?.length > 0
-                ? resp.movie_results[0]?.id
-                : resp.tv_results[0]?.id;
+            if (resp) {
+              id =
+                resp.movie_results?.length > 0
+                  ? resp.movie_results[0]?.id
+                  : resp.tv_results[0]?.id;
+              if (id) break;
+            }
           }
         }
       }

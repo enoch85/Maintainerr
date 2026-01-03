@@ -84,19 +84,19 @@ describe('JellyfinMapper', () => {
     it('should extract IMDB id correctly', () => {
       const providerIds = { Imdb: 'tt1234567' };
       const result = JellyfinMapper.extractProviderIds(providerIds);
-      expect(result.imdb).toBe('tt1234567');
+      expect(result.imdb).toEqual(['tt1234567']);
     });
 
     it('should extract TMDB id correctly', () => {
       const providerIds = { Tmdb: '12345' };
       const result = JellyfinMapper.extractProviderIds(providerIds);
-      expect(result.tmdb).toBe('12345');
+      expect(result.tmdb).toEqual(['12345']);
     });
 
     it('should extract TVDB id correctly', () => {
       const providerIds = { Tvdb: '67890' };
       const result = JellyfinMapper.extractProviderIds(providerIds);
-      expect(result.tvdb).toBe('67890');
+      expect(result.tvdb).toEqual(['67890']);
     });
 
     it('should extract multiple provider ids', () => {
@@ -106,24 +106,24 @@ describe('JellyfinMapper', () => {
         Tvdb: '67890',
       };
       const result = JellyfinMapper.extractProviderIds(providerIds);
-      expect(result.imdb).toBe('tt1234567');
-      expect(result.tmdb).toBe('12345');
-      expect(result.tvdb).toBe('67890');
+      expect(result.imdb).toEqual(['tt1234567']);
+      expect(result.tmdb).toEqual(['12345']);
+      expect(result.tvdb).toEqual(['67890']);
     });
 
     it('should handle undefined provider ids', () => {
       const result = JellyfinMapper.extractProviderIds(undefined);
-      expect(result).toEqual({});
+      expect(result).toEqual({ imdb: [], tmdb: [], tvdb: [] });
     });
 
     it('should handle null provider ids', () => {
       const result = JellyfinMapper.extractProviderIds(null);
-      expect(result).toEqual({});
+      expect(result).toEqual({ imdb: [], tmdb: [], tvdb: [] });
     });
 
     it('should handle empty provider ids', () => {
       const result = JellyfinMapper.extractProviderIds({});
-      expect(result).toEqual({});
+      expect(result).toEqual({ imdb: [], tmdb: [], tvdb: [] });
     });
   });
 
@@ -215,8 +215,8 @@ describe('JellyfinMapper', () => {
     it('should extract provider IDs correctly', () => {
       const result = JellyfinMapper.toMediaItem(baseJellyfinItem);
 
-      expect(result.providerIds.imdb).toBe('tt1234567');
-      expect(result.providerIds.tmdb).toBe('12345');
+      expect(result.providerIds.imdb).toEqual(['tt1234567']);
+      expect(result.providerIds.tmdb).toEqual(['12345']);
     });
 
     it('should convert duration from ticks to milliseconds', () => {
@@ -288,7 +288,7 @@ describe('JellyfinMapper', () => {
       expect(result.id).toBe('minimal123');
       expect(result.title).toBe('Minimal Movie');
       expect(result.parentId).toBeUndefined();
-      expect(result.providerIds).toEqual({});
+      expect(result.providerIds).toEqual({ imdb: [], tmdb: [], tvdb: [] });
       expect(result.mediaSources).toEqual([]);
       expect(result.genres).toEqual([]);
     });

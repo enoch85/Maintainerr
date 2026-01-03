@@ -114,7 +114,11 @@ export class PlexMapper {
   static extractProviderIds(
     guids: { id: string }[] | undefined,
   ): MediaProviderIds {
-    const providerIds: MediaProviderIds = {};
+    const providerIds: MediaProviderIds = {
+      imdb: [],
+      tmdb: [],
+      tvdb: [],
+    };
 
     if (!guids || !Array.isArray(guids)) {
       return providerIds;
@@ -130,13 +134,13 @@ export class PlexMapper {
 
       switch (provider.toLowerCase()) {
         case 'imdb':
-          providerIds.imdb = id;
+          providerIds.imdb.push(id);
           break;
         case 'tmdb':
-          providerIds.tmdb = id;
+          providerIds.tmdb.push(id);
           break;
         case 'tvdb':
-          providerIds.tvdb = id;
+          providerIds.tvdb.push(id);
           break;
         // Ignore plex:// and other unknown providers
       }

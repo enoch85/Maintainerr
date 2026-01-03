@@ -79,19 +79,19 @@ describe('PlexMapper', () => {
     it('should extract IMDB id from guid', () => {
       const guids = [{ id: 'imdb://tt1234567' }];
       const result = PlexMapper.extractProviderIds(guids);
-      expect(result.imdb).toBe('tt1234567');
+      expect(result.imdb).toEqual(['tt1234567']);
     });
 
     it('should extract TMDB id from guid', () => {
       const guids = [{ id: 'tmdb://12345' }];
       const result = PlexMapper.extractProviderIds(guids);
-      expect(result.tmdb).toBe('12345');
+      expect(result.tmdb).toEqual(['12345']);
     });
 
     it('should extract TVDB id from guid', () => {
       const guids = [{ id: 'tvdb://67890' }];
       const result = PlexMapper.extractProviderIds(guids);
-      expect(result.tvdb).toBe('67890');
+      expect(result.tvdb).toEqual(['67890']);
     });
 
     it('should extract multiple provider ids', () => {
@@ -101,33 +101,33 @@ describe('PlexMapper', () => {
         { id: 'tvdb://67890' },
       ];
       const result = PlexMapper.extractProviderIds(guids);
-      expect(result.imdb).toBe('tt1234567');
-      expect(result.tmdb).toBe('12345');
-      expect(result.tvdb).toBe('67890');
+      expect(result.imdb).toEqual(['tt1234567']);
+      expect(result.tmdb).toEqual(['12345']);
+      expect(result.tvdb).toEqual(['67890']);
     });
 
     it('should ignore plex:// guids', () => {
       const guids = [{ id: 'plex://movie/5d776830880197001ec7f3eb' }];
       const result = PlexMapper.extractProviderIds(guids);
-      expect(result.imdb).toBeUndefined();
-      expect(result.tmdb).toBeUndefined();
-      expect(result.tvdb).toBeUndefined();
+      expect(result.imdb).toEqual([]);
+      expect(result.tmdb).toEqual([]);
+      expect(result.tvdb).toEqual([]);
     });
 
     it('should handle undefined guids', () => {
       const result = PlexMapper.extractProviderIds(undefined);
-      expect(result).toEqual({});
+      expect(result).toEqual({ imdb: [], tmdb: [], tvdb: [] });
     });
 
     it('should handle empty array', () => {
       const result = PlexMapper.extractProviderIds([]);
-      expect(result).toEqual({});
+      expect(result).toEqual({ imdb: [], tmdb: [], tvdb: [] });
     });
 
     it('should handle malformed guids', () => {
       const guids = [{ id: 'malformed-id' }, { id: '' }];
       const result = PlexMapper.extractProviderIds(guids);
-      expect(result).toEqual({});
+      expect(result).toEqual({ imdb: [], tmdb: [], tvdb: [] });
     });
   });
 
@@ -216,8 +216,8 @@ describe('PlexMapper', () => {
     it('should extract provider IDs correctly', () => {
       const result = PlexMapper.toMediaItem(basePlexItem);
 
-      expect(result.providerIds.imdb).toBe('tt1234567');
-      expect(result.providerIds.tmdb).toBe('12345');
+      expect(result.providerIds.imdb).toEqual(['tt1234567']);
+      expect(result.providerIds.tmdb).toEqual(['12345']);
     });
 
     it('should convert media sources correctly', () => {

@@ -147,9 +147,9 @@ export const createMediaItem = (
     addedAt: faker.date.past(),
     updatedAt: faker.date.past(),
     providerIds: {
-      tvdb: faker.number.int().toString(),
-      tmdb: faker.number.int().toString(),
-      imdb: `tt${faker.number.int()}`,
+      tvdb: [faker.number.int().toString()],
+      tmdb: [faker.number.int().toString()],
+      imdb: [`tt${faker.number.int()}`],
     },
     mediaSources: [],
     library: {

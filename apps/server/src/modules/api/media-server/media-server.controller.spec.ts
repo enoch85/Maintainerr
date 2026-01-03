@@ -47,7 +47,7 @@ describe('MediaServerController', () => {
     year: 2023,
     addedAt: new Date(),
     guid: 'plex://movie/12345',
-    providerIds: { tmdb: '12345' },
+    providerIds: { tmdb: ['12345'] },
     mediaSources: [],
     library: { id: '1', title: 'Movies' },
   };

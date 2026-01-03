@@ -4,9 +4,9 @@ import { MediaItemType } from './enums'
  * Provider IDs for external databases (IMDB, TMDB, TVDB)
  */
 export interface MediaProviderIds {
-  imdb?: string
-  tmdb?: string
-  tvdb?: string
+  imdb?: string[]
+  tmdb?: string[]
+  tvdb?: string[]
 }
 
 /**
