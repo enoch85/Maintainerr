@@ -1,9 +1,9 @@
 import {
   BasicResponseDto,
-  MediaServerType,
   JellyfinSettingDto,
   JellyseerrSettingDto,
   MediaServerSwitchPreviewDto,
+  MediaServerType,
   OverseerrSettingDto,
   SwitchMediaServerRequestDto,
   SwitchMediaServerResponseDto,
