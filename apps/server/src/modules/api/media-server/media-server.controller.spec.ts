@@ -1,5 +1,4 @@
 import { BadRequestException } from '@nestjs/common';
-import { MediaServerType } from '@maintainerr/contracts';
 import { MediaServerController } from './media-server.controller';
 import { MediaServerFactory } from './media-server.factory';
 import { IMediaServerService } from './media-server.interface';
