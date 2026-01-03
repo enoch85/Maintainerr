@@ -1,11 +1,11 @@
-import { Mocked, TestBed } from '@suites/unit';
 import {
   MediaItem,
   MediaItemType,
   MediaUser,
   WatchRecord,
 } from '@maintainerr/contracts';
-import { createCollection, createRulesDto } from '../../../../test/utils/data';
+import { Mocked, TestBed } from '@suites/unit';
+import { createRulesDto } from '../../../../test/utils/data';
 
 import { JellyfinAdapterService } from '../../api/media-server/jellyfin/jellyfin-adapter.service';
 import { MaintainerrLogger } from '../../logging/logs.service';
