@@ -282,7 +282,6 @@ export interface RuleMigrationResult {
 
 export interface SwitchMediaServerRequest {
   targetServerType: MediaServerType
-  confirmDataClear: boolean
   migrateRules?: boolean
 }
 

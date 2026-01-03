@@ -64,7 +64,6 @@ const MediaServerSelector = ({
       try {
         await switchServer({
           targetServerType: type,
-          confirmDataClear: true,
         })
         toast.success(
           `Selected ${type === 'plex' ? 'Plex' : 'Jellyfin'} as your media server`,
@@ -104,7 +103,6 @@ const MediaServerSelector = ({
     try {
       const result = await switchServer({
         targetServerType: pendingType,
-        confirmDataClear: true,
         migrateRules: migrateRules,
       })
 

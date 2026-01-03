@@ -103,17 +103,7 @@ export class MediaServerSwitchService {
   async executeSwitch(
     request: SwitchMediaServerRequestDto,
   ): Promise<SwitchMediaServerResponseDto> {
-    const { targetServerType, confirmDataClear, migrateRules } = request;
-
-    // Require explicit confirmation
-    if (!confirmDataClear) {
-      return {
-        status: 'NOK',
-        code: 0,
-        message:
-          'Data clear confirmation required. Set confirmDataClear to true to proceed.',
-      };
-    }
+    const { targetServerType, migrateRules } = request;
 
     // Get current server type - don't default to PLEX on fresh install
     const currentServerType = this.settingsService.getMediaServerType();

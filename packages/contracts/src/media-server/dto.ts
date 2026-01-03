@@ -10,11 +10,6 @@ export interface SwitchMediaServerRequestDto {
   targetServerType: MediaServerType
 
   /**
-   * Confirmation that user understands data will be cleared
-   */
-  confirmDataClear: boolean
-
-  /**
    * Whether to attempt migrating rules to the new media server.
    * Rules that use properties only available in the source server will be skipped.
    * Default: false (rules are cleared like other data)
