@@ -1,8 +1,8 @@
 import { MediaItem } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
-import { MediaServerFactory } from '../media-server/media-server.factory';
 import { TmdbApiService } from '../../../modules/api/tmdb-api/tmdb.service';
 import { MaintainerrLogger } from '../../logging/logs.service';
+import { MediaServerFactory } from '../media-server/media-server.factory';
 
 @Injectable()
 export class TmdbIdService {
