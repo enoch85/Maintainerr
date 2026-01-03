@@ -61,11 +61,11 @@ import type { JellyfinWatchedCacheEntry } from './jellyfin.types';
  * - Uses ticks for duration (1 tick = 100 nanoseconds)
  */
 @Injectable()
-export class JellyfinService implements IMediaServerService {
+export class JellyfinAdapterService implements IMediaServerService {
   private jellyfin: Jellyfin | undefined;
   private api: Api | undefined;
   private initialized = false;
-  private readonly logger = new Logger(JellyfinService.name);
+  private readonly logger = new Logger(JellyfinAdapterService.name);
   private readonly cache: Cache;
 
   constructor(

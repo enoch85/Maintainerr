@@ -7,7 +7,7 @@ import {
 } from '@maintainerr/contracts';
 import { createCollection, createRulesDto } from '../../../../test/utils/data';
 
-import { JellyfinService } from '../../api/media-server/jellyfin/jellyfin-adapter.service';
+import { JellyfinAdapterService } from '../../api/media-server/jellyfin/jellyfin-adapter.service';
 import { MaintainerrLogger } from '../../logging/logs.service';
 import { JellyfinGetterService } from './jellyfin-getter.service';
 
@@ -62,7 +62,7 @@ const createWatchRecord = (
 
 describe('JellyfinGetterService', () => {
   let jellyfinGetterService: JellyfinGetterService;
-  let jellyfinService: Mocked<JellyfinService>;
+  let jellyfinAdapter: Mocked<JellyfinAdapterService>;
   let logger: Mocked<MaintainerrLogger>;
 
   beforeEach(async () => {
@@ -71,11 +71,11 @@ describe('JellyfinGetterService', () => {
     ).compile();
 
     jellyfinGetterService = unit;
-    jellyfinService = unitRef.get(JellyfinService);
+    jellyfinAdapter = unitRef.get(JellyfinAdapterService);
     logger = unitRef.get(MaintainerrLogger);
 
     // Default: Jellyfin is set up
-    jellyfinService.isSetup.mockReturnValue(true);
+    jellyfinAdapter.isSetup.mockReturnValue(true);
   });
 
   afterEach(() => {
@@ -84,7 +84,7 @@ describe('JellyfinGetterService', () => {
 
   describe('when Jellyfin is not configured', () => {
     it('should return null when Jellyfin service is not set up', async () => {
-      jellyfinService.isSetup.mockReturnValue(false);
+      jellyfinAdapter.isSetup.mockReturnValue(false);
       const mediaItem = createMediaItem({ type: 'movie' });
 
       const response = await jellyfinGetterService.get(
@@ -103,7 +103,7 @@ describe('JellyfinGetterService', () => {
       const mediaItem = createMediaItem({
         addedAt: new Date('2024-03-15'),
       });
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         0,
@@ -119,7 +119,7 @@ describe('JellyfinGetterService', () => {
       const mediaItem = createMediaItem({
         addedAt: undefined as unknown as Date,
       });
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         0,
@@ -140,9 +140,9 @@ describe('JellyfinGetterService', () => {
         createMediaUser({ id: 'user-2', name: 'Bob' }),
       ];
 
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
-      jellyfinService.getItemSeenBy.mockResolvedValue(['user-1', 'user-2']);
-      jellyfinService.getUsers.mockResolvedValue(users);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getItemSeenBy.mockResolvedValue(['user-1', 'user-2']);
+      jellyfinAdapter.getUsers.mockResolvedValue(users);
 
       const response = await jellyfinGetterService.get(
         1,
@@ -157,9 +157,9 @@ describe('JellyfinGetterService', () => {
     it('should return empty array when no one has watched', async () => {
       const mediaItem = createMediaItem();
 
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
-      jellyfinService.getItemSeenBy.mockResolvedValue([]);
-      jellyfinService.getUsers.mockResolvedValue([]);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getItemSeenBy.mockResolvedValue([]);
+      jellyfinAdapter.getUsers.mockResolvedValue([]);
 
       const response = await jellyfinGetterService.get(
         1,
@@ -177,7 +177,7 @@ describe('JellyfinGetterService', () => {
       const mediaItem = createMediaItem({
         originallyAvailableAt: new Date('2024-01-01'),
       });
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         2,
@@ -193,7 +193,7 @@ describe('JellyfinGetterService', () => {
   describe('rating_user (id: 3)', () => {
     it('should return user rating', async () => {
       const mediaItem = createMediaItem({ userRating: 8 });
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         3,
@@ -207,7 +207,7 @@ describe('JellyfinGetterService', () => {
 
     it('should return 0 when no user rating exists', async () => {
       const mediaItem = createMediaItem({ userRating: undefined });
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         3,
@@ -225,7 +225,7 @@ describe('JellyfinGetterService', () => {
       const mediaItem = createMediaItem({
         actors: [{ name: 'Actor One' }, { name: 'Actor Two' }],
       });
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         4,
@@ -239,7 +239,7 @@ describe('JellyfinGetterService', () => {
 
     it('should return null when no actors exist', async () => {
       const mediaItem = createMediaItem({ actors: undefined });
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         4,
@@ -261,8 +261,8 @@ describe('JellyfinGetterService', () => {
         createWatchRecord({ userId: 'user-1' }),
       ];
 
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
-      jellyfinService.getWatchHistory.mockResolvedValue(watchHistory);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getWatchHistory.mockResolvedValue(watchHistory);
 
       const response = await jellyfinGetterService.get(
         5,
@@ -284,8 +284,8 @@ describe('JellyfinGetterService', () => {
         createWatchRecord({ watchedAt: new Date('2024-03-15') }),
       ];
 
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
-      jellyfinService.getWatchHistory.mockResolvedValue(watchHistory);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getWatchHistory.mockResolvedValue(watchHistory);
 
       const response = await jellyfinGetterService.get(
         7,
@@ -300,8 +300,8 @@ describe('JellyfinGetterService', () => {
     it('should return null when no watch history', async () => {
       const mediaItem = createMediaItem();
 
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
-      jellyfinService.getWatchHistory.mockResolvedValue([]);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getWatchHistory.mockResolvedValue([]);
 
       const response = await jellyfinGetterService.get(
         7,
@@ -317,7 +317,7 @@ describe('JellyfinGetterService', () => {
   describe('fileVideoResolution (id: 8)', () => {
     it('should return video resolution from media sources', async () => {
       const mediaItem = createMediaItem();
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         8,
@@ -331,7 +331,7 @@ describe('JellyfinGetterService', () => {
 
     it('should return null when no media sources', async () => {
       const mediaItem = createMediaItem({ mediaSources: [] });
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         8,
@@ -347,7 +347,7 @@ describe('JellyfinGetterService', () => {
   describe('fileBitrate (id: 9)', () => {
     it('should return bitrate from media sources', async () => {
       const mediaItem = createMediaItem();
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         9,
@@ -363,7 +363,7 @@ describe('JellyfinGetterService', () => {
   describe('fileVideoCodec (id: 10)', () => {
     it('should return video codec from media sources', async () => {
       const mediaItem = createMediaItem();
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         10,
@@ -381,7 +381,7 @@ describe('JellyfinGetterService', () => {
       const mediaItem = createMediaItem({
         genres: [{ name: 'Action' }, { name: 'Comedy' }],
       });
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         11,
@@ -397,7 +397,7 @@ describe('JellyfinGetterService', () => {
   describe('labels (id: 24)', () => {
     it('should return tags as labels', async () => {
       const mediaItem = createMediaItem({ labels: ['tag1', 'tag2'] });
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         24,
@@ -415,7 +415,7 @@ describe('JellyfinGetterService', () => {
       const mediaItem = createMediaItem({
         ratings: [{ source: 'critic', value: 75, type: 'critic' }],
       });
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         22,
@@ -429,7 +429,7 @@ describe('JellyfinGetterService', () => {
 
     it('should return 0 when no critic rating', async () => {
       const mediaItem = createMediaItem({ ratings: [] });
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         22,
@@ -447,7 +447,7 @@ describe('JellyfinGetterService', () => {
       const mediaItem = createMediaItem({
         ratings: [{ source: 'audience', value: 8.5, type: 'audience' }],
       });
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         23,
@@ -463,7 +463,7 @@ describe('JellyfinGetterService', () => {
   describe('unsupported properties', () => {
     it('should return null for unknown property IDs', async () => {
       const mediaItem = createMediaItem();
-      jellyfinService.getMetadata.mockResolvedValue(mediaItem);
+      jellyfinAdapter.getMetadata.mockResolvedValue(mediaItem);
 
       const response = await jellyfinGetterService.get(
         999, // Unknown property ID
@@ -479,7 +479,7 @@ describe('JellyfinGetterService', () => {
   describe('error handling', () => {
     it('should return undefined when an error occurs', async () => {
       const mediaItem = createMediaItem({ type: 'movie' });
-      jellyfinService.getMetadata.mockRejectedValue(new Error('API Error'));
+      jellyfinAdapter.getMetadata.mockRejectedValue(new Error('API Error'));
 
       const response = await jellyfinGetterService.get(
         0,
@@ -493,7 +493,7 @@ describe('JellyfinGetterService', () => {
 
     it('should return null when metadata is not found', async () => {
       const mediaItem = createMediaItem({ type: 'movie' });
-      jellyfinService.getMetadata.mockResolvedValue(undefined);
+      jellyfinAdapter.getMetadata.mockResolvedValue(undefined);
 
       const response = await jellyfinGetterService.get(
         0,

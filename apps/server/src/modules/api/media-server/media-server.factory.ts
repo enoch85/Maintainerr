@@ -1,14 +1,8 @@
 import { MediaServerType } from '@maintainerr/contracts';
-import {
-  forwardRef,
-  Inject,
-  Injectable,
-  Logger,
-  Optional,
-} from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { Settings } from '../../settings/entities/settings.entities';
 import { SettingsService } from '../../settings/settings.service';
-import { JellyfinService } from './jellyfin/jellyfin-adapter.service';
+import { JellyfinAdapterService } from './jellyfin/jellyfin-adapter.service';
 import { IMediaServerService } from './media-server.interface';
 import { PlexAdapterService } from './plex/plex-adapter.service';
 
@@ -36,7 +30,7 @@ export class MediaServerFactory {
     @Inject(forwardRef(() => SettingsService))
     private readonly settingsService: SettingsService,
     private readonly plexAdapter: PlexAdapterService,
-    @Optional() private readonly jellyfinService?: JellyfinService,
+    private readonly jellyfinAdapter: JellyfinAdapterService,
   ) {}
 
   /**
@@ -78,13 +72,10 @@ export class MediaServerFactory {
   ): Promise<IMediaServerService> {
     switch (serverType) {
       case MediaServerType.JELLYFIN:
-        if (!this.jellyfinService) {
-          throw new Error('Jellyfin service not available');
+        if (!this.jellyfinAdapter.isSetup()) {
+          await this.jellyfinAdapter.initialize();
         }
-        if (!this.jellyfinService.isSetup()) {
-          await this.jellyfinService.initialize();
-        }
-        return this.jellyfinService;
+        return this.jellyfinAdapter;
 
       case MediaServerType.PLEX:
       default:

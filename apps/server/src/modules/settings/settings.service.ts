@@ -17,7 +17,7 @@ import { Repository } from 'typeorm';
 import { BasicResponseDto } from '../api/external-api/dto/basic-response.dto';
 import { InternalApiService } from '../api/internal-api/internal-api.service';
 import { JellyseerrApiService } from '../api/jellyseerr-api/jellyseerr-api.service';
-import { JellyfinService } from '../api/media-server/jellyfin/jellyfin-adapter.service';
+import { JellyfinAdapterService } from '../api/media-server/jellyfin/jellyfin-adapter.service';
 import { OverseerrApiService } from '../api/overseerr-api/overseerr-api.service';
 import { PlexApiService } from '../api/plex-api/plex-api.service';
 import { ServarrService } from '../api/servarr-api/servarr.service';
@@ -98,8 +98,8 @@ export class SettingsService implements SettingDto {
   constructor(
     @Inject(forwardRef(() => PlexApiService))
     private readonly plexApi: PlexApiService,
-    @Inject(forwardRef(() => JellyfinService))
-    private readonly jellyfinService: JellyfinService,
+    @Inject(forwardRef(() => JellyfinAdapterService))
+    private readonly jellyfinAdapter: JellyfinAdapterService,
     @Inject(forwardRef(() => ServarrService))
     private readonly servarr: ServarrService,
     @Inject(forwardRef(() => OverseerrApiService))
@@ -511,7 +511,7 @@ export class SettingsService implements SettingDto {
       });
 
       // Uninitialize service so it reinitializes with new credentials on next use
-      this.jellyfinService.uninitialize();
+      this.jellyfinAdapter.uninitialize();
 
       this.jellyfin_url = settings.jellyfin_url;
       this.jellyfin_api_key = settings.jellyfin_api_key;
@@ -596,7 +596,7 @@ export class SettingsService implements SettingDto {
       });
 
       // Uninitialize service to clear credentials
-      this.jellyfinService.uninitialize();
+      this.jellyfinAdapter.uninitialize();
 
       this.jellyfin_url = undefined;
       this.jellyfin_api_key = undefined;
@@ -1333,7 +1333,7 @@ export class SettingsService implements SettingDto {
       if (currentServerType === MediaServerType.PLEX) {
         this.plexApi.uninitialize();
       } else if (currentServerType === MediaServerType.JELLYFIN) {
-        this.jellyfinService.uninitialize();
+        this.jellyfinAdapter.uninitialize();
       }
 
       this.logger.log(

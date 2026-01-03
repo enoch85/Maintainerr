@@ -1,6 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { SettingsModule } from '../../../settings/settings.module';
-import { JellyfinService } from './jellyfin-adapter.service';
+import { JellyfinAdapterService } from './jellyfin-adapter.service';
 
 /**
  * Jellyfin Module
@@ -11,17 +11,17 @@ import { JellyfinService } from './jellyfin-adapter.service';
  * Usage:
  * ```typescript
  * // In a service or controller
- * constructor(private readonly jellyfinService: JellyfinService) {}
+ * constructor(private readonly jellyfinAdapter: JellyfinAdapterService) {}
  *
  * async someMethod() {
- *   await this.jellyfinService.initialize();
- *   const libraries = await this.jellyfinService.getLibraries();
+ *   await this.jellyfinAdapter.initialize();
+ *   const libraries = await this.jellyfinAdapter.getLibraries();
  * }
  * ```
  */
 @Module({
   imports: [forwardRef(() => SettingsModule)],
-  providers: [JellyfinService],
-  exports: [JellyfinService],
+  providers: [JellyfinAdapterService],
+  exports: [JellyfinAdapterService],
 })
 export class JellyfinModule {}

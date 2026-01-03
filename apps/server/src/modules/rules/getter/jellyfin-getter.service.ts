@@ -6,7 +6,7 @@ import {
 } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import cacheManager, { Cache } from '../../api/lib/cache';
-import { JellyfinService } from '../../api/media-server/jellyfin/jellyfin-adapter.service';
+import { JellyfinAdapterService } from '../../api/media-server/jellyfin/jellyfin-adapter.service';
 import { MaintainerrLogger } from '../../logging/logs.service';
 import {
   Application,
@@ -34,7 +34,7 @@ export class JellyfinGetterService {
   private readonly cache: Cache;
 
   constructor(
-    private readonly jellyfinService: JellyfinService,
+    private readonly jellyfinAdapter: JellyfinAdapterService,
     private readonly logger: MaintainerrLogger,
   ) {
     logger.setContext(JellyfinGetterService.name);
@@ -52,7 +52,7 @@ export class JellyfinGetterService {
     ruleGroup?: RulesDto,
   ): Promise<RuleValueType> {
     try {
-      if (!this.jellyfinService.isSetup()) {
+      if (!this.jellyfinAdapter.isSetup()) {
         this.logger.warn('Jellyfin service is not configured');
         return null;
       }
@@ -65,7 +65,7 @@ export class JellyfinGetterService {
 
       // Fetch full metadata from Jellyfin
       // Note: libItem.id maps to Jellyfin item ID
-      const metadata = await this.jellyfinService.getMetadata(libItem.id);
+      const metadata = await this.jellyfinAdapter.getMetadata(libItem.id);
 
       if (!metadata) {
         this.logger.warn(
@@ -78,14 +78,14 @@ export class JellyfinGetterService {
       let parentPromise: Promise<typeof metadata | undefined> | undefined;
       const getParent = async () => {
         if (!metadata?.parentId) return undefined;
-        parentPromise ??= this.jellyfinService.getMetadata(metadata.parentId);
+        parentPromise ??= this.jellyfinAdapter.getMetadata(metadata.parentId);
         return parentPromise;
       };
 
       let grandparentPromise: Promise<typeof metadata | undefined> | undefined;
       const getGrandparent = async () => {
         if (!metadata?.grandparentId) return undefined;
-        grandparentPromise ??= this.jellyfinService.getMetadata(
+        grandparentPromise ??= this.jellyfinAdapter.getMetadata(
           metadata.grandparentId,
         );
         return grandparentPromise;
@@ -98,10 +98,10 @@ export class JellyfinGetterService {
 
         case 'seenBy': {
           // Get users who have watched this item
-          const seenByUserIds = await this.jellyfinService.getItemSeenBy(
+          const seenByUserIds = await this.jellyfinAdapter.getItemSeenBy(
             metadata.id,
           );
-          const users = await this.jellyfinService.getUsers();
+          const users = await this.jellyfinAdapter.getUsers();
           const userMap = new Map(users.map((u) => [u.id, u.name]));
           return seenByUserIds.map((id) => userMap.get(id) || id);
         }
@@ -139,7 +139,7 @@ export class JellyfinGetterService {
 
         case 'viewCount': {
           // Get total view count from watch history
-          const watchHistory = await this.jellyfinService.getWatchHistory(
+          const watchHistory = await this.jellyfinAdapter.getWatchHistory(
             metadata.id,
           );
           return watchHistory.length;
@@ -147,7 +147,7 @@ export class JellyfinGetterService {
 
         case 'playCount': {
           // Get total play attempts across all users (includes unfinished views)
-          return await this.jellyfinService.getTotalPlayCount(metadata.id);
+          return await this.jellyfinAdapter.getTotalPlayCount(metadata.id);
         }
 
         case 'labels': {
@@ -220,7 +220,7 @@ export class JellyfinGetterService {
 
         case 'sw_playCount': {
           // For episodes, get total play attempts (includes unfinished views)
-          return await this.jellyfinService.getTotalPlayCount(metadata.id);
+          return await this.jellyfinAdapter.getTotalPlayCount(metadata.id);
         }
 
         case 'sw_watchers': {
@@ -344,7 +344,7 @@ export class JellyfinGetterService {
   }
 
   private async getLastViewedAt(itemId: string): Promise<Date | null> {
-    const watchHistory = await this.jellyfinService.getWatchHistory(itemId);
+    const watchHistory = await this.jellyfinAdapter.getWatchHistory(itemId);
     if (!watchHistory.length) return null;
 
     const dates = watchHistory
@@ -360,25 +360,25 @@ export class JellyfinGetterService {
     itemId: string,
     type: MediaItemType,
   ): Promise<string[]> {
-    const users = await this.jellyfinService.getUsers();
+    const users = await this.jellyfinAdapter.getUsers();
 
     // Get all episodes - handle both shows and seasons
     const allEpisodes: string[] = [];
     if (type === 'season') {
       // For seasons, get episodes directly (children of season)
-      const episodes = await this.jellyfinService.getChildrenMetadata(
+      const episodes = await this.jellyfinAdapter.getChildrenMetadata(
         itemId,
         'episode',
       );
       allEpisodes.push(...episodes.map((e) => e.id));
     } else {
       // For shows, get seasons first, then episodes from each season
-      const seasons = await this.jellyfinService.getChildrenMetadata(
+      const seasons = await this.jellyfinAdapter.getChildrenMetadata(
         itemId,
         'season',
       );
       for (const season of seasons) {
-        const episodes = await this.jellyfinService.getChildrenMetadata(
+        const episodes = await this.jellyfinAdapter.getChildrenMetadata(
           season.id,
           'episode',
         );
@@ -390,7 +390,7 @@ export class JellyfinGetterService {
 
     // Get watch status for each episode
     const episodeWatchers = await Promise.all(
-      allEpisodes.map((epId) => this.jellyfinService.getItemSeenBy(epId)),
+      allEpisodes.map((epId) => this.jellyfinAdapter.getItemSeenBy(epId)),
     );
 
     // Find users who appear in ALL episode watch lists
@@ -412,7 +412,7 @@ export class JellyfinGetterService {
 
     if (type === 'season') {
       // For seasons, get episodes directly
-      const episodes = await this.jellyfinService.getChildrenMetadata(
+      const episodes = await this.jellyfinAdapter.getChildrenMetadata(
         itemId,
         'episode',
       );
@@ -424,12 +424,12 @@ export class JellyfinGetterService {
       }
     } else {
       // For shows, iterate through seasons first
-      const seasons = await this.jellyfinService.getChildrenMetadata(
+      const seasons = await this.jellyfinAdapter.getChildrenMetadata(
         itemId,
         'season',
       );
       for (const season of seasons) {
-        const episodes = await this.jellyfinService.getChildrenMetadata(
+        const episodes = await this.jellyfinAdapter.getChildrenMetadata(
           season.id,
           'episode',
         );
@@ -450,7 +450,7 @@ export class JellyfinGetterService {
     type: MediaItemType,
   ): Promise<number> {
     if (type === 'season') {
-      const episodes = await this.jellyfinService.getChildrenMetadata(
+      const episodes = await this.jellyfinAdapter.getChildrenMetadata(
         itemId,
         'episode',
       );
@@ -458,13 +458,13 @@ export class JellyfinGetterService {
     }
 
     // For shows, sum up all episode counts
-    const seasons = await this.jellyfinService.getChildrenMetadata(
+    const seasons = await this.jellyfinAdapter.getChildrenMetadata(
       itemId,
       'season',
     );
     let count = 0;
     for (const season of seasons) {
-      const episodes = await this.jellyfinService.getChildrenMetadata(
+      const episodes = await this.jellyfinAdapter.getChildrenMetadata(
         season.id,
         'episode',
       );
@@ -480,16 +480,16 @@ export class JellyfinGetterService {
     const seasons =
       type === 'season'
         ? [{ id: itemId }]
-        : await this.jellyfinService.getChildrenMetadata(itemId, 'season');
+        : await this.jellyfinAdapter.getChildrenMetadata(itemId, 'season');
 
     let viewedCount = 0;
     for (const season of seasons) {
-      const episodes = await this.jellyfinService.getChildrenMetadata(
+      const episodes = await this.jellyfinAdapter.getChildrenMetadata(
         season.id,
         'episode',
       );
       for (const episode of episodes) {
-        const seenBy = await this.jellyfinService.getItemSeenBy(episode.id);
+        const seenBy = await this.jellyfinAdapter.getItemSeenBy(episode.id);
         if (seenBy.length > 0) viewedCount++;
       }
     }
@@ -503,12 +503,12 @@ export class JellyfinGetterService {
     const seasons =
       type === 'season'
         ? [{ id: itemId }]
-        : await this.jellyfinService.getChildrenMetadata(itemId, 'season');
+        : await this.jellyfinAdapter.getChildrenMetadata(itemId, 'season');
 
     let latestAddedAt: Date | null = null;
 
     for (const season of seasons) {
-      const episodes = await this.jellyfinService.getChildrenMetadata(
+      const episodes = await this.jellyfinAdapter.getChildrenMetadata(
         season.id,
         'episode',
       );
@@ -530,23 +530,23 @@ export class JellyfinGetterService {
     type: MediaItemType,
   ): Promise<number> {
     if (type === 'episode') {
-      const history = await this.jellyfinService.getWatchHistory(itemId);
+      const history = await this.jellyfinAdapter.getWatchHistory(itemId);
       return history.length;
     }
 
     const seasons =
       type === 'season'
         ? [{ id: itemId }]
-        : await this.jellyfinService.getChildrenMetadata(itemId, 'season');
+        : await this.jellyfinAdapter.getChildrenMetadata(itemId, 'season');
 
     let totalViews = 0;
     for (const season of seasons) {
-      const episodes = await this.jellyfinService.getChildrenMetadata(
+      const episodes = await this.jellyfinAdapter.getChildrenMetadata(
         season.id,
         'episode',
       );
       for (const episode of episodes) {
-        const history = await this.jellyfinService.getWatchHistory(episode.id);
+        const history = await this.jellyfinAdapter.getWatchHistory(episode.id);
         totalViews += history.length;
       }
     }
@@ -554,8 +554,8 @@ export class JellyfinGetterService {
   }
 
   private async getShowWatchers(itemId: string): Promise<string[]> {
-    const watchHistory = await this.jellyfinService.getWatchHistory(itemId);
-    const users = await this.jellyfinService.getUsers();
+    const watchHistory = await this.jellyfinAdapter.getWatchHistory(itemId);
+    const users = await this.jellyfinAdapter.getUsers();
     const userMap = new Map(users.map((u) => [u.id, u.name]));
 
     const uniqueViewerIds = [...new Set(watchHistory.map((r) => r.userId))];
@@ -571,11 +571,11 @@ export class JellyfinGetterService {
     const cached = this.cache.data.get<string[]>(cacheKey);
     if (cached) return cached;
 
-    const collections = await this.jellyfinService.getCollections(libraryId);
+    const collections = await this.jellyfinAdapter.getCollections(libraryId);
     const collectionNames: string[] = [];
 
     for (const collection of collections) {
-      const children = await this.jellyfinService.getCollectionChildren(
+      const children = await this.jellyfinAdapter.getCollectionChildren(
         collection.id,
       );
       if (children.some((child) => child.id === itemId)) {
@@ -610,7 +610,7 @@ export class JellyfinGetterService {
     itemId: string,
     type: MediaItemType,
   ): Promise<string[]> {
-    const playlists = await this.jellyfinService.getPlaylists('');
+    const playlists = await this.jellyfinAdapter.getPlaylists('');
     const matchingPlaylists: string[] = [];
 
     // For shows, check all episodes
@@ -618,11 +618,11 @@ export class JellyfinGetterService {
       const seasons =
         type === 'season'
           ? [{ id: itemId }]
-          : await this.jellyfinService.getChildrenMetadata(itemId, 'season');
+          : await this.jellyfinAdapter.getChildrenMetadata(itemId, 'season');
 
       const episodeIds: string[] = [];
       for (const season of seasons) {
-        const episodes = await this.jellyfinService.getChildrenMetadata(
+        const episodes = await this.jellyfinAdapter.getChildrenMetadata(
           season.id,
           'episode',
         );
@@ -666,7 +666,7 @@ export class JellyfinGetterService {
     libraryId: string,
     ruleGroup?: RulesDto,
   ): Promise<string[]> {
-    const collections = await this.jellyfinService.getCollections(libraryId);
+    const collections = await this.jellyfinAdapter.getCollections(libraryId);
     const collectionNames = new Set<string>();
 
     const idsToCheck = [itemId, parentId, grandparentId].filter(
@@ -674,7 +674,7 @@ export class JellyfinGetterService {
     );
 
     for (const collection of collections) {
-      const children = await this.jellyfinService.getCollectionChildren(
+      const children = await this.jellyfinAdapter.getCollectionChildren(
         collection.id,
       );
 
@@ -703,12 +703,12 @@ export class JellyfinGetterService {
     const seasons =
       type === 'season'
         ? [{ id: itemId }]
-        : await this.jellyfinService.getChildrenMetadata(itemId, 'season');
+        : await this.jellyfinAdapter.getChildrenMetadata(itemId, 'season');
 
     let latestAiredAt: Date | null = null;
 
     for (const season of seasons) {
-      const episodes = await this.jellyfinService.getChildrenMetadata(
+      const episodes = await this.jellyfinAdapter.getChildrenMetadata(
         season.id,
         'episode',
       );
@@ -728,7 +728,7 @@ export class JellyfinGetterService {
   private async getSeasonLastEpisodeAiredAt(
     seasonId: string,
   ): Promise<Date | null> {
-    const episodes = await this.jellyfinService.getChildrenMetadata(
+    const episodes = await this.jellyfinAdapter.getChildrenMetadata(
       seasonId,
       'episode',
     );

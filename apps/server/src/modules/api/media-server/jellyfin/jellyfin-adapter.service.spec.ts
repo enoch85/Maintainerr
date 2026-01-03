@@ -1,7 +1,7 @@
 import { MediaServerFeature, MediaServerType } from '@maintainerr/contracts';
 import { Mocked, TestBed } from '@suites/unit';
 import { SettingsService } from '../../../settings/settings.service';
-import { JellyfinService } from './jellyfin-adapter.service';
+import { JellyfinAdapterService } from './jellyfin-adapter.service';
 
 // Mock the @jellyfin/sdk module and its generated client
 jest.mock('@jellyfin/sdk', () => ({
@@ -88,8 +88,8 @@ jest.mock('../../lib/cache', () => ({
   },
 }));
 
-describe('JellyfinService', () => {
-  let service: JellyfinService;
+describe('JellyfinAdapterService', () => {
+  let service: JellyfinAdapterService;
   let settingsService: Mocked<SettingsService>;
 
   const mockSettings = {
@@ -99,7 +99,9 @@ describe('JellyfinService', () => {
   };
 
   beforeEach(async () => {
-    const { unit, unitRef } = await TestBed.solitary(JellyfinService).compile();
+    const { unit, unitRef } = await TestBed.solitary(
+      JellyfinAdapterService,
+    ).compile();
 
     service = unit;
     settingsService = unitRef.get(SettingsService);
