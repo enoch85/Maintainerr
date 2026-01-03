@@ -40,6 +40,18 @@ export class MediaServerFactory {
   ) {}
 
   /**
+   * Initialize the configured media server service.
+   * Safe to call on startup - handles unconfigured/unavailable servers gracefully.
+   */
+  async initialize(): Promise<void> {
+    try {
+      await this.getService();
+    } catch {
+      // Media server not configured yet, that's OK for fresh installs
+    }
+  }
+
+  /**
    * Get the media server service based on current settings.
    * This method reads from settings on each call to support runtime configuration changes.
    */

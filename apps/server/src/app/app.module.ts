@@ -92,12 +92,7 @@ export class AppModule implements OnModuleInit {
     await this.settings.init();
 
     // Initialize configured media server (Plex or Jellyfin)
-    // This will initialize the correct service based on settings
-    try {
-      await this.mediaServerFactory.getService();
-    } catch {
-      // Media server not configured yet, that's OK for fresh installs
-    }
+    await this.mediaServerFactory.initialize();
 
     this.overseerApi.init();
     this.tautulliApi.init();
