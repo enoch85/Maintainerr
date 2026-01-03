@@ -951,7 +951,10 @@ export class JellyfinAdapterService implements IMediaServerService {
 
       return (response.data.Items || []).map(JellyfinMapper.toMediaPlaylist);
     } catch (error) {
-      this.logger.error(`Failed to get Jellyfin playlists for library ${libraryId}`, error);
+      this.logger.error(
+        `Failed to get Jellyfin playlists for library ${libraryId}`,
+        error,
+      );
       return [];
     }
   }

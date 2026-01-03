@@ -13,7 +13,7 @@ import type {
  * Extended BaseItemDto with additional computed fields used by Maintainerr.
  * Currently inherits all properties from BaseItemDto without additions.
  */
- 
+
 export type JellyfinMediaItem = BaseItemDto;
 
 /**
@@ -28,7 +28,7 @@ export interface JellyfinUserItemData extends UserItemDataDto {
  * Jellyfin user representation with Maintainerr context.
  * Currently inherits all properties from UserDto without additions.
  */
- 
+
 export type JellyfinUser = UserDto;
 
 /**
