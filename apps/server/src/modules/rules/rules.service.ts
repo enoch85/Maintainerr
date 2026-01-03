@@ -151,6 +151,8 @@ export class RulesService {
       const queryBuilder = this.connection
         .createQueryBuilder('rule_group', 'rg')
         .innerJoinAndSelect('rg.rules', 'r')
+        // leftJoin because collectionId may be null during media server migration
+        // (rules are preserved but collections are cleared until user re-assigns libraries)
         .leftJoinAndSelect('rg.collection', 'c')
         .leftJoinAndSelect('rg.notifications', 'n')
         .where(
@@ -189,6 +191,7 @@ export class RulesService {
       const rulegroups = await this.connection
         .createQueryBuilder('rule_group', 'rg')
         .innerJoinAndSelect('rg.rules', 'r')
+        // leftJoin because collectionId may be null during media server migration
         .leftJoinAndSelect('rg.collection', 'c')
         .leftJoinAndSelect('rg.notifications', 'n')
         .where('rg.id IN (:...ids)', { ids })
@@ -213,6 +216,7 @@ export class RulesService {
       const rulegroup = await this.connection
         .createQueryBuilder('rule_group', 'rg')
         .innerJoinAndSelect('rg.rules', 'r')
+        // leftJoin because collectionId may be null during media server migration
         .leftJoinAndSelect('rg.collection', 'c')
         .leftJoinAndSelect('rg.notifications', 'n')
         .andWhere('rg.id = :id', { id })
