@@ -35,13 +35,11 @@ export class RadarrGetterService {
 
     try {
       const prop = this.plexProperties.find((el) => el.id === id);
-      
+
       const tmdbIds = libItem.providerIds?.tmdb || [];
-      
+
       if (tmdbIds.length === 0) {
-        this.logger.warn(
-          `[TMDb] No TMDb IDs found for '${libItem.title}'`,
-        );
+        this.logger.warn(`[TMDb] No TMDb IDs found for '${libItem.title}'`);
         return null;
       }
 

@@ -419,7 +419,9 @@ export class SonarrGetterService {
     return undefined;
   }
 
-  public async findAllTvdbIdsFromMediaItem(libItem: MediaItem): Promise<number[]> {
+  public async findAllTvdbIdsFromMediaItem(
+    libItem: MediaItem,
+  ): Promise<number[]> {
     const tvdbIds: number[] = [];
 
     if (libItem.providerIds?.tvdb) {

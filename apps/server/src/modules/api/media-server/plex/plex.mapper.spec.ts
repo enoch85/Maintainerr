@@ -23,41 +23,29 @@ describe('PlexMapper', () => {
     });
 
     it('should map episode type correctly', () => {
-      expect(PlexMapper.toMediaItemType('episode')).toBe(
-        'episode',
-      );
+      expect(PlexMapper.toMediaItemType('episode')).toBe('episode');
     });
 
     it('should map collection type to movie as fallback', () => {
-      expect(PlexMapper.toMediaItemType('collection')).toBe(
-        'movie',
-      );
+      expect(PlexMapper.toMediaItemType('collection')).toBe('movie');
     });
   });
 
   describe('toPlexDataType', () => {
     it('should map MOVIE to MOVIES', () => {
-      expect(PlexMapper.toPlexDataType('movie')).toBe(
-        EPlexDataType.MOVIES,
-      );
+      expect(PlexMapper.toPlexDataType('movie')).toBe(EPlexDataType.MOVIES);
     });
 
     it('should map SHOW to SHOWS', () => {
-      expect(PlexMapper.toPlexDataType('show')).toBe(
-        EPlexDataType.SHOWS,
-      );
+      expect(PlexMapper.toPlexDataType('show')).toBe(EPlexDataType.SHOWS);
     });
 
     it('should map SEASON to SEASONS', () => {
-      expect(PlexMapper.toPlexDataType('season')).toBe(
-        EPlexDataType.SEASONS,
-      );
+      expect(PlexMapper.toPlexDataType('season')).toBe(EPlexDataType.SEASONS);
     });
 
     it('should map EPISODE to EPISODES', () => {
-      expect(PlexMapper.toPlexDataType('episode')).toBe(
-        EPlexDataType.EPISODES,
-      );
+      expect(PlexMapper.toPlexDataType('episode')).toBe(EPlexDataType.EPISODES);
     });
   });
 

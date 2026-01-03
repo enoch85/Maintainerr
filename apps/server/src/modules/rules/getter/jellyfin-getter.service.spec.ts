@@ -5,10 +5,7 @@ import {
   MediaUser,
   WatchRecord,
 } from '@maintainerr/contracts';
-import {
-  createCollection,
-  createRulesDto,
-} from '../../../../test/utils/data';
+import { createCollection, createRulesDto } from '../../../../test/utils/data';
 
 import { JellyfinService } from '../../api/media-server/jellyfin/jellyfin-adapter.service';
 import { MaintainerrLogger } from '../../logging/logs.service';

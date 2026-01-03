@@ -139,32 +139,41 @@ describe('MediaServerController', () => {
     it('should return library content with default pagination', async () => {
       const result = await controller.getLibraryContent('1');
 
-      expect(mockMediaServerService.getLibraryContents).toHaveBeenCalledWith('1', {
-        offset: 0,
-        limit: 50,
-        type: undefined,
-      });
+      expect(mockMediaServerService.getLibraryContents).toHaveBeenCalledWith(
+        '1',
+        {
+          offset: 0,
+          limit: 50,
+          type: undefined,
+        },
+      );
       expect(result.items).toHaveLength(1);
     });
 
     it('should return library content with custom pagination', async () => {
       const result = await controller.getLibraryContent('1', 2, 25);
 
-      expect(mockMediaServerService.getLibraryContents).toHaveBeenCalledWith('1', {
-        offset: 25, // (page 2 - 1) * 25
-        limit: 25,
-        type: undefined,
-      });
+      expect(mockMediaServerService.getLibraryContents).toHaveBeenCalledWith(
+        '1',
+        {
+          offset: 25, // (page 2 - 1) * 25
+          limit: 25,
+          type: undefined,
+        },
+      );
     });
 
     it('should return library content with type filter', async () => {
       await controller.getLibraryContent('1', 1, 50, 'movie');
 
-      expect(mockMediaServerService.getLibraryContents).toHaveBeenCalledWith('1', {
-        offset: 0,
-        limit: 50,
-        type: 'movie',
-      });
+      expect(mockMediaServerService.getLibraryContents).toHaveBeenCalledWith(
+        '1',
+        {
+          offset: 0,
+          limit: 50,
+          type: 'movie',
+        },
+      );
     });
 
     it('should search library content', async () => {
@@ -181,7 +190,10 @@ describe('MediaServerController', () => {
     it('should return recently added items', async () => {
       const result = await controller.getRecentlyAdded('1', 10);
 
-      expect(mockMediaServerService.getRecentlyAdded).toHaveBeenCalledWith('1', { limit: 10 });
+      expect(mockMediaServerService.getRecentlyAdded).toHaveBeenCalledWith(
+        '1',
+        { limit: 10 },
+      );
       expect(result).toEqual([mockMediaItem]);
     });
   });
@@ -213,14 +225,18 @@ describe('MediaServerController', () => {
     it('should return children metadata', async () => {
       const result = await controller.getChildrenMetadata('item1');
 
-      expect(mockMediaServerService.getChildrenMetadata).toHaveBeenCalledWith('item1');
+      expect(mockMediaServerService.getChildrenMetadata).toHaveBeenCalledWith(
+        'item1',
+      );
       expect(result).toEqual([mockMediaItem]);
     });
 
     it('should return watch history', async () => {
       const result = await controller.getWatchHistory('item1');
 
-      expect(mockMediaServerService.getWatchHistory).toHaveBeenCalledWith('item1');
+      expect(mockMediaServerService.getWatchHistory).toHaveBeenCalledWith(
+        'item1',
+      );
       expect(result).toEqual(mockWatchRecords);
     });
   });
@@ -229,7 +245,9 @@ describe('MediaServerController', () => {
     it('should search content across the media server', async () => {
       const result = await controller.searchContent('test query');
 
-      expect(mockMediaServerService.searchContent).toHaveBeenCalledWith('test query');
+      expect(mockMediaServerService.searchContent).toHaveBeenCalledWith(
+        'test query',
+      );
       expect(result).toEqual([mockMediaItem]);
     });
   });
@@ -245,14 +263,18 @@ describe('MediaServerController', () => {
     it('should return a single collection', async () => {
       const result = await controller.getCollection('coll1');
 
-      expect(mockMediaServerService.getCollection).toHaveBeenCalledWith('coll1');
+      expect(mockMediaServerService.getCollection).toHaveBeenCalledWith(
+        'coll1',
+      );
       expect(result).toEqual(mockCollection);
     });
 
     it('should return collection children', async () => {
       const result = await controller.getCollectionChildren('coll1');
 
-      expect(mockMediaServerService.getCollectionChildren).toHaveBeenCalledWith('coll1');
+      expect(mockMediaServerService.getCollectionChildren).toHaveBeenCalledWith(
+        'coll1',
+      );
       expect(result).toEqual([mockMediaItem]);
     });
 
@@ -264,26 +286,36 @@ describe('MediaServerController', () => {
       };
       const result = await controller.createCollection(params);
 
-      expect(mockMediaServerService.createCollection).toHaveBeenCalledWith(params);
+      expect(mockMediaServerService.createCollection).toHaveBeenCalledWith(
+        params,
+      );
       expect(result).toEqual(mockCollection);
     });
 
     it('should delete a collection', async () => {
       await controller.deleteCollection('coll1');
 
-      expect(mockMediaServerService.deleteCollection).toHaveBeenCalledWith('coll1');
+      expect(mockMediaServerService.deleteCollection).toHaveBeenCalledWith(
+        'coll1',
+      );
     });
 
     it('should add an item to a collection', async () => {
       await controller.addToCollection('coll1', 'item1');
 
-      expect(mockMediaServerService.addToCollection).toHaveBeenCalledWith('coll1', 'item1');
+      expect(mockMediaServerService.addToCollection).toHaveBeenCalledWith(
+        'coll1',
+        'item1',
+      );
     });
 
     it('should remove an item from a collection', async () => {
       await controller.removeFromCollection('coll1', 'item1');
 
-      expect(mockMediaServerService.removeFromCollection).toHaveBeenCalledWith('coll1', 'item1');
+      expect(mockMediaServerService.removeFromCollection).toHaveBeenCalledWith(
+        'coll1',
+        'item1',
+      );
     });
   });
 
