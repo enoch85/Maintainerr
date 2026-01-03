@@ -594,14 +594,19 @@ export class RulesService {
     } else {
       // get type from metadata
       const metaData = await mediaServer.getMetadata(String(data.mediaId));
-      const type: MediaItemType = metaData?.type === 'movie' ? 'movie' : 'show';
+      if (!metaData?.type) {
+        this.logger.warn(
+          `No metadata found for media ${data.mediaId}, cannot set exclusion`,
+        );
+        return this.createReturnStatus(false, 'Failed - no metadata');
+      }
 
       // get media - traverse show -> seasons -> episodes if needed
       const ids = await mediaServer.getAllIdsForContextAction(
         undefined,
         data.context
           ? { type: data.context.type, id: String(data.context.id) }
-          : { type: type, id: String(data.mediaId) },
+          : { type: metaData.type, id: String(data.mediaId) },
         String(data.mediaId),
       );
       handleMedia = ids.map((id) => ({ mediaServerId: id }));
@@ -631,16 +636,7 @@ export class RulesService {
             // set parent
             parent: data.mediaId ? data.mediaId : null,
             // set media type
-            type:
-              metaData.type === 'movie'
-                ? 'movie'
-                : metaData.type === 'show'
-                  ? 'show'
-                  : metaData.type === 'season'
-                    ? 'season'
-                    : metaData.type === 'episode'
-                      ? 'episode'
-                      : undefined,
+            type: metaData?.type,
           },
         ]);
 
@@ -782,12 +778,17 @@ export class RulesService {
     let handleMedia: AddRemoveCollectionMedia[] = [];
 
     const metaData = await mediaServer.getMetadata(mediaServerId);
-    const type: MediaItemType = metaData?.type === 'movie' ? 'movie' : 'show';
+    if (!metaData?.type) {
+      this.logger.warn(
+        `No metadata found for media ${mediaServerId}, cannot remove exclusions`,
+      );
+      return this.createReturnStatus(false, 'Failed - no metadata');
+    }
 
     // get media - traverse show -> seasons -> episodes if needed
     const ids = await mediaServer.getAllIdsForContextAction(
       undefined,
-      { type: type, id: mediaServerId },
+      { type: metaData.type, id: mediaServerId },
       mediaServerId,
     );
     handleMedia = ids.map((id) => ({ mediaServerId: id }));
