@@ -1,16 +1,3 @@
-/**
- * Mapper for converting Jellyfin SDK types to Maintainerr's server-agnostic types.
- *
- * Key mappings:
- * - Id → id
- * - Name → title
- * - Type → type (with enum mapping)
- * - DateCreated → addedAt (ISO string → Date)
- * - RunTimeTicks → durationMs (ticks → ms)
- * - ProviderIds → providerIds { imdb, tmdb, tvdb }
- * - MediaSources → mediaSources
- */
-
 import {
   type BaseItemDto,
   BaseItemKind,
@@ -34,14 +21,7 @@ import {
 } from '@maintainerr/contracts';
 import { JELLYFIN_TICKS_PER_MS } from './jellyfin.constants';
 
-/**
- * Mapper class for converting between Jellyfin SDK types and Maintainerr types.
- */
 export class JellyfinMapper {
-  /**
-   * Convert Jellyfin BaseItemKind to MediaItemType string.
-   * This is what the API returns to the frontend.
-   */
   static toMediaItemType(kind?: BaseItemKind | string): MediaItemType {
     switch (kind) {
       case BaseItemKind.Movie:

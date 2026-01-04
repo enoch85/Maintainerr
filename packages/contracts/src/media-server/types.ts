@@ -54,92 +54,55 @@ export interface MediaRating {
 }
 
 /**
- * Server-agnostic media item representation
+ * Server-agnostic media item representation.
  * Maps from PlexLibraryItem, JellyfinMediaItem, etc.
  */
 export interface MediaItem {
-  /** Unique identifier within the media server */
   id: string
-  /** Parent item ID (for seasons -> show, episodes -> season) */
   parentId?: string
-  /** Grandparent item ID (for episodes -> show) */
   grandparentId?: string
-  /** Display title */
   title: string
-  /** Parent title (e.g., show name for episode) */
   parentTitle?: string
-  /** Grandparent title */
   grandparentTitle?: string
-  /** Internal GUID/identifier */
   guid: string
-  /** Parent GUID */
   parentGuid?: string
-  /** Grandparent GUID */
   grandparentGuid?: string
-  /** Media type (string for API responses) */
   type: MediaItemType
-  /** When the item was added to the library */
   addedAt: Date
-  /** When the item was last updated */
   updatedAt?: Date
-  /** External provider IDs */
   providerIds: MediaProviderIds
-  /** Media sources/files */
   mediaSources: MediaSource[]
-  /** Library section information */
   library: {
     id: string
     title: string
   }
-  /** Summary/description */
   summary?: string
-  /** View count */
   viewCount?: number
-  /** Skip count */
   skipCount?: number
-  /** Last viewed timestamp */
   lastViewedAt?: Date
-  /** Release year */
   year?: number
-  /** Duration in milliseconds */
   durationMs?: number
-  /** Original air date */
   originallyAvailableAt?: Date
-  /** Ratings */
   ratings?: MediaRating[]
-  /** User rating (0-10) */
   userRating?: number
-  /** Genres */
   genres?: MediaGenre[]
-  /** Cast/actors */
   actors?: MediaActor[]
-  /** Number of child items (for shows/seasons) */
   childCount?: number
-  /** Number of watched child items */
   watchedChildCount?: number
-  /** Index within parent (episode number, season number) */
   index?: number
-  /** Parent index (season number for episodes) */
   parentIndex?: number
-  /** Collection tags */
   collections?: string[]
-  /** Labels/tags */
   labels?: string[]
-
-  /** Maintainerr-specific: exclusion type */
   maintainerrExclusionType?: 'specific' | 'global'
-  /** Maintainerr-specific: exclusion ID */
   maintainerrExclusionId?: number
-  /** Maintainerr-specific: manual addition flag */
   maintainerrIsManual?: boolean
 }
 
 /**
- * MediaItem extended with parent metadata
- * Used when child items need their parent's metadata (e.g., for provider IDs)
+ * MediaItem extended with parent metadata.
+ * Used when child items need their parent's metadata (e.g., for provider IDs).
  */
 export interface MediaItemWithParent extends MediaItem {
-  /** Parent item metadata (for episodes/seasons) */
   parentItem?: MediaItem
 }
 
@@ -147,13 +110,9 @@ export interface MediaItemWithParent extends MediaItem {
  * Server-agnostic library representation
  */
 export interface MediaLibrary {
-  /** Unique identifier */
   id: string
-  /** Display name */
   title: string
-  /** Library type (movie/show) */
   type: 'movie' | 'show'
-  /** Agent used for metadata */
   agent?: string
 }
 
@@ -161,11 +120,8 @@ export interface MediaLibrary {
  * Server-agnostic user representation
  */
 export interface MediaUser {
-  /** Unique identifier */
   id: string
-  /** Username/display name */
   name: string
-  /** User thumbnail */
   thumb?: string
 }
 
@@ -173,13 +129,9 @@ export interface MediaUser {
  * Watch history record
  */
 export interface WatchRecord {
-  /** User who watched */
   userId: string
-  /** Item that was watched */
   itemId: string
-  /** When it was watched */
   watchedAt: Date
-  /** Playback progress (0-100) */
   progress?: number
 }
 
@@ -187,23 +139,14 @@ export interface WatchRecord {
  * Server-agnostic collection representation
  */
 export interface MediaCollection {
-  /** Unique identifier */
   id: string
-  /** Collection title */
   title: string
-  /** Collection summary */
   summary?: string
-  /** Thumbnail URL */
   thumb?: string
-  /** Number of items in collection */
   childCount: number
-  /** When the collection was added */
   addedAt?: Date
-  /** When the collection was last updated */
   updatedAt?: Date
-  /** Whether this is a smart collection */
   smart?: boolean
-  /** Library ID this collection belongs to */
   libraryId?: string
 }
 
@@ -211,21 +154,13 @@ export interface MediaCollection {
  * Server-agnostic playlist representation
  */
 export interface MediaPlaylist {
-  /** Unique identifier */
   id: string
-  /** Playlist title */
   title: string
-  /** Playlist summary */
   summary?: string
-  /** Whether this is a smart playlist */
   smart?: boolean
-  /** Number of items */
   itemCount: number
-  /** Total duration in milliseconds */
   durationMs?: number
-  /** When the playlist was added */
   addedAt?: Date
-  /** When the playlist was last updated */
   updatedAt?: Date
 }
 
@@ -233,15 +168,10 @@ export interface MediaPlaylist {
  * Server status information
  */
 export interface MediaServerStatus {
-  /** Server identifier */
   machineId: string
-  /** Server version */
   version: string
-  /** Server name */
   name?: string
-  /** Operating system */
   platform?: string
-  /** Server URL (for building links to web UI) */
   url?: string
 }
 
@@ -249,15 +179,10 @@ export interface MediaServerStatus {
  * Options for querying library contents
  */
 export interface LibraryQueryOptions {
-  /** Filter by media type */
   type?: MediaItemType
-  /** Pagination offset */
   offset?: number
-  /** Number of items to return */
   limit?: number
-  /** Sort field */
   sort?: string
-  /** Sort direction */
   sortOrder?: 'asc' | 'desc'
 }
 
@@ -265,9 +190,7 @@ export interface LibraryQueryOptions {
  * Options for getting recently added items
  */
 export interface RecentlyAddedOptions {
-  /** Number of items to return */
   limit?: number
-  /** Filter by media type */
   type?: MediaItemType
 }
 
@@ -275,13 +198,9 @@ export interface RecentlyAddedOptions {
  * Paginated result wrapper
  */
 export interface PagedResult<T> {
-  /** Items in this page */
   items: T[]
-  /** Total number of items */
   totalSize: number
-  /** Current offset */
   offset: number
-  /** Page size */
   limit: number
 }
 
@@ -289,31 +208,19 @@ export interface PagedResult<T> {
  * Parameters for creating a collection
  */
 export interface CreateCollectionParams {
-  /** Library to create collection in */
   libraryId: string
-  /** Collection title */
   title: string
-  /** Collection summary */
   summary?: string
-  /** Media type for the collection */
   type: MediaItemType
-  /** Sort title override */
   sortTitle?: string
 }
 
-/**
- * Collection visibility settings (Plex-only)
- */
+/** Plex-only visibility settings */
 export interface CollectionVisibilitySettings {
-  /** Library ID where the collection exists */
   libraryId: string
-  /** Collection ID to update */
   collectionId: string
-  /** Visible on home screen for owner */
   ownHome?: boolean
-  /** Visible on home screen for shared users */
   sharedHome?: boolean
-  /** Visible in recommendations */
   recommended?: boolean
 }
 
@@ -321,14 +228,9 @@ export interface CollectionVisibilitySettings {
  * Parameters for updating a collection's metadata
  */
 export interface UpdateCollectionParams {
-  /** Library ID where the collection exists */
   libraryId: string
-  /** Collection ID to update */
   collectionId: string
-  /** New title for the collection */
   title?: string
-  /** New summary/description for the collection */
   summary?: string
-  /** Sort title for ordering */
   sortTitle?: string
 }

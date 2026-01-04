@@ -1,21 +1,10 @@
-/**
- * Media server type enumeration
- * Identifies which media server implementation is being used
- */
 export enum MediaServerType {
   PLEX = 'plex',
   JELLYFIN = 'jellyfin',
 }
 
-/**
- * String type representation for media data types
- * Uses singular lowercase names to match API conventions
- */
 export type MediaItemType = 'movie' | 'show' | 'season' | 'episode'
 
-/**
- * MediaItemType values array for validation and iteration
- */
 export const MediaItemTypes: MediaItemType[] = [
   'movie',
   'show',
@@ -23,9 +12,6 @@ export const MediaItemTypes: MediaItemType[] = [
   'episode',
 ]
 
-/**
- * MediaItemType values as uppercase strings for YAML serialization
- */
 export const MediaDataTypeStrings: string[] = [
   'MOVIES',
   'SHOWS',
@@ -33,9 +19,6 @@ export const MediaDataTypeStrings: string[] = [
   'EPISODES',
 ]
 
-/**
- * Check if a MediaItemType matches a specific type
- */
 export function isMediaType(
   itemType: MediaItemType | null | undefined,
   expectedType: MediaItemType,
@@ -43,9 +26,6 @@ export function isMediaType(
   return itemType === expectedType
 }
 
-/**
- * Validate if a string is a valid MediaItemType
- */
 export function isValidMediaItemType(type: string): type is MediaItemType {
   return MediaItemTypes.includes(type as MediaItemType)
 }
