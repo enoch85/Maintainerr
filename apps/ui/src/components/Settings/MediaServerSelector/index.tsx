@@ -1,4 +1,4 @@
-import { CheckCircleIcon, ExclamationIcon } from '@heroicons/react/solid'
+import { CheckCircleIcon } from '@heroicons/react/solid'
 import {
   MediaServerSwitchPreview,
   MediaServerType,
@@ -228,7 +228,9 @@ const MediaServerSelector = ({
           okDisabled={isSwitchPending}
           cancelText="Cancel"
           loading={isSwitchPending}
-          iconSvg={<ExclamationIcon className="h-6 w-6 text-amber-500" />}
+          iconSvg={
+            <img src="/logo_icon.svg" alt="Maintainerr" className="h-6 w-6" />
+          }
         >
           <div className="text-zinc-300">
             <p className="mb-4">

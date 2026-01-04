@@ -817,14 +817,17 @@ export class JellyfinAdapterService implements IMediaServerService {
       const response = await getCollectionApi(this.api).createCollection({
         name: params.title,
         parentId: params.libraryId,
+        // isLocked enables composite image generation from collection items
         isLocked: true,
       });
 
-      // Fetch full collection data
       const collectionId = response.data.Id;
       if (!collectionId) {
         throw new Error('Collection created but no ID returned');
       }
+
+      // Note: No refresh needed - Jellyfin auto-generates composite images
+      // when items are added (as long as isLocked: true, which we set above).
 
       const collection = await this.getCollection(collectionId);
       if (!collection) {
