@@ -1,4 +1,7 @@
-import { CheckCircleIcon } from '@heroicons/react/solid'
+import {
+  ArrowNarrowRightIcon,
+  CheckCircleIcon,
+} from '@heroicons/react/solid'
 import {
   MediaServerSwitchPreview,
   MediaServerType,
@@ -47,6 +50,7 @@ const MediaServerSelector = ({
   const [pendingType, setPendingType] = useState<MediaServerType | null>(null)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [migrateRules, setMigrateRules] = useState(true)
+  const [isSwitchComplete, setIsSwitchComplete] = useState(false)
 
   const { mutateAsync: previewSwitch, isPending: isPreviewPending } =
     usePreviewMediaServerSwitch()
@@ -127,18 +131,22 @@ const MediaServerSelector = ({
         )
       }
 
-      setShowConfirmModal(false)
+      setIsSwitchComplete(true)
 
-      // Wait for settings to refetch before navigating
+      // Invalidate queries
       await queryClient.invalidateQueries({ queryKey: ['settings'] })
-
-      onSwitch?.()
-      setPendingType(null)
-      // Navigate to the new media server's settings page
-      navigate(`/settings/${pendingType}`)
     } catch (err) {
       toast.error('Failed to switch media server')
     }
+  }
+
+  const handleFinish = () => {
+    setShowConfirmModal(false)
+    onSwitch?.()
+    const type = pendingType
+    setPendingType(null)
+    setIsSwitchComplete(false)
+    navigate(`/settings/${type}`)
   }
 
   const handleCancelSwitch = () => {
@@ -146,13 +154,15 @@ const MediaServerSelector = ({
     setPendingType(null)
     setPreviewData(null)
     setMigrateRules(true)
+    setIsSwitchComplete(false)
   }
 
   const hasDataToDelete =
     previewData?.dataToBeCleared &&
     (previewData.dataToBeCleared.collections > 0 ||
       previewData.dataToBeCleared.collectionMedia > 0 ||
-      previewData.dataToBeCleared.exclusions > 0)
+      previewData.dataToBeCleared.exclusions > 0 ||
+      previewData.dataToBeCleared.collectionLogs > 0)
 
   const hasRulesToMigrate =
     previewData?.ruleMigration && previewData.ruleMigration.totalRules > 0
@@ -220,21 +230,57 @@ const MediaServerSelector = ({
       {/* Confirmation Modal */}
       {showConfirmModal && (
         <Modal
-          title="Switch Media Server"
           onCancel={handleCancelSwitch}
-          onOk={handleConfirmSwitch}
-          okText="Switch"
-          okButtonType="danger"
-          okDisabled={isSwitchPending}
-          cancelText="Cancel"
-          loading={isSwitchPending}
-          iconSvg={
-            <img src="/logo_icon.svg" alt="Maintainerr" className="h-6 w-6" />
+          onOk={isSwitchComplete ? handleFinish : handleConfirmSwitch}
+          okText={
+            isSwitchComplete
+              ? 'Done'
+              : isSwitchPending
+                ? 'Switching...'
+                : 'Switch'
           }
+          okButtonType={isSwitchComplete ? 'primary' : 'danger'}
+          okDisabled={isSwitchPending && !isSwitchComplete}
+          cancelText={isSwitchComplete ? undefined : 'Cancel'}
+          loading={isSwitchPending}
         >
-          <div className="text-zinc-300">
-            <p className="mb-4">
-              You are about to switch from{' '}
+          <div className="text-zinc-100">
+            <div className="mb-6 flex items-center justify-center space-x-8">
+              <div className="flex flex-col items-center">
+                <div className="flex h-16 w-16 items-center justify-center">
+                  <img
+                    src={
+                      serverOptions.find((o) => o.value === currentType)?.icon
+                    }
+                    alt={currentType === 'plex' ? 'Plex' : 'Jellyfin'}
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </div>
+                <span className="mt-2 text-sm font-medium text-zinc-400">
+                  {currentType === 'plex' ? 'Plex' : 'Jellyfin'}
+                </span>
+              </div>
+
+              <ArrowNarrowRightIcon className="h-8 w-8 text-zinc-500" />
+
+              <div className="flex flex-col items-center">
+                <div className="flex h-16 w-16 items-center justify-center">
+                  <img
+                    src={
+                      serverOptions.find((o) => o.value === pendingType)?.icon
+                    }
+                    alt={pendingType === 'plex' ? 'Plex' : 'Jellyfin'}
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </div>
+                <span className="mt-2 text-sm font-medium text-zinc-400">
+                  {pendingType === 'plex' ? 'Plex' : 'Jellyfin'}
+                </span>
+              </div>
+            </div>
+
+            <p className="mb-2 text-lg font-medium text-zinc-100">
+              We will now switch from{' '}
               <strong className="text-zinc-100">
                 {currentType === 'plex' ? 'Plex' : 'Jellyfin'}
               </strong>{' '}
@@ -244,13 +290,17 @@ const MediaServerSelector = ({
               </strong>
               .
             </p>
+            <p className="mb-2 text-zinc-100">
+              Your general settings, Radarr, Sonarr, Overseerr, Jellyseerr,
+              Tautulli, and notification settings will be kept.
+            </p>
 
             {hasDataToDelete ? (
               <>
-                <p className="mb-3 font-semibold text-amber-400">
+                <p className="mb-3 font-semibold text-zinc-100">
                   The following data will be permanently deleted:
                 </p>
-                <ul className="mb-4 list-inside list-disc space-y-1 text-sm">
+                <ul className="mb-4 list-inside list-disc space-y-1 text-sm text-zinc-100">
                   {previewData!.dataToBeCleared.collections > 0 && (
                     <li>
                       {previewData!.dataToBeCleared.collections} collection(s)
@@ -275,9 +325,23 @@ const MediaServerSelector = ({
                 </ul>
               </>
             ) : (
-              <p className="mb-4 text-green-400">
+              <p className="mb-4 text-zinc-100">
                 No data will be deleted (no collections exist).
               </p>
+            )}
+
+            {/* Progress Bar */}
+            {(isSwitchPending || isSwitchComplete) && (
+              <div className="relative mb-4 h-8 w-full overflow-hidden rounded bg-zinc-700">
+                <div
+                  className={`h-full bg-amber-500 transition-all duration-500 ${
+                    isSwitchComplete ? 'w-full' : 'w-full animate-pulse'
+                  }`}
+                />
+                <div className="absolute inset-0 flex items-center justify-center text-sm font-medium text-white drop-shadow-md">
+                  {isSwitchComplete ? '100% Completed' : 'Switching...'}
+                </div>
+              </div>
             )}
 
             {/* Rule Migration Section */}
@@ -289,6 +353,7 @@ const MediaServerSelector = ({
                     id="migrateRules"
                     checked={migrateRules}
                     onChange={(e) => setMigrateRules(e.target.checked)}
+                    disabled={isSwitchPending || isSwitchComplete}
                     className="mt-1 h-4 w-4 rounded border-zinc-600 bg-zinc-700 text-amber-500 focus:ring-amber-500"
                   />
                   <label htmlFor="migrateRules" className="ml-3 cursor-pointer">
@@ -309,13 +374,6 @@ const MediaServerSelector = ({
                         </span>
                       )}
                     </span>
-                    {migrateRules && (
-                      <div className="mt-2 rounded border border-amber-600/50 bg-amber-900/20 p-2 text-sm text-amber-300">
-                        <strong>Important:</strong> After migration, you must
-                        manually assign a library to each rule group before
-                        rules can run.
-                      </div>
-                    )}
                   </label>
                 </div>
 
@@ -355,10 +413,15 @@ const MediaServerSelector = ({
               </div>
             )}
 
-            <p className="text-sm text-zinc-400">
-              Your general settings, Radarr, Sonarr, Overseerr, Jellyseerr,
-              Tautulli, and notification settings will be kept.
-            </p>
+            {migrateRules && (
+              <p className="mb-4 text-amber-400">
+                <span className="font-bold">Important:</span>{' '}
+                <span className="text-zinc-100">
+                  After migration, you must manually assign a library to each rule
+                  group before rules can run.
+                </span>
+              </p>
+            )}
           </div>
         </Modal>
       )}
