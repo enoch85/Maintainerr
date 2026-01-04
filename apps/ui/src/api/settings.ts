@@ -1,4 +1,11 @@
-import { BasicResponseDto, MediaServerType } from '@maintainerr/contracts'
+import {
+  BasicResponseDto,
+  JellyfinSetting,
+  MediaServerSwitchPreview,
+  MediaServerType,
+  SwitchMediaServerRequest,
+  SwitchMediaServerResponse,
+} from '@maintainerr/contracts'
 import {
   useMutation,
   UseMutationOptions,
@@ -43,13 +50,7 @@ interface ISettings {
   rules_handler_job_cron: string
 }
 
-// Jellyfin-specific types
-export interface JellyfinSettingsPayload {
-  jellyfin_url: string
-  jellyfin_api_key: string
-  jellyfin_user_id?: string
-}
-
+// Jellyfin test result (not in contracts as it's UI-specific)
 export interface JellyfinTestResult {
   status: string
   code: number
@@ -156,12 +157,12 @@ export const useUpdatePlexAuth = (options?: UseUpdatePlexAuthOptions) => {
 export type UseUpdatePlexAuthResult = ReturnType<typeof useUpdatePlexAuth>
 
 type UseTestJellyfinOptions = Omit<
-  UseMutationOptions<JellyfinTestResult, Error, JellyfinSettingsPayload>,
+  UseMutationOptions<JellyfinTestResult, Error, JellyfinSetting>,
   'mutationFn' | 'mutationKey'
 >
 
 export const useTestJellyfin = (options?: UseTestJellyfinOptions) => {
-  return useMutation<JellyfinTestResult, Error, JellyfinSettingsPayload>({
+  return useMutation<JellyfinTestResult, Error, JellyfinSetting>({
     mutationKey: ['settings', 'testJellyfin'],
     mutationFn: async (payload) => {
       return await PostApiHandler<JellyfinTestResult>(
@@ -176,7 +177,7 @@ export const useTestJellyfin = (options?: UseTestJellyfinOptions) => {
 export type UseTestJellyfinResult = ReturnType<typeof useTestJellyfin>
 
 type UseSaveJellyfinSettingsOptions = Omit<
-  UseMutationOptions<BasicResponseDto, Error, JellyfinSettingsPayload>,
+  UseMutationOptions<BasicResponseDto, Error, JellyfinSetting>,
   'mutationFn' | 'mutationKey' | 'onSuccess'
 >
 
@@ -185,7 +186,7 @@ export const useSaveJellyfinSettings = (
 ) => {
   const queryClient = useQueryClient()
 
-  return useMutation<BasicResponseDto, Error, JellyfinSettingsPayload>({
+  return useMutation<BasicResponseDto, Error, JellyfinSetting>({
     mutationKey: ['settings', 'saveJellyfin'],
     mutationFn: async (payload) => {
       return await PostApiHandler<BasicResponseDto>(
@@ -233,70 +234,6 @@ export const useDeleteJellyfinSettings = (
 export type UseDeleteJellyfinSettingsResult = ReturnType<
   typeof useDeleteJellyfinSettings
 >
-
-export interface MediaServerSwitchPreview {
-  currentServerType: MediaServerType
-  targetServerType: MediaServerType
-  dataToBeCleared: {
-    collections: number
-    collectionMedia: number
-    exclusions: number
-    collectionLogs: number
-  }
-  dataToBeKept: {
-    generalSettings: boolean
-    radarrSettings: number
-    sonarrSettings: number
-    overseerrSettings: boolean
-    jellyseerrSettings: boolean
-    tautulliSettings: boolean
-    notificationSettings: boolean
-  }
-  ruleMigration?: {
-    canMigrate: boolean
-    totalGroups: number
-    totalRules: number
-    migratableRules: number
-    skippedRules: number
-    skippedDetails: SkippedRuleDetail[]
-  }
-}
-
-export interface SkippedRuleDetail {
-  ruleGroupId: number
-  ruleGroupName: string
-  ruleId: number
-  reason: string
-  propertyName?: string
-}
-
-export interface RuleMigrationResult {
-  totalRules: number
-  migratedRules: number
-  skippedRules: number
-  fullyMigratedGroups: number
-  partiallyMigratedGroups: number
-  skippedGroups: number
-  skippedDetails: SkippedRuleDetail[]
-}
-
-export interface SwitchMediaServerRequest {
-  targetServerType: MediaServerType
-  migrateRules?: boolean
-}
-
-export interface SwitchMediaServerResponse {
-  status: 'OK' | 'NOK'
-  code: number
-  message: string
-  clearedData?: {
-    collections: number
-    collectionMedia: number
-    exclusions: number
-    collectionLogs: number
-  }
-  ruleMigration?: RuleMigrationResult
-}
 
 type UsePreviewMediaServerSwitchOptions = Omit<
   UseMutationOptions<MediaServerSwitchPreview, Error, MediaServerType>,

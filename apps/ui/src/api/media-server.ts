@@ -1,88 +1,14 @@
+import {
+  MediaCollection,
+  MediaItem,
+  MediaLibrary,
+  MediaServerStatus,
+  MediaUser,
+  PagedResult,
+  WatchRecord,
+} from '@maintainerr/contracts'
 import { useQuery, UseQueryOptions } from '@tanstack/react-query'
 import GetApiHandler from '../utils/ApiHandler'
-
-/**
- * Unified Media Server API
- *
- * This module provides React Query hooks for interacting with the media server
- * abstraction layer. These hooks automatically work with whichever media server
- * is configured (Plex, Jellyfin, etc.) without frontend code needing to know
- * which one is active.
- */
-
-/**
- * Unified library type that works across all media servers
- */
-export interface MediaLibrary {
-  id: string
-  title: string
-  type: 'movie' | 'show' | 'music' | 'photo' | 'other'
-  itemCount?: number
-}
-
-/**
- * Unified user type
- */
-export interface MediaUser {
-  id: string
-  name: string
-  thumb?: string
-}
-
-/**
- * Unified media item type
- */
-export interface MediaItem {
-  id: string
-  title: string
-  type: 'movie' | 'show' | 'season' | 'episode' | 'unknown'
-  year?: number
-  thumb?: string
-  addedAt?: string
-  guid?: string
-  providerIds?: Record<string, string>
-}
-
-/**
- * Unified collection type
- */
-export interface MediaCollection {
-  id: string
-  title: string
-  summary?: string
-  thumb?: string
-  childCount?: number
-}
-
-/**
- * Watch history record
- */
-export interface WatchRecord {
-  userId: string
-  itemId: string
-  watchedAt?: string
-  playCount?: number
-}
-
-/**
- * Paged result wrapper
- */
-export interface PagedResult<T> {
-  items: T[]
-  totalSize: number
-  offset: number
-  limit: number
-}
-
-/**
- * Server status info
- */
-export interface MediaServerStatus {
-  id: string
-  version: string
-  name?: string
-  platform?: string
-}
 
 export const mediaServerKeys = {
   all: ['media-server'] as const,

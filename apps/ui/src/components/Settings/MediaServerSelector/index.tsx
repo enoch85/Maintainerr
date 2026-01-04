@@ -1,11 +1,13 @@
 import { CheckCircleIcon, ExclamationIcon } from '@heroicons/react/solid'
+import {
+  MediaServerSwitchPreview,
+  MediaServerType,
+} from '@maintainerr/contracts'
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import {
-  MediaServerSwitchPreview,
-  MediaServerType,
   usePreviewMediaServerSwitch,
   useSwitchMediaServer,
 } from '../../../api/settings'

@@ -2,11 +2,11 @@ import {
   BasicResponseDto,
   JellyfinSettingDto,
   JellyseerrSettingDto,
-  MediaServerSwitchPreviewDto,
+  MediaServerSwitchPreview,
   MediaServerType,
   OverseerrSettingDto,
-  SwitchMediaServerRequestDto,
-  SwitchMediaServerResponseDto,
+  SwitchMediaServerRequest,
+  SwitchMediaServerResponse,
   TautulliSettingDto,
 } from '@maintainerr/contracts';
 import {
@@ -263,7 +263,7 @@ export class SettingsController {
   @Get('/media-server/switch/preview/:targetServerType')
   async previewMediaServerSwitch(
     @Param('targetServerType') targetServerType: MediaServerType,
-  ): Promise<MediaServerSwitchPreviewDto> {
+  ): Promise<MediaServerSwitchPreview> {
     return this.mediaServerSwitchService.previewSwitch(targetServerType);
   }
 
@@ -274,8 +274,8 @@ export class SettingsController {
    */
   @Post('/media-server/switch')
   async switchMediaServer(
-    @Body() payload: SwitchMediaServerRequestDto,
-  ): Promise<SwitchMediaServerResponseDto> {
+    @Body() payload: SwitchMediaServerRequest,
+  ): Promise<SwitchMediaServerResponse> {
     return this.mediaServerSwitchService.executeSwitch(payload);
   }
 }

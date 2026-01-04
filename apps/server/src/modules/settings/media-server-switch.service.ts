@@ -1,8 +1,8 @@
 import {
-  MediaServerSwitchPreviewDto,
+  MediaServerSwitchPreview,
   MediaServerType,
-  SwitchMediaServerRequestDto,
-  SwitchMediaServerResponseDto,
+  SwitchMediaServerRequest,
+  SwitchMediaServerResponse,
 } from '@maintainerr/contracts';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -56,7 +56,7 @@ export class MediaServerSwitchService {
    */
   async previewSwitch(
     targetServerType: MediaServerType,
-  ): Promise<MediaServerSwitchPreviewDto> {
+  ): Promise<MediaServerSwitchPreview> {
     const currentServerType = this.settingsService.getMediaServerType();
 
     // Count media server-specific data
@@ -102,8 +102,8 @@ export class MediaServerSwitchService {
    * Optionally migrates rules if migrateRules is true
    */
   async executeSwitch(
-    request: SwitchMediaServerRequestDto,
-  ): Promise<SwitchMediaServerResponseDto> {
+    request: SwitchMediaServerRequest,
+  ): Promise<SwitchMediaServerResponse> {
     const { targetServerType, migrateRules } = request;
 
     // Get current server type - don't default to PLEX on fresh install
@@ -166,7 +166,7 @@ export class MediaServerSwitchService {
         `Successfully switched media server to ${targetServerType}`,
       );
 
-      const response: SwitchMediaServerResponseDto = {
+      const response: SwitchMediaServerResponse = {
         status: 'OK',
         code: 1,
         message: currentServerType

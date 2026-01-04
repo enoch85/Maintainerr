@@ -10,7 +10,11 @@ import {
   UploadIcon,
 } from '@heroicons/react/solid'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Application, MediaItemType } from '@maintainerr/contracts'
+import {
+  Application,
+  MediaItemType,
+  MediaLibrary,
+} from '@maintainerr/contracts'
 import { isValidCron } from 'cron-validator'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -18,10 +22,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { z } from 'zod'
 import { IRuleGroup } from '..'
-import {
-  MediaLibrary,
-  useMediaServerLibraries,
-} from '../../../../api/media-server'
+import { useMediaServerLibraries } from '../../../../api/media-server'
 import {
   RuleGroupCreatePayload,
   useCreateRuleGroup,

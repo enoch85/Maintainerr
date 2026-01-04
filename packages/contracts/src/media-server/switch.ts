@@ -1,9 +1,9 @@
 import { MediaServerType } from './enums'
 
 /**
- * Request DTO for switching media server type
+ * Request for switching media server type
  */
-export interface SwitchMediaServerRequestDto {
+export interface SwitchMediaServerRequest {
   /**
    * Target media server type to switch to
    */
@@ -31,7 +31,7 @@ export interface SkippedRuleDetail {
 /**
  * Result of rule migration attempt
  */
-export interface RuleMigrationResultDto {
+export interface RuleMigrationResult {
   /** Total rules processed */
   totalRules: number
   /** Successfully migrated rules */
@@ -49,9 +49,9 @@ export interface RuleMigrationResultDto {
 }
 
 /**
- * Response DTO for media server switch operation
+ * Response for media server switch operation
  */
-export interface SwitchMediaServerResponseDto {
+export interface SwitchMediaServerResponse {
   status: 'OK' | 'NOK'
   code: number
   message: string
@@ -62,13 +62,13 @@ export interface SwitchMediaServerResponseDto {
     collectionLogs: number
   }
   /** Present when migrateRules was true */
-  ruleMigration?: RuleMigrationResultDto
+  ruleMigration?: RuleMigrationResult
 }
 
 /**
  * Summary of data that will be cleared when switching media servers
  */
-export interface MediaServerSwitchPreviewDto {
+export interface MediaServerSwitchPreview {
   currentServerType: MediaServerType
   targetServerType: MediaServerType
   dataToBeCleared: {
