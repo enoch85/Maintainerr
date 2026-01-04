@@ -104,36 +104,21 @@ const MediaServerSelector = ({
     if (!pendingType) return
 
     try {
-      const result = await switchServer({
+      await switchServer({
         targetServerType: pendingType,
         migrateRules: migrateRules,
       })
-
-      // Show appropriate success message
-      if (result.ruleMigration) {
-        const { migratedRules, totalRules, skippedRules } = result.ruleMigration
-        if (skippedRules > 0) {
-          toast.warning(
-            `Switched to ${pendingType === 'plex' ? 'Plex' : 'Jellyfin'}. ${migratedRules}/${totalRules} rules migrated, ${skippedRules} skipped (incompatible properties).`,
-            { autoClose: 8000 },
-          )
-        } else {
-          toast.success(
-            `Switched to ${pendingType === 'plex' ? 'Plex' : 'Jellyfin'}. All ${migratedRules} rules migrated successfully!`,
-          )
-        }
-      } else {
-        toast.success(
-          `Switched to ${pendingType === 'plex' ? 'Plex' : 'Jellyfin'}`,
-        )
-      }
 
       setIsSwitchComplete(true)
 
       // Invalidate queries
       await queryClient.invalidateQueries({ queryKey: ['settings'] })
-    } catch (err) {
-      toast.error('Failed to switch media server')
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Failed to switch media server'
+      toast.error(message)
     }
   }
 
