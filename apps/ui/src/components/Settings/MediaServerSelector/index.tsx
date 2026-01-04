@@ -242,11 +242,11 @@ const MediaServerSelector = ({
           loading={isSwitchPending}
         >
           <div className="text-zinc-100">
-            <div className="mb-6 flex items-center justify-center space-x-8">
+            <div className="mb-6 flex items-start justify-center space-x-8">
               {!isSwitchComplete && (
                 <>
                   <div className="flex flex-col items-center">
-                    <div className="flex h-16 w-16 items-center justify-center">
+                    <div className="flex h-16 w-28 items-center justify-center">
                       <img
                         src={
                           serverOptions.find((o) => o.value === currentType)
@@ -261,12 +261,14 @@ const MediaServerSelector = ({
                     </span>
                   </div>
 
-                  <ArrowNarrowRightIcon className="h-8 w-8 text-zinc-500" />
+                  <div className="flex h-16 items-center">
+                    <ArrowNarrowRightIcon className="h-8 w-8 text-zinc-500" />
+                  </div>
                 </>
               )}
 
               <div className="flex flex-col items-center">
-                <div className="flex h-16 w-16 items-center justify-center">
+                <div className="flex h-16 w-28 items-center justify-center">
                   <img
                     src={
                       serverOptions.find((o) => o.value === pendingType)?.icon
@@ -284,11 +286,7 @@ const MediaServerSelector = ({
             <p className="mb-2 text-lg font-medium text-zinc-100">
               {isSwitchComplete ? (
                 <>
-                  Successfully switched from{' '}
-                  <strong className="text-zinc-100">
-                    {currentType === 'plex' ? 'Plex' : 'Jellyfin'}
-                  </strong>{' '}
-                  to{' '}
+                  Successfully switched to{' '}
                   <strong className="text-zinc-100">
                     {pendingType === 'plex' ? 'Plex' : 'Jellyfin'}
                   </strong>
@@ -309,42 +307,42 @@ const MediaServerSelector = ({
               )}
             </p>
 
-            {hasDataToDelete ? (
-              <>
-                <p className="mb-3 text-zinc-100">
-                  {isSwitchComplete
-                    ? 'The following data was permanently deleted:'
-                    : 'The following data will be permanently deleted:'}
+            {!isSwitchComplete &&
+              (hasDataToDelete ? (
+                <>
+                  <p className="mb-3 text-zinc-100">
+                    The following data will be permanently deleted:
+                  </p>
+                  <ul className="mb-4 list-inside list-disc space-y-1 text-sm text-zinc-100">
+                    {previewData!.dataToBeCleared.collections > 0 && (
+                      <li>
+                        {previewData!.dataToBeCleared.collections} collection(s)
+                      </li>
+                    )}
+                    {previewData!.dataToBeCleared.collectionMedia > 0 && (
+                      <li>
+                        {previewData!.dataToBeCleared.collectionMedia}{' '}
+                        collection media item(s)
+                      </li>
+                    )}
+                    {previewData!.dataToBeCleared.exclusions > 0 && (
+                      <li>
+                        {previewData!.dataToBeCleared.exclusions} exclusion(s)
+                      </li>
+                    )}
+                    {previewData!.dataToBeCleared.collectionLogs > 0 && (
+                      <li>
+                        {previewData!.dataToBeCleared.collectionLogs} log
+                        entries
+                      </li>
+                    )}
+                  </ul>
+                </>
+              ) : (
+                <p className="mb-4 text-zinc-100">
+                  No data will be deleted (no collections exist).
                 </p>
-                <ul className="mb-4 list-inside list-disc space-y-1 text-sm text-zinc-100">
-                  {previewData!.dataToBeCleared.collections > 0 && (
-                    <li>
-                      {previewData!.dataToBeCleared.collections} collection(s)
-                    </li>
-                  )}
-                  {previewData!.dataToBeCleared.collectionMedia > 0 && (
-                    <li>
-                      {previewData!.dataToBeCleared.collectionMedia} collection
-                      media item(s)
-                    </li>
-                  )}
-                  {previewData!.dataToBeCleared.exclusions > 0 && (
-                    <li>
-                      {previewData!.dataToBeCleared.exclusions} exclusion(s)
-                    </li>
-                  )}
-                  {previewData!.dataToBeCleared.collectionLogs > 0 && (
-                    <li>
-                      {previewData!.dataToBeCleared.collectionLogs} log entries
-                    </li>
-                  )}
-                </ul>
-              </>
-            ) : (
-              <p className="mb-4 text-zinc-100">
-                No data will be deleted (no collections exist).
-              </p>
-            )}
+              ))}
 
             {/* Progress Bar */}
             {(isSwitchPending || isSwitchComplete) && (
