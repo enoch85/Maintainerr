@@ -1,7 +1,4 @@
-import {
-  ArrowNarrowRightIcon,
-  CheckCircleIcon,
-} from '@heroicons/react/solid'
+import { ArrowNarrowRightIcon, CheckCircleIcon } from '@heroicons/react/solid'
 import {
   MediaServerSwitchPreview,
   MediaServerType,
@@ -417,8 +414,8 @@ const MediaServerSelector = ({
               <p className="mb-4 text-amber-400">
                 <span className="font-bold">Important:</span>{' '}
                 <span className="text-zinc-100">
-                  After migration, you must manually assign a library to each rule
-                  group before rules can run.
+                  After migration, you must manually assign a library to each
+                  rule group before rules can run.
                 </span>
               </p>
             )}
