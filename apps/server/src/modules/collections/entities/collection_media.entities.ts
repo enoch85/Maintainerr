@@ -17,7 +17,6 @@ export class CollectionMedia {
   @Column()
   collectionId: number;
 
-  /** Media server item ID (Plex ratingKey or Jellyfin GUID) */
   @Column()
   mediaServerId: string;
 
@@ -39,13 +38,9 @@ export class CollectionMedia {
   collection: Collection;
 }
 
-// Re-export for convenience
-export type { MediaItemWithParent };
-
 /**
  * Collection media with server-agnostic metadata.
  */
 export class CollectionMediaWithMetadata extends CollectionMedia {
-  /** Server-agnostic media metadata */
   mediaData: MediaItemWithParent;
 }

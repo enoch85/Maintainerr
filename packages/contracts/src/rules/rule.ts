@@ -9,7 +9,6 @@ export enum MediaType {
 }
 
 export interface IComparisonStatistics {
-  /** Media server item ID (Plex ratingKey or Jellyfin GUID) */
   mediaServerId: string
   result: boolean
   sectionResults: ISectionComparisonResults[]

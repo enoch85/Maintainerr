@@ -1,5 +1,8 @@
 import { MediaServerType } from './enums'
 
+/**
+ * Request for switching media server type
+ */
 export interface SwitchMediaServerRequest {
   targetServerType: MediaServerType
   /**
@@ -10,6 +13,9 @@ export interface SwitchMediaServerRequest {
   migrateRules?: boolean
 }
 
+/**
+ * Details about a rule that was skipped during migration
+ */
 export interface SkippedRuleDetail {
   ruleGroupId: number
   ruleGroupName: string
@@ -18,6 +24,9 @@ export interface SkippedRuleDetail {
   propertyName?: string
 }
 
+/**
+ * Result of rule migration attempt
+ */
 export interface RuleMigrationResult {
   totalRules: number
   migratedRules: number
@@ -28,6 +37,9 @@ export interface RuleMigrationResult {
   skippedDetails: SkippedRuleDetail[]
 }
 
+/**
+ * Response for media server switch operation
+ */
 export interface SwitchMediaServerResponse {
   status: 'OK' | 'NOK'
   code: number
@@ -41,6 +53,9 @@ export interface SwitchMediaServerResponse {
   ruleMigration?: RuleMigrationResult
 }
 
+/**
+ * Preview of data that will be cleared/kept when switching media servers
+ */
 export interface MediaServerSwitchPreview {
   currentServerType: MediaServerType
   targetServerType: MediaServerType

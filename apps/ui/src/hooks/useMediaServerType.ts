@@ -13,15 +13,10 @@ export function useMediaServerType() {
     | undefined
 
   return {
-    /** Current media server type ('plex', 'jellyfin', or null/undefined if not set) */
     mediaServerType,
-    /** Whether settings are still loading */
     isLoading,
-    /** True if Plex is the configured media server */
     isPlex: mediaServerType === 'plex',
-    /** True if Jellyfin is the configured media server */
     isJellyfin: mediaServerType === 'jellyfin',
-    /** True if no media server type has been selected yet */
     isNotConfigured: !mediaServerType,
   }
 }

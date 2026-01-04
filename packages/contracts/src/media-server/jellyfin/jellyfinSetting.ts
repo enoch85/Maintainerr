@@ -4,7 +4,6 @@ import z from 'zod'
  * Schema for Jellyfin server settings
  */
 export const jellyfinSettingSchema = z.object({
-  /** Jellyfin server URL (e.g., http://jellyfin.local:8096) */
   jellyfin_url: z
     .string()
     .trim()
@@ -14,9 +13,7 @@ export const jellyfinSettingSchema = z.object({
     .refine((val) => !val.endsWith('/'), {
       message: "Must not end with a '/'",
     }),
-  /** API key generated from Jellyfin Dashboard → API Keys */
   jellyfin_api_key: z.string().trim().min(1, 'API key is required'),
-  /** Optional admin user ID for administrative operations */
   jellyfin_user_id: z.string().trim().optional(),
 })
 

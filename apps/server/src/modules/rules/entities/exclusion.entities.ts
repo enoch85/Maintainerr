@@ -6,7 +6,6 @@ export class Exclusion {
   @PrimaryGeneratedColumn()
   id: number;
 
-  /** Media server item ID (Plex ratingKey or Jellyfin GUID) */
   @Column()
   mediaServerId: string;
 
@@ -19,6 +18,5 @@ export class Exclusion {
   @Column({ nullable: true }) // nullable because old exclusions don't have the type. They'll be added by a maintenance task
   type: MediaItemType | undefined;
 
-  /** Server-agnostic media metadata (added programmatically, not stored in DB) */
   mediaData: MediaItemWithParent;
 }

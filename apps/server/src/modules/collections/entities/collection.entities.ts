@@ -20,11 +20,9 @@ export class Collection {
   @PrimaryGeneratedColumn()
   id: number;
 
-  /** Media server collection ID (Plex ratingKey or Jellyfin GUID) */
   @Column({ nullable: true })
   mediaServerId: string;
 
-  /** Which media server this collection belongs to */
   @Column({ type: 'varchar', default: MediaServerType.PLEX })
   mediaServerType: MediaServerType;
 

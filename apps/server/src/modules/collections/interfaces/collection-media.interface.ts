@@ -3,7 +3,6 @@ import { CollectionLogMeta, MediaItemType } from '@maintainerr/contracts';
 export interface ICollectionMedia {
   id: number;
   collectionId: number;
-  /** Media server item ID (Plex ratingKey or Jellyfin GUID) */
   mediaServerId: string;
   tmdbId: number;
   tvdbid: number;
@@ -11,7 +10,6 @@ export interface ICollectionMedia {
 }
 
 export interface AddRemoveCollectionMedia {
-  /** Media server item ID (Plex ratingKey or Jellyfin GUID) */
   mediaServerId: string;
   reason?: CollectionLogMeta;
 }
