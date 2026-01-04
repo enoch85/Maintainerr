@@ -31,4 +31,11 @@ export interface IRuleComparisonResult {
   result: boolean
 }
 
-export type RuleValueType = number | Date | string | boolean | number[] | null
+export type RuleValueType =
+  | number
+  | Date
+  | string
+  | boolean
+  | number[]
+  | string[]
+  | null
