@@ -1,4 +1,7 @@
-import { ArrowNarrowRightIcon, CheckCircleIcon } from '@heroicons/react/solid'
+import {
+  ArrowNarrowRightIcon,
+  CheckCircleIcon,
+} from '@heroicons/react/solid'
 import {
   MediaServerSwitchPreview,
   MediaServerType,
@@ -294,7 +297,7 @@ const MediaServerSelector = ({
 
             {hasDataToDelete ? (
               <>
-                <p className="mb-3 font-semibold text-zinc-100">
+                <p className="mb-3 text-zinc-100">
                   The following data will be permanently deleted:
                 </p>
                 <ul className="mb-4 list-inside list-disc space-y-1 text-sm text-zinc-100">
@@ -410,15 +413,13 @@ const MediaServerSelector = ({
               </div>
             )}
 
-            {migrateRules && (
-              <p className="mb-4 text-amber-400">
-                <span className="font-bold">Important:</span>{' '}
-                <span className="text-zinc-100">
-                  After migration, you must manually assign a library to each
-                  rule group before rules can run.
-                </span>
-              </p>
-            )}
+            <p className="mb-4 text-amber-400">
+              <span className="font-bold">Important:</span>{' '}
+              <span className="text-zinc-100">
+                After migration, you must manually assign a library to each rule
+                group before rules can run.
+              </span>
+            </p>
           </div>
         </Modal>
       )}
