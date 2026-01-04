@@ -284,7 +284,8 @@ const AddModal = (props: IAddModal) => {
                 id={`Seasons-field`}
                 value={selectedSeasons}
                 onChange={(e: { target: { value: string } }) => {
-                  setSelectedSeasons(+e.target.value)
+                  const value = e.target.value
+                  setSelectedSeasons(value === '-1' ? -1 : value)
                 }}
               >
                 {seasonOptions.map((e: ICollectionMedia) => {
@@ -305,7 +306,8 @@ const AddModal = (props: IAddModal) => {
                 id={`Episodes-field`}
                 value={selectedEpisodes}
                 onChange={(e: { target: { value: string } }) => {
-                  setSelectedEpisodes(+e.target.value)
+                  const value = e.target.value
+                  setSelectedEpisodes(value === '-1' ? -1 : value)
                 }}
               >
                 {episodeOptions.map((e: ICollectionMedia) => {

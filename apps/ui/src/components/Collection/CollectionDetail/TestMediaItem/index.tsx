@@ -247,7 +247,8 @@ const TestMediaItem = (props: ITestMediaItem) => {
                   id={`Seasons-field`}
                   value={selectedSeasons}
                   onChange={(e: { target: { value: string } }) => {
-                    updateSelectedSeasons(+e.target.value)
+                    const value = e.target.value
+                    updateSelectedSeasons(value === '-1' ? -1 : value)
                   }}
                 >
                   {seasonOptions.map((e: IOptions) => {
@@ -269,7 +270,8 @@ const TestMediaItem = (props: ITestMediaItem) => {
                   id={`episode-field`}
                   value={selectedEpisodes}
                   onChange={(e: { target: { value: string } }) => {
-                    setSelectedEpisodes(+e.target.value)
+                    const value = e.target.value
+                    setSelectedEpisodes(value === '-1' ? -1 : value)
                   }}
                 >
                   {episodeOptions.map((e: IOptions) => {
