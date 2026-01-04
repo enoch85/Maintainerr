@@ -246,14 +246,14 @@ const MediaServerSelector = ({
               {!isSwitchComplete && (
                 <>
                   <div className="flex flex-col items-center">
-                    <div className="flex h-16 w-28 items-center justify-center">
+                    <div className="flex h-16 items-center justify-center">
                       <img
                         src={
                           serverOptions.find((o) => o.value === currentType)
                             ?.icon
                         }
                         alt={currentType === 'plex' ? 'Plex' : 'Jellyfin'}
-                        className="max-h-full max-w-full object-contain"
+                        className="max-h-full max-w-[7rem] object-contain"
                       />
                     </div>
                     <span className="mt-2 text-sm font-medium text-zinc-400">
@@ -268,13 +268,13 @@ const MediaServerSelector = ({
               )}
 
               <div className="flex flex-col items-center">
-                <div className="flex h-16 w-28 items-center justify-center">
+                <div className="flex h-16 items-center justify-center">
                   <img
                     src={
                       serverOptions.find((o) => o.value === pendingType)?.icon
                     }
                     alt={pendingType === 'plex' ? 'Plex' : 'Jellyfin'}
-                    className="max-h-full max-w-full object-contain"
+                    className="max-h-full max-w-[7rem] object-contain"
                   />
                 </div>
                 <span className="mt-2 text-sm font-medium text-zinc-400">
