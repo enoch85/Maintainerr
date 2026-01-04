@@ -243,22 +243,27 @@ const MediaServerSelector = ({
         >
           <div className="text-zinc-100">
             <div className="mb-6 flex items-center justify-center space-x-8">
-              <div className="flex flex-col items-center">
-                <div className="flex h-16 w-16 items-center justify-center">
-                  <img
-                    src={
-                      serverOptions.find((o) => o.value === currentType)?.icon
-                    }
-                    alt={currentType === 'plex' ? 'Plex' : 'Jellyfin'}
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </div>
-                <span className="mt-2 text-sm font-medium text-zinc-400">
-                  {currentType === 'plex' ? 'Plex' : 'Jellyfin'}
-                </span>
-              </div>
+              {!isSwitchComplete && (
+                <>
+                  <div className="flex flex-col items-center">
+                    <div className="flex h-16 w-16 items-center justify-center">
+                      <img
+                        src={
+                          serverOptions.find((o) => o.value === currentType)
+                            ?.icon
+                        }
+                        alt={currentType === 'plex' ? 'Plex' : 'Jellyfin'}
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    </div>
+                    <span className="mt-2 text-sm font-medium text-zinc-400">
+                      {currentType === 'plex' ? 'Plex' : 'Jellyfin'}
+                    </span>
+                  </div>
 
-              <ArrowNarrowRightIcon className="h-8 w-8 text-zinc-500" />
+                  <ArrowNarrowRightIcon className="h-8 w-8 text-zinc-500" />
+                </>
+              )}
 
               <div className="flex flex-col items-center">
                 <div className="flex h-16 w-16 items-center justify-center">
@@ -277,25 +282,39 @@ const MediaServerSelector = ({
             </div>
 
             <p className="mb-2 text-lg font-medium text-zinc-100">
-              We will now switch from{' '}
-              <strong className="text-zinc-100">
-                {currentType === 'plex' ? 'Plex' : 'Jellyfin'}
-              </strong>{' '}
-              to{' '}
-              <strong className="text-zinc-100">
-                {pendingType === 'plex' ? 'Plex' : 'Jellyfin'}
-              </strong>
-              .
-            </p>
-            <p className="mb-2 text-zinc-100">
-              Your general settings, Radarr, Sonarr, Overseerr, Jellyseerr,
-              Tautulli, and notification settings will be kept.
+              {isSwitchComplete ? (
+                <>
+                  Successfully switched from{' '}
+                  <strong className="text-zinc-100">
+                    {currentType === 'plex' ? 'Plex' : 'Jellyfin'}
+                  </strong>{' '}
+                  to{' '}
+                  <strong className="text-zinc-100">
+                    {pendingType === 'plex' ? 'Plex' : 'Jellyfin'}
+                  </strong>
+                  !
+                </>
+              ) : (
+                <>
+                  We will now switch from{' '}
+                  <strong className="text-zinc-100">
+                    {currentType === 'plex' ? 'Plex' : 'Jellyfin'}
+                  </strong>{' '}
+                  to{' '}
+                  <strong className="text-zinc-100">
+                    {pendingType === 'plex' ? 'Plex' : 'Jellyfin'}
+                  </strong>
+                  .
+                </>
+              )}
             </p>
 
             {hasDataToDelete ? (
               <>
                 <p className="mb-3 text-zinc-100">
-                  The following data will be permanently deleted:
+                  {isSwitchComplete
+                    ? 'The following data was permanently deleted:'
+                    : 'The following data will be permanently deleted:'}
                 </p>
                 <ul className="mb-4 list-inside list-disc space-y-1 text-sm text-zinc-100">
                   {previewData!.dataToBeCleared.collections > 0 && (
@@ -342,7 +361,7 @@ const MediaServerSelector = ({
             )}
 
             {/* Rule Migration Section */}
-            {hasRulesToMigrate && (
+            {hasRulesToMigrate && !isSwitchComplete && (
               <div className="mb-4 rounded-md border border-zinc-700 bg-zinc-800/50 p-3">
                 <div className="flex items-start">
                   <input
