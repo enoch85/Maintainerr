@@ -227,7 +227,7 @@ const MediaServerSelector = ({
       {/* Confirmation Modal */}
       {showConfirmModal && (
         <Modal
-          onCancel={handleCancelSwitch}
+          onCancel={isSwitchComplete ? undefined : handleCancelSwitch}
           onOk={isSwitchComplete ? handleFinish : handleConfirmSwitch}
           okText={
             isSwitchComplete
