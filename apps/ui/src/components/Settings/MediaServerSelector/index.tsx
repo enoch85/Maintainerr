@@ -1,7 +1,4 @@
-import {
-  ArrowNarrowRightIcon,
-  CheckCircleIcon,
-} from '@heroicons/react/solid'
+import { ArrowNarrowRightIcon, CheckCircleIcon } from '@heroicons/react/solid'
 import {
   MediaServerSwitchPreview,
   MediaServerType,
