@@ -1,4 +1,4 @@
-import { MediaServerType, MediaItemType } from '@maintainerr/contracts';
+import { MediaItemType, MediaServerType } from '@maintainerr/contracts';
 import {
   Column,
   Entity,
