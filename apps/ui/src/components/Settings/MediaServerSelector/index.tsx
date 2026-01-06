@@ -106,7 +106,7 @@ const MediaServerSelector = ({
     try {
       await switchServer({
         targetServerType: pendingType,
-        migrateRules: migrateRules,
+        migrateRules,
       })
 
       setIsSwitchComplete(true)

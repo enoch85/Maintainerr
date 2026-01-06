@@ -5,9 +5,9 @@ This directory contains a complete Docker Compose setup for testing Maintainerr'
 ## Quick Start
 
 ```bash
-cd jellyfin-dev-documents/docker
+cd docker-dev-jellyfin-temp
 
-# Start with default branch (jellyfin-phase-e)
+# Start with default branch
 docker compose up -d
 
 # Or build from a specific branch

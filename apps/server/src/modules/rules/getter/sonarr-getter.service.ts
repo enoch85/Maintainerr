@@ -88,9 +88,16 @@ export class SonarrGetterService {
       );
 
       let showResponse: SonarrSeries | undefined;
+      let attemptCount = 0;
       for (const tvdbId of tvdbIds) {
+        attemptCount++;
         showResponse = await sonarrApiClient.getSeriesByTvdbId(tvdbId);
         if (showResponse?.id) {
+          if (attemptCount > 1) {
+            this.logger.debug(
+              `[TVDB] Found '${libItem.title}' in Sonarr using TVDB ID ${tvdbId} (attempt ${attemptCount}/${tvdbIds.length}). Consider checking upstream provider data quality.`,
+            );
+          }
           break;
         }
       }

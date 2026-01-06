@@ -251,8 +251,12 @@ export class RuleExecutorService {
           }
         }
 
-        // Handle manually removed
-        // Skip for Jellyfin when children is empty - API lag causes false positives
+        // Handle manually removed items from collections
+        // Jellyfin workaround: Skip removal check when children array is empty.
+        // Unlike Plex, Jellyfin's collection API can return empty children during
+        // brief sync delays after collection modifications, causing false positives
+        // where valid items would be incorrectly flagged as "manually removed".
+        // This workaround can be removed if Jellyfin improves collection sync consistency.
         const isJellyfin =
           this.settings.media_server_type === MediaServerType.JELLYFIN;
         const shouldCheckRemovals = isJellyfin

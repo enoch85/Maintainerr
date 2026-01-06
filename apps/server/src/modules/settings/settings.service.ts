@@ -505,9 +505,10 @@ export class SettingsService implements SettingDto {
       }
 
       // Fallback to first user if no admin found
+      // Warning: Non-admin users may lack permissions for some operations
       if (users.length > 0 && users[0].Id) {
-        this.logger.debug(
-          `No admin user found, using first user: ${users[0].Name} (${users[0].Id})`,
+        this.logger.warn(
+          `No Jellyfin admin user found, falling back to first user: ${users[0].Name} (${users[0].Id}). Some operations may fail due to insufficient permissions.`,
         );
         return users[0].Id;
       }
