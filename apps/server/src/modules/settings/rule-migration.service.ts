@@ -1,11 +1,11 @@
+import { MediaServerType } from '@maintainerr/contracts';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Rules } from '../rules/entities/rules.entities';
-import { RuleGroup } from '../rules/entities/rule-group.entities';
-import { RuleDto } from '../rules/dtos/rule.dto';
 import { Application } from '../rules/constants/rules.constants';
-import { MediaServerType } from '@maintainerr/contracts';
+import { RuleDto } from '../rules/dtos/rule.dto';
+import { RuleGroup } from '../rules/entities/rule-group.entities';
+import { Rules } from '../rules/entities/rules.entities';
 
 /**
  * Properties that exist in Plex but NOT in Jellyfin.
@@ -271,14 +271,16 @@ export class RuleMigrationService {
 
         this.logger.debug(`Migrated rule ${rule.id}`);
       } catch (error) {
-        this.logger.error(`Failed to migrate rule ${rule.id}: ${error}`);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.logger.error(`Failed to migrate rule ${rule.id}: ${errorMessage}`);
         result.skippedRules++;
         groupStatus.skipped++;
         result.skippedDetails.push({
           ruleGroupId: groupId,
           ruleGroupName: rule.ruleGroup?.name ?? 'Unknown',
           ruleId: rule.id,
-          reason: `Migration error: ${error.message}`,
+          reason: `Migration error: ${errorMessage}`,
         });
       }
     }

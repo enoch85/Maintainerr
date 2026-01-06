@@ -268,17 +268,19 @@ export class RuleExecutorService {
           collectionMedia.length > 0 &&
           shouldCheckRemovals
         ) {
-          for (const media of collectionMedia) {
-            if (media && media.mediaServerId) {
+          for (const mediaItem of collectionMedia) {
+            if (mediaItem && mediaItem.mediaServerId) {
               if (
                 !children ||
-                !children.find((e) => media.mediaServerId === e.id.toString())
+                !children.find(
+                  (e) => mediaItem.mediaServerId === e.id.toString(),
+                )
               ) {
                 await this.collectionService.removeFromCollection(
                   collection.id,
                   [
                     {
-                      mediaServerId: media.mediaServerId,
+                      mediaServerId: mediaItem.mediaServerId,
                       reason: {
                         type: 'media_removed_manually',
                       },
@@ -376,9 +378,9 @@ export class RuleExecutorService {
         }
 
         // Ensure manually added media always remains included
-        for (const media of collMediaData) {
-          if (media?.isManual === true) {
-            desiredMediaServerIds.add(media.mediaServerId);
+        for (const mediaItem of collMediaData) {
+          if (mediaItem?.isManual === true) {
+            desiredMediaServerIds.add(mediaItem.mediaServerId);
           }
         }
 
