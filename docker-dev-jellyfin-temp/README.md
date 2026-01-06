@@ -20,10 +20,10 @@ REPO=https://github.com/yourfork/Maintainerr.git BRANCH=my-feature docker compos
 
 ## Access Points
 
-| Service     | URL                    | Description                |
-|-------------|------------------------|----------------------------|
-| Maintainerr | http://localhost:6246  | Maintainerr web UI         |
-| Jellyfin    | http://localhost:8096  | Jellyfin media server      |
+| Service     | URL                   | Description           |
+| ----------- | --------------------- | --------------------- |
+| Maintainerr | http://localhost:6246 | Maintainerr web UI    |
+| Jellyfin    | http://localhost:8096 | Jellyfin media server |
 
 ## First-Time Setup
 
