@@ -275,9 +275,6 @@ export class JellyfinGetterService {
         // Plex-only features - not supported in Jellyfin
         case 'watchlist_isListedByUsers':
         case 'watchlist_isWatchlisted': {
-          this.logger.debug(
-            `Property ${prop.name} is not supported for Jellyfin (Plex-only feature)`,
-          );
           return prop.name === 'watchlist_isWatchlisted' ? false : [];
         }
 
@@ -293,9 +290,6 @@ export class JellyfinGetterService {
         case 'rating_tmdbShow': {
           // These would require external API calls
           // For now, return null (not supported)
-          this.logger.debug(
-            `External rating ${prop.name} not yet implemented for Jellyfin`,
-          );
           return null;
         }
 
@@ -339,7 +333,6 @@ export class JellyfinGetterService {
       this.logger.warn(
         `Jellyfin-Getter - Action failed for '${libItem.title}' with id '${libItem.id}': ${e instanceof Error ? e.message : String(e)}`,
       );
-      this.logger.debug(e);
       return undefined;
     }
   }
@@ -675,10 +668,6 @@ export class JellyfinGetterService {
 
     const excludeNames = buildCollectionExcludeNames(ruleGroup);
 
-    this.logger.debug(
-      `[getCollectionNamesIncludingParent] itemId=${itemId}, parentId=${parentId}, grandparentId=${grandparentId}, excludeNames=${JSON.stringify(excludeNames)}, idsToCheck=${JSON.stringify(idsToCheck)}`,
-    );
-
     for (const collection of collections) {
       const children = await this.jellyfinAdapter.getCollectionChildren(
         collection.id,
@@ -687,25 +676,14 @@ export class JellyfinGetterService {
       const childIds = children.map((c) => c.id);
       const hasMatch = children.some((child) => idsToCheck.includes(child.id));
 
-      this.logger.debug(
-        `[getCollectionNamesIncludingParent] collection="${collection.title}" (id=${collection.id}), childCount=${children.length}, childIds=${JSON.stringify(childIds.slice(0, 5))}..., hasMatch=${hasMatch}`,
-      );
-
       if (hasMatch) {
         const collectionNameLower = collection.title.toLowerCase().trim();
-        const isExcluded = excludeNames.includes(collectionNameLower);
-        this.logger.debug(
-          `[getCollectionNamesIncludingParent] Match found! collectionName="${collection.title}", isExcluded=${isExcluded}`,
-        );
-        if (!isExcluded) {
+        if (!excludeNames.includes(collectionNameLower)) {
           collectionNames.add(collection.title.trim());
         }
       }
     }
 
-    this.logger.debug(
-      `[getCollectionNamesIncludingParent] Result: ${JSON.stringify(Array.from(collectionNames))}`,
-    );
     return Array.from(collectionNames);
   }
 
