@@ -2,6 +2,7 @@ import {
   ECollectionLogType,
   MaintainerrEvent,
   MediaItemType,
+  MediaServerType,
 } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -1287,11 +1288,20 @@ export class RulesService {
 
       // if any rule requires a cache reset
       if (result) {
-        cacheManager.getCache('plextv').flush();
-        cacheManager.getCache('plexguid').flush();
-        this.logger.log(
-          `Flushed Plex cache because a rule in the group required it`,
-        );
+        const serverType = await this.mediaServerFactory.getConfiguredServerType();
+
+        if (serverType === MediaServerType.JELLYFIN) {
+          cacheManager.getCache('jellyfin').flush();
+          this.logger.log(
+            `Flushed Jellyfin cache because a rule in the group required it`,
+          );
+        } else if (serverType === MediaServerType.PLEX) {
+          cacheManager.getCache('plextv').flush();
+          cacheManager.getCache('plexguid').flush();
+          this.logger.log(
+            `Flushed Plex cache because a rule in the group required it`,
+          );
+        }
       }
 
       return result;

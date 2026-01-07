@@ -765,10 +765,11 @@ export class JellyfinAdapterService implements IMediaServerService {
     if (!this.api) return [];
 
     try {
+      // Get all BoxSets system-wide - Jellyfin collections can contain items
+      // from any library, so we can't filter by parentId
       const response = await getItemsApi(this.api).getItems({
-        parentId: libraryId,
         includeItemTypes: [BaseItemKind.BoxSet],
-        recursive: false,
+        recursive: true,
         fields: [
           ItemFields.Overview,
           ItemFields.DateCreated,

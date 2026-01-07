@@ -569,15 +569,28 @@ export class JellyfinGetterService {
   ): Promise<string[]> {
     const cacheKey = `jellyfin:item:collections:${itemId}`;
     const cached = this.cache.data.get<string[]>(cacheKey);
-    if (cached) return cached;
+    if (cached) {
+      this.logger.debug(
+        `[getCollectionNames] Using cached collection names for item ${itemId}: ${JSON.stringify(cached)}`,
+      );
+      return cached;
+    }
 
     const collections = await this.jellyfinAdapter.getCollections(libraryId);
+    this.logger.debug(
+      `[getCollectionNames] Found ${collections.length} total collections in system`,
+    );
+
     const collectionNames: string[] = [];
 
     for (const collection of collections) {
       const children = await this.jellyfinAdapter.getCollectionChildren(
         collection.id,
       );
+      this.logger.debug(
+        `[getCollectionNames] Collection "${collection.title}" (${collection.id}) has ${children.length} children`,
+      );
+
       if (children.some((child) => child.id === itemId)) {
         // Exclude the current collection if it matches
         const excludeName = ruleGroup?.collection?.manualCollectionName
@@ -589,10 +602,21 @@ export class JellyfinGetterService {
           collection.title.toLowerCase().trim() !==
             excludeName.toLowerCase().trim()
         ) {
+          this.logger.debug(
+            `[getCollectionNames] Item ${itemId} found in collection "${collection.title}"`,
+          );
           collectionNames.push(collection.title.trim());
+        } else {
+          this.logger.debug(
+            `[getCollectionNames] Item ${itemId} found in collection "${collection.title}" but excluded (matches current rulegroup)`,
+          );
         }
       }
     }
+
+    this.logger.debug(
+      `[getCollectionNames] Item ${itemId} is in ${collectionNames.length} other collections: ${JSON.stringify(collectionNames)}`,
+    );
 
     this.cache.data.set(cacheKey, collectionNames, 600);
     return collectionNames;
