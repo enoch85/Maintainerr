@@ -105,18 +105,43 @@ export class JellyfinMapper {
   }
 
   /**
+   * Determine the correct parent ID for a Jellyfin item.
+   *
+   * Jellyfin's parent hierarchy differs from Plex:
+   * - For Seasons: ParentId = library folder, SeriesId = show
+   * - For Episodes: ParentId = season, SeriesId = show
+   * - For Movies/Shows: ParentId = library folder
+   *
+   * To maintain consistent behavior with Plex (where parentId of a season
+   * is the show), we use SeriesId as parentId for seasons.
+   */
+  private static getParentId(item: BaseItemDto): string | undefined {
+    const itemType = JellyfinMapper.toMediaItemType(item.Type);
+
+    // For seasons, the "parent" should be the show (SeriesId), not the library (ParentId)
+    if (itemType === 'season') {
+      return item.SeriesId || item.ParentId || undefined;
+    }
+
+    // For all other types, use the standard ParentId
+    return item.ParentId || undefined;
+  }
+
+  /**
    * Convert a Jellyfin BaseItemDto to a MediaItem.
    */
   static toMediaItem(item: BaseItemDto): MediaItem {
+    const parentId = JellyfinMapper.getParentId(item);
+
     return {
       id: item.Id || '',
-      parentId: item.ParentId || undefined,
+      parentId: parentId,
       grandparentId: item.SeriesId || undefined,
       title: item.Name || '',
       parentTitle: item.SeasonName || item.SeriesName || undefined,
       grandparentTitle: item.SeriesName || undefined,
       guid: item.Id || '', // Jellyfin uses Id as guid
-      parentGuid: item.ParentId || undefined,
+      parentGuid: parentId,
       grandparentGuid: item.SeriesId || undefined,
       type: JellyfinMapper.toMediaItemType(item.Type),
       addedAt: item.DateCreated ? new Date(item.DateCreated) : new Date(),
