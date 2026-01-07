@@ -1,8 +1,8 @@
 import {
-  MediaItem,
-  MediaItemType,
   IComparisonStatistics,
   IRuleComparisonResult,
+  MediaItem,
+  MediaItemType,
   RuleValueType,
 } from '@maintainerr/contracts';
 import { Injectable } from '@nestjs/common';
@@ -188,6 +188,10 @@ export class RuleComparatorService {
       data = this.workerData;
     }
 
+    // Log first few items for debugging
+    let logCount = 0;
+    const maxLogs = 3;
+
     // loop media items
     for (let i = data.length - 1; i >= 0; i--) {
       // fetch values
@@ -219,6 +223,14 @@ export class RuleComparatorService {
           secondVal,
           rule.action,
         );
+
+        // Debug log first few items
+        if (logCount < maxLogs) {
+          this.logger.debug(
+            `[Rule] ${rule.firstVal} ${RulePossibility[rule.action]} ${secondVal}: got ${JSON.stringify(firstVal)} => ${comparisonResult ? 'PASS' : 'FAIL'} (item: ${mediaItem.title})`,
+          );
+          logCount++;
+        }
 
         // add stats if enabled
         this.addStatistictoParent(

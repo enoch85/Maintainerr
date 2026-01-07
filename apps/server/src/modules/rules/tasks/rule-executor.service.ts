@@ -318,6 +318,10 @@ export class RuleExecutorService {
 
       const exclusions = await this.rulesService.getExclusions(rulegroup.id);
 
+      this.logger.debug(
+        `[handleCollection] Found ${exclusions.length} exclusions for rule group ${rulegroup.id}`,
+      );
+
       // Build sets of excluded IDs - both direct mediaServerId and parent IDs
       const excludedMediaServerIds = new Set<string>(
         exclusions.map((e) => e.mediaServerId),
@@ -325,6 +329,15 @@ export class RuleExecutorService {
       const excludedParentIds = new Set<string>(
         exclusions.filter((e) => e.parent).map((e) => String(e.parent)),
       );
+
+      if (exclusions.length > 0) {
+        this.logger.debug(
+          `[handleCollection] Excluded media server IDs: ${[...excludedMediaServerIds].slice(0, 5).join(', ')}${excludedMediaServerIds.size > 5 ? '...' : ''}`,
+        );
+        this.logger.debug(
+          `[handleCollection] Excluded parent IDs: ${[...excludedParentIds].slice(0, 5).join(', ')}${excludedParentIds.size > 5 ? '...' : ''}`,
+        );
+      }
 
       const statsByMediaServerId = new Map<string, IComparisonStatistics>();
       for (const stat of this.statisticsData ?? []) {
@@ -337,6 +350,10 @@ export class RuleExecutorService {
       // filter exclusions out of results & get correct media item ID
       // Check both direct exclusion and parent exclusion (e.g., show excluded -> all seasons excluded)
       const desiredMediaServerIds = new Set<string>();
+      let directlyExcludedCount = 0;
+      let parentExcludedCount = 0;
+      let grandparentExcludedCount = 0;
+
       for (const item of this.resultData ?? []) {
         const mediaServerId = item.id;
         const isDirectlyExcluded = excludedMediaServerIds.has(mediaServerId);
@@ -344,6 +361,10 @@ export class RuleExecutorService {
           item.parentId && excludedParentIds.has(item.parentId);
         const isGrandparentExcluded =
           item.grandparentId && excludedParentIds.has(item.grandparentId);
+
+        if (isDirectlyExcluded) directlyExcludedCount++;
+        if (isParentExcluded) parentExcludedCount++;
+        if (isGrandparentExcluded) grandparentExcludedCount++;
 
         if (
           !isDirectlyExcluded &&
@@ -353,6 +374,10 @@ export class RuleExecutorService {
           desiredMediaServerIds.add(mediaServerId);
         }
       }
+
+      this.logger.debug(
+        `[handleCollection] Exclusion breakdown: ${directlyExcludedCount} direct, ${parentExcludedCount} parent, ${grandparentExcludedCount} grandparent`,
+      );
 
       if (collection) {
         const collMediaData = await this.collectionService.getCollectionMedia(
