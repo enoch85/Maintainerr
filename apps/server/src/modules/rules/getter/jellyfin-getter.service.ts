@@ -673,7 +673,6 @@ export class JellyfinGetterService {
         collection.id,
       );
 
-      const childIds = children.map((c) => c.id);
       const hasMatch = children.some((child) => idsToCheck.includes(child.id));
 
       if (hasMatch) {
