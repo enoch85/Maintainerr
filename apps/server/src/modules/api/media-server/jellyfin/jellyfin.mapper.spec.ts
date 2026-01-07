@@ -128,169 +128,259 @@ describe('JellyfinMapper', () => {
   });
 
   describe('toMediaItem', () => {
-    const baseJellyfinItem = {
-      Id: 'abc123',
-      ParentId: 'parent123',
-      SeriesId: 'series123',
-      Name: 'Test Movie',
-      SeasonName: 'Season 1',
-      SeriesName: 'Test Series',
-      Type: BaseItemKind.Movie,
-      DateCreated: '2021-01-01T00:00:00.000Z',
-      DateLastSaved: '2021-01-02T00:00:00.000Z',
-      ProviderIds: {
-        Imdb: 'tt1234567',
-        Tmdb: '12345',
-      },
-      MediaSources: [
-        {
-          Id: 'source1',
-          RunTimeTicks: 72000000000, // 2 hours in ticks
-          Bitrate: 5000000,
-          Container: 'mkv',
-          MediaStreams: [
-            {
-              Type: 'Video' as const,
-              Width: 1920,
-              Height: 1080,
-              Codec: 'h264',
-              AspectRatio: '16:9',
-            },
-            {
-              Type: 'Audio' as const,
-              Channels: 6,
-              Codec: 'aac',
-            },
-          ],
+    describe('Episode', () => {
+      const episodeItem = {
+        Id: 'episode123',
+        ParentId: 'season123',
+        SeriesId: 'series123',
+        Name: 'Test Episode',
+        SeasonName: 'Season 1',
+        SeriesName: 'Test Series',
+        Type: BaseItemKind.Episode,
+        DateCreated: '2021-01-01T00:00:00.000Z',
+        DateLastSaved: '2021-01-02T00:00:00.000Z',
+        ProviderIds: {
+          Imdb: 'tt1234567',
+          Tmdb: '12345',
         },
-      ],
-      Overview: 'Test summary',
-      UserData: {
-        PlayCount: 5,
-        LastPlayedDate: '2021-01-03T00:00:00.000Z',
-        Played: true,
-      },
-      ProductionYear: 2021,
-      RunTimeTicks: 72000000000,
-      PremiereDate: '2021-01-01T00:00:00.000Z',
-      CommunityRating: 8.5,
-      CriticRating: 85,
-      Genres: ['Action', 'Thriller'],
-      People: [
-        {
-          Id: 'actor1',
-          Name: 'Actor Name',
-          Type: 'Actor',
-          Role: 'Hero',
-          PrimaryImageTag: 'tag1',
+        MediaSources: [
+          {
+            Id: 'source1',
+            RunTimeTicks: 72000000000, // 2 hours in ticks
+            Bitrate: 5000000,
+            Container: 'mkv',
+            MediaStreams: [
+              {
+                Type: 'Video' as const,
+                Width: 1920,
+                Height: 1080,
+                Codec: 'h264',
+                AspectRatio: '16:9',
+              },
+              {
+                Type: 'Audio' as const,
+                Channels: 6,
+                Codec: 'aac',
+              },
+            ],
+          },
+        ],
+        Overview: 'Test summary',
+        UserData: {
+          PlayCount: 5,
+          LastPlayedDate: '2021-01-03T00:00:00.000Z',
+          Played: true,
         },
-      ],
-      ChildCount: 10,
-      IndexNumber: 1,
-      ParentIndexNumber: 1,
-      Tags: ['HD', '4K'],
-    } as BaseItemDto;
+        ProductionYear: 2021,
+        RunTimeTicks: 72000000000,
+        PremiereDate: '2021-01-01T00:00:00.000Z',
+        CommunityRating: 8.5,
+        CriticRating: 85,
+        Genres: ['Action', 'Thriller'],
+        People: [
+          {
+            Id: 'actor1',
+            Name: 'Actor Name',
+            Type: 'Actor',
+            Role: 'Hero',
+            PrimaryImageTag: 'tag1',
+          },
+        ],
+        ChildCount: 10,
+        IndexNumber: 1,
+        ParentIndexNumber: 1,
+        Tags: ['HD', '4K'],
+      } as BaseItemDto;
 
-    it('should convert all basic fields correctly', () => {
-      const result = JellyfinMapper.toMediaItem(baseJellyfinItem);
+      it('should convert episode with correct parent/grandparent hierarchy', () => {
+        const result = JellyfinMapper.toMediaItem(episodeItem);
 
-      expect(result.id).toBe('abc123');
-      expect(result.parentId).toBe('parent123');
-      expect(result.grandparentId).toBe('series123');
-      expect(result.title).toBe('Test Movie');
-      expect(result.parentTitle).toBe('Season 1');
-      expect(result.grandparentTitle).toBe('Test Series');
-      expect(result.guid).toBe('abc123');
-      expect(result.type).toBe('movie');
-    });
-
-    it('should convert timestamps to Date objects', () => {
-      const result = JellyfinMapper.toMediaItem(baseJellyfinItem);
-
-      expect(result.addedAt).toEqual(new Date('2021-01-01T00:00:00.000Z'));
-      expect(result.updatedAt).toEqual(new Date('2021-01-02T00:00:00.000Z'));
-      expect(result.lastViewedAt).toEqual(new Date('2021-01-03T00:00:00.000Z'));
-    });
-
-    it('should extract provider IDs correctly', () => {
-      const result = JellyfinMapper.toMediaItem(baseJellyfinItem);
-
-      expect(result.providerIds.imdb).toEqual(['tt1234567']);
-      expect(result.providerIds.tmdb).toEqual(['12345']);
-    });
-
-    it('should convert duration from ticks to milliseconds', () => {
-      const result = JellyfinMapper.toMediaItem(baseJellyfinItem);
-
-      // 72000000000 ticks / 10000 = 7200000 ms = 2 hours
-      expect(result.durationMs).toBe(7200000);
-    });
-
-    it('should convert media sources correctly', () => {
-      const result = JellyfinMapper.toMediaItem(baseJellyfinItem);
-
-      expect(result.mediaSources).toHaveLength(1);
-      expect(result.mediaSources[0].id).toBe('source1');
-      expect(result.mediaSources[0].duration).toBe(7200000);
-      expect(result.mediaSources[0].videoCodec).toBe('h264');
-      expect(result.mediaSources[0].audioCodec).toBe('aac');
-      expect(result.mediaSources[0].audioChannels).toBe(6);
-    });
-
-    it('should convert genres correctly', () => {
-      const result = JellyfinMapper.toMediaItem(baseJellyfinItem);
-
-      expect(result.genres).toHaveLength(2);
-      expect(result.genres![0].name).toBe('Action');
-      expect(result.genres![1].name).toBe('Thriller');
-    });
-
-    it('should convert actors correctly', () => {
-      const result = JellyfinMapper.toMediaItem(baseJellyfinItem);
-
-      expect(result.actors).toHaveLength(1);
-      expect(result.actors![0].name).toBe('Actor Name');
-      expect(result.actors![0].role).toBe('Hero');
-    });
-
-    it('should convert labels from tags', () => {
-      const result = JellyfinMapper.toMediaItem(baseJellyfinItem);
-
-      expect(result.labels).toEqual(['HD', '4K']);
-    });
-
-    it('should convert ratings correctly', () => {
-      const result = JellyfinMapper.toMediaItem(baseJellyfinItem);
-
-      expect(result.ratings).toHaveLength(2);
-      expect(result.ratings).toContainEqual({
-        source: 'community',
-        value: 8.5,
-        type: 'audience',
+        expect(result.id).toBe('episode123');
+        // Episode: parentId = season (from ParentId or SeasonId)
+        expect(result.parentId).toBe('season123');
+        // Episode: grandparentId = show (from SeriesId)
+        expect(result.grandparentId).toBe('series123');
+        expect(result.title).toBe('Test Episode');
+        expect(result.parentTitle).toBe('Season 1');
+        expect(result.grandparentTitle).toBe('Test Series');
+        expect(result.guid).toBe('episode123');
+        expect(result.type).toBe('episode');
       });
-      // Critic rating is normalized from 0-100 to 0-10
-      expect(result.ratings).toContainEqual({
-        source: 'critic',
-        value: 8.5,
-        type: 'critic',
+
+      it('should convert timestamps to Date objects', () => {
+        const result = JellyfinMapper.toMediaItem(episodeItem);
+
+        expect(result.addedAt).toEqual(new Date('2021-01-01T00:00:00.000Z'));
+        expect(result.updatedAt).toEqual(new Date('2021-01-02T00:00:00.000Z'));
+        expect(result.lastViewedAt).toEqual(
+          new Date('2021-01-03T00:00:00.000Z'),
+        );
+      });
+
+      it('should extract provider IDs correctly', () => {
+        const result = JellyfinMapper.toMediaItem(episodeItem);
+
+        expect(result.providerIds.imdb).toEqual(['tt1234567']);
+        expect(result.providerIds.tmdb).toEqual(['12345']);
+      });
+
+      it('should convert duration from ticks to milliseconds', () => {
+        const result = JellyfinMapper.toMediaItem(episodeItem);
+
+        // 72000000000 ticks / 10000 = 7200000 ms = 2 hours
+        expect(result.durationMs).toBe(7200000);
+      });
+
+      it('should convert media sources correctly', () => {
+        const result = JellyfinMapper.toMediaItem(episodeItem);
+
+        expect(result.mediaSources).toHaveLength(1);
+        expect(result.mediaSources[0].id).toBe('source1');
+        expect(result.mediaSources[0].duration).toBe(7200000);
+        expect(result.mediaSources[0].videoCodec).toBe('h264');
+        expect(result.mediaSources[0].audioCodec).toBe('aac');
+        expect(result.mediaSources[0].audioChannels).toBe(6);
+      });
+
+      it('should convert genres correctly', () => {
+        const result = JellyfinMapper.toMediaItem(episodeItem);
+
+        expect(result.genres).toHaveLength(2);
+        expect(result.genres![0].name).toBe('Action');
+        expect(result.genres![1].name).toBe('Thriller');
+      });
+
+      it('should convert actors correctly', () => {
+        const result = JellyfinMapper.toMediaItem(episodeItem);
+
+        expect(result.actors).toHaveLength(1);
+        expect(result.actors![0].name).toBe('Actor Name');
+        expect(result.actors![0].role).toBe('Hero');
+      });
+
+      it('should convert labels from tags', () => {
+        const result = JellyfinMapper.toMediaItem(episodeItem);
+
+        expect(result.labels).toEqual(['HD', '4K']);
+      });
+
+      it('should convert ratings correctly', () => {
+        const result = JellyfinMapper.toMediaItem(episodeItem);
+
+        expect(result.ratings).toHaveLength(2);
+        expect(result.ratings).toContainEqual({
+          source: 'community',
+          value: 8.5,
+          type: 'audience',
+        });
+        // Critic rating is normalized from 0-100 to 0-10
+        expect(result.ratings).toContainEqual({
+          source: 'critic',
+          value: 8.5,
+          type: 'critic',
+        });
       });
     });
 
-    it('should handle missing optional fields', () => {
-      const minimalItem: BaseItemDto = {
-        Id: 'minimal123',
-        Name: 'Minimal Movie',
-        Type: BaseItemKind.Movie,
-      };
+    describe('Season', () => {
+      it('should convert season with correct parent hierarchy', () => {
+        const seasonItem: BaseItemDto = {
+          Id: 'season123',
+          ParentId: 'library123',
+          SeriesId: 'series123',
+          Name: 'Season 1',
+          SeriesName: 'Test Series',
+          Type: BaseItemKind.Season,
+          IndexNumber: 1,
+          DateCreated: '2021-01-01T00:00:00.000Z',
+        };
 
-      const result = JellyfinMapper.toMediaItem(minimalItem);
+        const result = JellyfinMapper.toMediaItem(seasonItem);
 
-      expect(result.id).toBe('minimal123');
-      expect(result.title).toBe('Minimal Movie');
-      expect(result.parentId).toBeUndefined();
-      expect(result.providerIds).toEqual({ imdb: [], tmdb: [], tvdb: [] });
-      expect(result.mediaSources).toEqual([]);
-      expect(result.genres).toEqual([]);
+        expect(result.id).toBe('season123');
+        // Season: parentId = show (from SeriesId, not library ParentId)
+        expect(result.parentId).toBe('series123');
+        // Season: no grandparent
+        expect(result.grandparentId).toBeUndefined();
+        expect(result.title).toBe('Season 1');
+        expect(result.parentTitle).toBe('Test Series');
+        expect(result.type).toBe('season');
+        expect(result.index).toBe(1);
+      });
+    });
+
+    describe('Show/Series', () => {
+      it('should convert show with library as parent', () => {
+        const showItem: BaseItemDto = {
+          Id: 'series123',
+          ParentId: 'library123',
+          Name: 'Test Series',
+          Type: BaseItemKind.Series,
+          DateCreated: '2021-01-01T00:00:00.000Z',
+          Overview: 'A test series',
+          ProviderIds: {
+            Tvdb: '12345',
+          },
+        };
+
+        const result = JellyfinMapper.toMediaItem(showItem);
+
+        expect(result.id).toBe('series123');
+        // Show: parentId = library
+        expect(result.parentId).toBe('library123');
+        // Show: no grandparent
+        expect(result.grandparentId).toBeUndefined();
+        expect(result.title).toBe('Test Series');
+        expect(result.type).toBe('show');
+        expect(result.summary).toBe('A test series');
+      });
+    });
+
+    describe('Movie', () => {
+      it('should convert movie with library as parent', () => {
+        const movieItem: BaseItemDto = {
+          Id: 'movie123',
+          ParentId: 'library123',
+          Name: 'Test Movie',
+          Type: BaseItemKind.Movie,
+          DateCreated: '2021-01-01T00:00:00.000Z',
+          Overview: 'A test movie',
+          ProductionYear: 2021,
+          ProviderIds: {
+            Imdb: 'tt1234567',
+            Tmdb: '12345',
+          },
+        };
+
+        const result = JellyfinMapper.toMediaItem(movieItem);
+
+        expect(result.id).toBe('movie123');
+        // Movie: parentId = library
+        expect(result.parentId).toBe('library123');
+        // Movie: no grandparent
+        expect(result.grandparentId).toBeUndefined();
+        expect(result.title).toBe('Test Movie');
+        expect(result.type).toBe('movie');
+        expect(result.summary).toBe('A test movie');
+        expect(result.year).toBe(2021);
+      });
+
+      it('should handle missing optional fields', () => {
+        const minimalItem: BaseItemDto = {
+          Id: 'minimal123',
+          Name: 'Minimal Item',
+          Type: BaseItemKind.Movie,
+        };
+
+        const result = JellyfinMapper.toMediaItem(minimalItem);
+
+        expect(result.id).toBe('minimal123');
+        expect(result.title).toBe('Minimal Item');
+        expect(result.parentId).toBeUndefined();
+        expect(result.providerIds).toEqual({ imdb: [], tmdb: [], tvdb: [] });
+        expect(result.mediaSources).toEqual([]);
+        expect(result.genres).toEqual([]);
+      });
     });
   });
 
