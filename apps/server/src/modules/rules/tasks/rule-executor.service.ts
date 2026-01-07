@@ -166,8 +166,15 @@ export class RuleExecutorService {
             if (ruleResult) {
               this.statisticsData.push(...ruleResult.stats);
               this.resultData.push(...ruleResult.data);
+              this.logger.debug(
+                `Rule batch complete: ${ruleResult.data.length} items passed, ${ruleResult.stats.length} items evaluated`,
+              );
             }
           }
+
+          this.logger.debug(
+            `Rule execution complete: ${this.resultData.length} total items passed all rules`,
+          );
 
           await this.handleCollection(
             await this.rulesService.getRuleGroupById(ruleGroup.id), // refetch to get latest changes
@@ -383,6 +390,10 @@ export class RuleExecutorService {
             desiredMediaServerIds.add(mediaItem.mediaServerId);
           }
         }
+
+        this.logger.debug(
+          `[handleCollection] ${this.resultData?.length || 0} items from rules, ${desiredMediaServerIds.size} desired after exclusions`,
+        );
 
         const currentMediaServerIds = new Set<string>(
           collMediaData.map((e) => {
