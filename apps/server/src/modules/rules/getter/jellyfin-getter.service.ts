@@ -693,25 +693,44 @@ export class JellyfinGetterService {
       (id): id is string => id !== undefined,
     );
 
+    const excludeName = ruleGroup?.collection?.manualCollectionName
+      ? ruleGroup.collection.manualCollectionName
+      : ruleGroup?.name;
+
+    this.logger.debug(
+      `[getCollectionNamesIncludingParent] Checking item=${itemId}, parent=${parentId}, grandparent=${grandparentId}, excludeName="${excludeName}"`,
+    );
+    this.logger.debug(
+      `[getCollectionNamesIncludingParent] Found ${collections.length} collections in library`,
+    );
+
     for (const collection of collections) {
       const children = await this.jellyfinAdapter.getCollectionChildren(
         collection.id,
       );
 
-      if (children.some((child) => idsToCheck.includes(child.id))) {
-        const excludeName = ruleGroup?.collection?.manualCollectionName
-          ? ruleGroup.collection.manualCollectionName
-          : ruleGroup?.name;
+      const matchedChild = children.find((child) =>
+        idsToCheck.includes(child.id),
+      );
+      if (matchedChild) {
+        const isExcluded =
+          excludeName &&
+          collection.title.toLowerCase().trim() ===
+            excludeName.toLowerCase().trim();
 
-        if (
-          !excludeName ||
-          collection.title.toLowerCase().trim() !==
-            excludeName.toLowerCase().trim()
-        ) {
+        this.logger.debug(
+          `[getCollectionNamesIncludingParent] Found match: collection="${collection.title}", matchedId=${matchedChild.id}, isExcluded=${isExcluded}`,
+        );
+
+        if (!isExcluded) {
           collectionNames.add(collection.title.trim());
         }
       }
     }
+
+    this.logger.debug(
+      `[getCollectionNamesIncludingParent] Result: ${collectionNames.size} collections: ${JSON.stringify(Array.from(collectionNames))}`,
+    );
 
     return Array.from(collectionNames);
   }
