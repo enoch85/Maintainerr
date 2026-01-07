@@ -126,7 +126,11 @@ export class JellyfinMapper {
     // For episodes, Jellyfin provides SeasonId for the parent season.
     // ParentId may refer to the series or library depending on context.
     if (itemType === 'episode') {
-      return (item as unknown as { SeasonId?: string }).SeasonId || item.ParentId || undefined;
+      return (
+        (item as unknown as { SeasonId?: string }).SeasonId ||
+        item.ParentId ||
+        undefined
+      );
     }
 
     // For all other types, use the standard ParentId
