@@ -675,20 +675,37 @@ export class JellyfinGetterService {
 
     const excludeNames = buildCollectionExcludeNames(ruleGroup);
 
+    this.logger.debug(
+      `[getCollectionNamesIncludingParent] itemId=${itemId}, parentId=${parentId}, grandparentId=${grandparentId}, excludeNames=${JSON.stringify(excludeNames)}, idsToCheck=${JSON.stringify(idsToCheck)}`,
+    );
+
     for (const collection of collections) {
       const children = await this.jellyfinAdapter.getCollectionChildren(
         collection.id,
       );
 
+      const childIds = children.map((c) => c.id);
       const hasMatch = children.some((child) => idsToCheck.includes(child.id));
+
+      this.logger.debug(
+        `[getCollectionNamesIncludingParent] collection="${collection.title}" (id=${collection.id}), childCount=${children.length}, childIds=${JSON.stringify(childIds.slice(0, 5))}..., hasMatch=${hasMatch}`,
+      );
+
       if (hasMatch) {
         const collectionNameLower = collection.title.toLowerCase().trim();
-        if (!excludeNames.includes(collectionNameLower)) {
+        const isExcluded = excludeNames.includes(collectionNameLower);
+        this.logger.debug(
+          `[getCollectionNamesIncludingParent] Match found! collectionName="${collection.title}", isExcluded=${isExcluded}`,
+        );
+        if (!isExcluded) {
           collectionNames.add(collection.title.trim());
         }
       }
     }
 
+    this.logger.debug(
+      `[getCollectionNamesIncludingParent] Result: ${JSON.stringify(Array.from(collectionNames))}`,
+    );
     return Array.from(collectionNames);
   }
 
