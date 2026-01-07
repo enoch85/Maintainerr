@@ -1288,7 +1288,8 @@ export class RulesService {
 
       // if any rule requires a cache reset
       if (result) {
-        const serverType = await this.mediaServerFactory.getConfiguredServerType();
+        const serverType =
+          await this.mediaServerFactory.getConfiguredServerType();
 
         if (serverType === MediaServerType.JELLYFIN) {
           cacheManager.getCache('jellyfin').flush();
