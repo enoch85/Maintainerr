@@ -857,7 +857,17 @@ export class JellyfinAdapterService implements IMediaServerService {
     if (!this.api) return [];
 
     try {
+      // Get admin user ID from settings - Jellyfin BoxSets require userId to return their children
+      const settings = await this.settingsService.getSettings();
+      const userId =
+        settings && 'jellyfin_user_id' in settings
+          ? settings.jellyfin_user_id
+          : undefined;
+
+      // For BoxSets in Jellyfin, we need to use the Items endpoint
+      // with the collection's ID as parentId AND a userId
       const response = await getItemsApi(this.api).getItems({
+        userId: userId,
         parentId: collectionId,
         fields: [
           ItemFields.ProviderIds,
@@ -865,7 +875,35 @@ export class JellyfinAdapterService implements IMediaServerService {
           ItemFields.DateCreated,
         ],
         enableUserData: true,
+        recursive: false,
       });
+
+      // If parentId approach returns nothing, try recursive search
+      if (!response.data.Items?.length) {
+        const itemsResponse = await getItemsApi(this.api).getItems({
+          userId: userId,
+          parentId: collectionId,
+          recursive: true,
+          includeItemTypes: [
+            BaseItemKind.Movie,
+            BaseItemKind.Series,
+            BaseItemKind.Season,
+            BaseItemKind.Episode,
+          ],
+          fields: [
+            ItemFields.ProviderIds,
+            ItemFields.Path,
+            ItemFields.DateCreated,
+          ],
+          enableUserData: true,
+        });
+
+        if (itemsResponse.data.Items?.length) {
+          return (itemsResponse.data.Items || []).map(
+            JellyfinMapper.toMediaItem,
+          );
+        }
+      }
 
       return (response.data.Items || []).map(JellyfinMapper.toMediaItem);
     } catch (error) {
