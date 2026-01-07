@@ -130,21 +130,18 @@ export class CollectionsController {
   }
   @Delete('/media')
   deleteMediaFromCollection(
-    @Query('mediaId') mediaId: number,
-    @Query('collectionId') collectionId: number,
+    @Query('mediaId') mediaId: string,
+    @Query('collectionId', new ParseIntPipe({ optional: true }))
+    collectionId?: number,
   ) {
-    const collId = Number(collectionId);
-    if (!collId) {
+    if (!collectionId) {
       return this.collectionService.removeFromAllCollections([
-        { mediaServerId: mediaId.toString() },
-      ]);
-    } else {
-      return this.collectionService.removeFromCollection(collId, [
-        {
-          mediaServerId: mediaId.toString(),
-        },
+        { mediaServerId: mediaId },
       ]);
     }
+    return this.collectionService.removeFromCollection(collectionId, [
+      { mediaServerId: mediaId },
+    ]);
   }
 
   @Get('/media/')
