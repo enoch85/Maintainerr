@@ -567,59 +567,55 @@ export class JellyfinGetterService {
     libraryId: string,
     ruleGroup?: RulesDto,
   ): Promise<string[]> {
+    // Cache the raw collection names (without exclusion filtering)
+    // so we can apply different exclusions for different rule groups
     const cacheKey = `jellyfin:item:collections:${itemId}`;
-    const cached = this.cache.data.get<string[]>(cacheKey);
-    if (cached) {
+    let allCollectionNames = this.cache.data.get<string[]>(cacheKey);
+
+    if (!allCollectionNames) {
+      const collections = await this.jellyfinAdapter.getCollections(libraryId);
       this.logger.debug(
-        `[getCollectionNames] Using cached collection names for item ${itemId}: ${JSON.stringify(cached)}`,
-      );
-      return cached;
-    }
-
-    const collections = await this.jellyfinAdapter.getCollections(libraryId);
-    this.logger.debug(
-      `[getCollectionNames] Found ${collections.length} total collections in system`,
-    );
-
-    const collectionNames: string[] = [];
-
-    for (const collection of collections) {
-      const children = await this.jellyfinAdapter.getCollectionChildren(
-        collection.id,
-      );
-      this.logger.debug(
-        `[getCollectionNames] Collection "${collection.title}" (${collection.id}) has ${children.length} children`,
+        `[getCollectionNames] Found ${collections.length} total collections in system`,
       );
 
-      if (children.some((child) => child.id === itemId)) {
-        // Exclude the current collection if it matches
-        const excludeName = ruleGroup?.collection?.manualCollectionName
-          ? ruleGroup.collection.manualCollectionName
-          : ruleGroup?.name;
+      allCollectionNames = [];
 
-        if (
-          !excludeName ||
-          collection.title.toLowerCase().trim() !==
-            excludeName.toLowerCase().trim()
-        ) {
+      for (const collection of collections) {
+        const children = await this.jellyfinAdapter.getCollectionChildren(
+          collection.id,
+        );
+        this.logger.debug(
+          `[getCollectionNames] Collection "${collection.title}" (${collection.id}) has ${children.length} children`,
+        );
+
+        if (children.some((child) => child.id === itemId)) {
           this.logger.debug(
             `[getCollectionNames] Item ${itemId} found in collection "${collection.title}"`,
           );
-          collectionNames.push(collection.title.trim());
-        } else {
-          this.logger.debug(
-            `[getCollectionNames] Item ${itemId} found in collection "${collection.title}" but excluded (matches current rulegroup)`,
-          );
+          allCollectionNames.push(collection.title.trim());
         }
       }
+
+      this.cache.data.set(cacheKey, allCollectionNames, 600);
     }
 
+    // Now filter out the current rule group's collection
+    const excludeName = ruleGroup?.collection?.manualCollectionName
+      ? ruleGroup.collection.manualCollectionName
+      : ruleGroup?.name;
+
+    const filteredNames = excludeName
+      ? allCollectionNames.filter(
+          (name) =>
+            name.toLowerCase().trim() !== excludeName.toLowerCase().trim(),
+        )
+      : allCollectionNames;
+
     this.logger.debug(
-      `[getCollectionNames] Item ${itemId} is in ${collectionNames.length} other collections: ${JSON.stringify(collectionNames)}`,
+      `[getCollectionNames] Item ${itemId} is in ${allCollectionNames.length} collections total, ${filteredNames.length} after excluding "${excludeName}": ${JSON.stringify(filteredNames)}`,
     );
 
-    this.cache.data.set(cacheKey, collectionNames, 600);
-    return collectionNames;
+    return filteredNames;
   }
 
   private async getPlaylistCount(

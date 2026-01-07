@@ -63,7 +63,7 @@ services:
       init-permissions:
         condition: service_completed_successfully
     ports:
-      - "8096:8096"
+      - "8097:8096"
     volumes:
       - jellyfin-config:/config
       - jellyfin-cache:/cache
