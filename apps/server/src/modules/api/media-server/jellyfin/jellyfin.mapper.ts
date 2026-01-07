@@ -128,21 +128,42 @@ export class JellyfinMapper {
   }
 
   /**
+   * Determine the correct grandparent ID for a Jellyfin item.
+   *
+   * Jellyfin hierarchy:
+   * - Episodes: grandparent = show (SeriesId)
+   * - Seasons: no grandparent (parent is show, so grandparent would be library - not useful)
+   * - Movies/Shows: no grandparent
+   */
+  private static getGrandparentId(item: BaseItemDto): string | undefined {
+    const itemType = JellyfinMapper.toMediaItemType(item.Type);
+
+    // Only episodes have a meaningful grandparent (the show)
+    if (itemType === 'episode') {
+      return item.SeriesId || undefined;
+    }
+
+    // Seasons, movies, and shows don't have a useful grandparent
+    return undefined;
+  }
+
+  /**
    * Convert a Jellyfin BaseItemDto to a MediaItem.
    */
   static toMediaItem(item: BaseItemDto): MediaItem {
     const parentId = JellyfinMapper.getParentId(item);
+    const grandparentId = JellyfinMapper.getGrandparentId(item);
 
     return {
       id: item.Id || '',
       parentId: parentId,
-      grandparentId: item.SeriesId || undefined,
+      grandparentId: grandparentId,
       title: item.Name || '',
       parentTitle: item.SeasonName || item.SeriesName || undefined,
       grandparentTitle: item.SeriesName || undefined,
       guid: item.Id || '', // Jellyfin uses Id as guid
       parentGuid: parentId,
-      grandparentGuid: item.SeriesId || undefined,
+      grandparentGuid: grandparentId,
       type: JellyfinMapper.toMediaItemType(item.Type),
       addedAt: item.DateCreated ? new Date(item.DateCreated) : new Date(),
       updatedAt: (item as { DateLastSaved?: string }).DateLastSaved
