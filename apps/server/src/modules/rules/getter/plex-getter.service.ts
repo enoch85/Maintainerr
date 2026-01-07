@@ -17,6 +17,7 @@ import {
   RuleConstants,
 } from '../constants/rules.constants';
 import { RulesDto } from '../dtos/rules.dto';
+import { buildCollectionExcludeNames } from '../helpers/collection-exclude.helper';
 
 @Injectable()
 export class PlexGetterService {
@@ -117,17 +118,10 @@ export class PlexGetterService {
           return item.Label ? item.Label.map((l) => l.tag) : [];
         }
         case 'collections': {
+          const excludeNames = buildCollectionExcludeNames(ruleGroup);
           return metadata.Collection
             ? metadata.Collection.filter(
-                (el) =>
-                  el.tag.toLowerCase().trim() !==
-                  (ruleGroup?.collection?.manualCollection &&
-                  ruleGroup?.collection?.manualCollectionName
-                    ? ruleGroup.collection.manualCollectionName
-                    : ruleGroup.name
-                  )
-                    .toLowerCase()
-                    .trim(),
+                (el) => !excludeNames.includes(el.tag.toLowerCase().trim()),
               ).length
             : 0;
         }
@@ -140,17 +134,10 @@ export class PlexGetterService {
             ...(grandparent?.Collection || []),
           ];
 
+          const excludeNames = buildCollectionExcludeNames(ruleGroup);
           return combinedCollections
             ? combinedCollections.filter(
-                (el) =>
-                  el.tag.toLowerCase().trim() !==
-                  (ruleGroup?.collection?.manualCollection &&
-                  ruleGroup?.collection?.manualCollectionName
-                    ? ruleGroup.collection.manualCollectionName
-                    : ruleGroup.name
-                  )
-                    .toLowerCase()
-                    .trim(),
+                (el) => !excludeNames.includes(el.tag.toLowerCase().trim()),
               ).length
             : 0;
         }
@@ -630,17 +617,10 @@ export class PlexGetterService {
             }
           }
 
+          const excludeNames = buildCollectionExcludeNames(ruleGroup);
           const normalCollectionCount = metadata.Collection
             ? metadata.Collection.filter(
-                (el) =>
-                  el.tag.toLowerCase().trim() !==
-                  (ruleGroup?.collection?.manualCollection &&
-                  ruleGroup?.collection?.manualCollectionName
-                    ? ruleGroup.collection.manualCollectionName
-                    : ruleGroup.name
-                  )
-                    .toLowerCase()
-                    .trim(),
+                (el) => !excludeNames.includes(el.tag.toLowerCase().trim()),
               ).length
             : 0;
 
@@ -678,17 +658,10 @@ export class PlexGetterService {
             ).length;
           }
 
+          const excludeNames = buildCollectionExcludeNames(ruleGroup);
           const normalCollectionCount = combinedCollections
             ? combinedCollections.filter(
-                (el) =>
-                  el.tag.toLowerCase().trim() !==
-                  (ruleGroup?.collection?.manualCollection &&
-                  ruleGroup?.collection?.manualCollectionName
-                    ? ruleGroup.collection.manualCollectionName
-                    : ruleGroup.name
-                  )
-                    .toLowerCase()
-                    .trim(),
+                (el) => !excludeNames.includes(el.tag.toLowerCase().trim()),
               ).length
             : 0;
 

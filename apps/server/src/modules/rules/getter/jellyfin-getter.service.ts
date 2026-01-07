@@ -14,6 +14,7 @@ import {
   RuleConstants,
 } from '../constants/rules.constants';
 import { RulesDto } from '../dtos/rules.dto';
+import { buildCollectionExcludeNames } from '../helpers/collection-exclude.helper';
 
 /**
  * Jellyfin Getter Service
@@ -574,24 +575,14 @@ export class JellyfinGetterService {
 
     if (!allCollectionNames) {
       const collections = await this.jellyfinAdapter.getCollections(libraryId);
-      this.logger.debug(
-        `[getCollectionNames] Found ${collections.length} total collections in system`,
-      );
-
       allCollectionNames = [];
 
       for (const collection of collections) {
         const children = await this.jellyfinAdapter.getCollectionChildren(
           collection.id,
         );
-        this.logger.debug(
-          `[getCollectionNames] Collection "${collection.title}" (${collection.id}) has ${children.length} children`,
-        );
 
         if (children.some((child) => child.id === itemId)) {
-          this.logger.debug(
-            `[getCollectionNames] Item ${itemId} found in collection "${collection.title}"`,
-          );
           allCollectionNames.push(collection.title.trim());
         }
       }
@@ -599,34 +590,12 @@ export class JellyfinGetterService {
       this.cache.data.set(cacheKey, allCollectionNames, 600);
     }
 
-    // Exclude both the rule group name AND manualCollectionName (if different)
-    // This handles cases where the Jellyfin collection may use either name
-    const excludeNames: string[] = [];
-    if (ruleGroup?.name) {
-      excludeNames.push(ruleGroup.name.toLowerCase().trim());
-    }
-    if (
-      ruleGroup?.collection?.manualCollectionName &&
-      ruleGroup.collection.manualCollectionName.toLowerCase().trim() !==
-        ruleGroup.name?.toLowerCase().trim()
-    ) {
-      excludeNames.push(
-        ruleGroup.collection.manualCollectionName.toLowerCase().trim(),
-      );
-    }
-
-    const filteredNames =
-      excludeNames.length > 0
-        ? allCollectionNames.filter(
-            (name) => !excludeNames.includes(name.toLowerCase().trim()),
-          )
-        : allCollectionNames;
-
-    this.logger.debug(
-      `[getCollectionNames] Item ${itemId} is in ${allCollectionNames.length} collections total, ${filteredNames.length} after excluding ${JSON.stringify(excludeNames)}: ${JSON.stringify(filteredNames)}`,
-    );
-
-    return filteredNames;
+    const excludeNames = buildCollectionExcludeNames(ruleGroup);
+    return excludeNames.length > 0
+      ? allCollectionNames.filter(
+          (name) => !excludeNames.includes(name.toLowerCase().trim()),
+        )
+      : allCollectionNames;
   }
 
   private async getPlaylistCount(
@@ -704,54 +673,21 @@ export class JellyfinGetterService {
       (id): id is string => id !== undefined,
     );
 
-    // Exclude both the rule group name AND manualCollectionName (if different)
-    // This handles cases where the Jellyfin collection may use either name
-    const excludeNames: string[] = [];
-    if (ruleGroup?.name) {
-      excludeNames.push(ruleGroup.name.toLowerCase().trim());
-    }
-    if (
-      ruleGroup?.collection?.manualCollectionName &&
-      ruleGroup.collection.manualCollectionName.toLowerCase().trim() !==
-        ruleGroup.name?.toLowerCase().trim()
-    ) {
-      excludeNames.push(
-        ruleGroup.collection.manualCollectionName.toLowerCase().trim(),
-      );
-    }
-
-    this.logger.debug(
-      `[getCollectionNamesIncludingParent] Checking item=${itemId}, parent=${parentId}, grandparent=${grandparentId}, excludeNames=${JSON.stringify(excludeNames)}`,
-    );
-    this.logger.debug(
-      `[getCollectionNamesIncludingParent] Found ${collections.length} collections in library`,
-    );
+    const excludeNames = buildCollectionExcludeNames(ruleGroup);
 
     for (const collection of collections) {
       const children = await this.jellyfinAdapter.getCollectionChildren(
         collection.id,
       );
 
-      const matchedChild = children.find((child) =>
-        idsToCheck.includes(child.id),
-      );
-      if (matchedChild) {
+      const hasMatch = children.some((child) => idsToCheck.includes(child.id));
+      if (hasMatch) {
         const collectionNameLower = collection.title.toLowerCase().trim();
-        const isExcluded = excludeNames.includes(collectionNameLower);
-
-        this.logger.debug(
-          `[getCollectionNamesIncludingParent] Found match: collection="${collection.title}", matchedId=${matchedChild.id}, isExcluded=${isExcluded}`,
-        );
-
-        if (!isExcluded) {
+        if (!excludeNames.includes(collectionNameLower)) {
           collectionNames.add(collection.title.trim());
         }
       }
     }
-
-    this.logger.debug(
-      `[getCollectionNamesIncludingParent] Result: ${collectionNames.size} collections: ${JSON.stringify(Array.from(collectionNames))}`,
-    );
 
     return Array.from(collectionNames);
   }
