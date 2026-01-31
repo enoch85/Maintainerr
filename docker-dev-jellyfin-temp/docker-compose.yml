@@ -50,13 +50,12 @@ services:
       args:
         BRANCH: ${BRANCH:-remaining-issues/abstraction-cleanup-squashed}
         REPO: ${REPO:-https://github.com/enoch85/Maintainerr.git}
-    container_name: maintainerr-dev
+    container_name: maintainerr-test
     user: "1000:1000"
     depends_on:
       init-permissions:
         condition: service_completed_successfully
-    ports:
-      - "6246:6246"
+    network_mode: container:wg
     volumes:
       - maintainerr-data:/opt/data
     environment:
