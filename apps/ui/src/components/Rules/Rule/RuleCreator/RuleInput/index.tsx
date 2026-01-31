@@ -163,11 +163,9 @@ const RuleInput = (props: IRuleInput) => {
   // Update last known values when we have a valid property - done via event handlers, not during render
   const possibilities = currentProp?.type.possibilities ?? lastPossibilities
 
-  const effectiveFirstval = isNewlyAdded
-    ? undefined
-    : currentProp
-      ? firstval
-      : undefined
+  // For newly added rules, clear all values
+  // For existing rules, use the state values directly (don't null them based on currentProp)
+  const effectiveFirstval = isNewlyAdded ? undefined : firstval
   const effectiveSecondVal = effectiveFirstval ? secondVal : undefined
   const effectiveCustomValBase = effectiveFirstval ? customVal : undefined
   const effectiveCustomVal =
