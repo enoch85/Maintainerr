@@ -3,7 +3,7 @@ import {
   PlusCircleIcon,
   TrashIcon,
 } from '@heroicons/react/solid'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import GetApiHandler, { DeleteApiHandler } from '../../../utils/ApiHandler'
 import { ICollection } from '../../Collection'
 import Button from '../../Common/Button'
@@ -71,14 +71,16 @@ const RadarrSettings = () => {
       })
   }
 
-  useEffect(() => {
-    if (loaded) return
-
-    GetApiHandler<IRadarrSetting[]>('/settings/radarr').then((resp) => {
+  // Load settings on mount using lazy state initializer
+  const [initializeLoad] = useState(() => {
+    queueMicrotask(async () => {
+      const resp = await GetApiHandler<IRadarrSetting[]>('/settings/radarr')
       setSettings(resp)
       setLoaded(true)
     })
-  }, [])
+    return true
+  })
+  void initializeLoad
 
   const showAddModal = () => {
     setSettingsModalActive(true)

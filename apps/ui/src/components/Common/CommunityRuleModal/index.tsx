@@ -1,6 +1,6 @@
 import { UploadIcon } from '@heroicons/react/solid'
 import { compareVersions } from 'compare-versions'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import GetApiHandler, { PostApiHandler } from '../../../utils/ApiHandler'
 import { IRule } from '../../Rules/Rule/RuleCreator'
 import CommunityRuleUpload from '../../Rules/Rule/RuleCreator/CommunityRuleUpload'
@@ -37,6 +37,21 @@ export interface ICommunityRule {
   JsonRules: IRule[]
 }
 
+// Helper functions defined before component
+const getAppVersionAsync = async (): Promise<string> => {
+  const resp = await GetApiHandler('/settings/version')
+  if (resp) return resp as string
+  throw new Error(`Couldn't fetch app version.`)
+}
+
+const getKarmaHistoryAsync = async (): Promise<
+  ICommunityRuleKarmaHistory[]
+> => {
+  const resp = await GetApiHandler('/rules/community/karma/history')
+  if (resp) return resp as ICommunityRuleKarmaHistory[]
+  throw new Error(`Couldn't fetch community rule Karma history.`)
+}
+
 const CommunityRuleModal = (props: ICommunityRuleModal) => {
   const [communityRules, setCommunityRules] = useState<ICommunityRule[]>([])
   const [error, setError] = useState(false)
@@ -50,63 +65,36 @@ const CommunityRuleModal = (props: ICommunityRuleModal) => {
   const [searchText, setSearchText] = useState<string>('')
   const itemsPerPage = 5
 
-  useEffect(() => {
-    const fetchData = async () => {
+  // Initialize data on mount
+  const [initialized] = useState(() => {
+    queueMicrotask(async () => {
       setLoading(true)
       setError(false)
 
-      const apiVersionPromise = getAppVersion()
+      try {
+        const [version, rules, karma] = await Promise.all([
+          getAppVersionAsync(),
+          GetApiHandler<ICommunityRule[]>('/rules/community'),
+          getKarmaHistoryAsync(),
+        ])
 
-      const communityRulesPromise = GetApiHandler<ICommunityRule[]>(
-        '/rules/community',
-      ).then((resp) => {
-        if (Array.isArray(resp)) {
-          setCommunityRules(resp)
+        setAppVersion(version)
+        if (Array.isArray(rules)) {
+          setCommunityRules(rules)
         } else {
           throw new Error(`Couldn't fetch community rules.`)
         }
-      })
-
-      const karmaPromise = getKarmaHistory()
-
-      await Promise.all([
-        apiVersionPromise,
-        communityRulesPromise,
-        karmaPromise,
-      ])
-        .catch((e) => {
-          setError(true)
-          console.error(e)
-        })
-        .finally(() => {
-          setLoading(false)
-        })
-    }
-
-    fetchData()
-  }, [])
-
-  const getAppVersion = async () => {
-    return GetApiHandler('/settings/version').then((resp: string) => {
-      if (resp) {
-        setAppVersion(resp)
-      } else {
-        throw new Error(`Couldn't fetch app version.`)
+        setHistory(karma)
+      } catch (e) {
+        setError(true)
+        console.error(e)
+      } finally {
+        setLoading(false)
       }
     })
-  }
-
-  const getKarmaHistory = async () => {
-    return GetApiHandler('/rules/community/karma/history').then(
-      (resp: ICommunityRuleKarmaHistory[]) => {
-        if (resp) {
-          setHistory(resp)
-        } else {
-          throw new Error(`Couldn't fetch community rule Karma history.`)
-        }
-      },
-    )
-  }
+    return true
+  })
+  void initialized
 
   const applicableCommunityRules = useMemo(() => {
     return communityRules

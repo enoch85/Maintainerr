@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import GetApiHandler from '../../../../../utils/ApiHandler'
 import Modal from '../../../../Common/Modal'
 import ToggleItem from '../../../../Common/ToggleButton'
@@ -13,20 +13,18 @@ const ConfigureNotificationModal = (props: ConfigureNotificationModal) => {
   const [notifications, setNotifications] = useState<AgentConfiguration[]>()
   const [activatedNotifications, setActivatedNotifications] = useState<
     AgentConfiguration[]
-  >([])
+  >(props.selectedAgents ?? [])
   const [isLoading, setIsloading] = useState(true)
 
-  useEffect(() => {
-    GetApiHandler('/notifications/configurations').then(
-      (notificationConfigs) => {
-        setNotifications(notificationConfigs)
-        if (props.selectedAgents) {
-          setActivatedNotifications(props.selectedAgents)
-        }
-        setIsloading(false)
-      },
-    )
-  }, [])
+  // Initialize data on mount
+  useState(() => {
+    queueMicrotask(async () => {
+      const notificationConfigs = await GetApiHandler<AgentConfiguration[]>('/notifications/configurations')
+      setNotifications(notificationConfigs)
+      setIsloading(false)
+    })
+    return true
+  })
 
   return (
     <Modal

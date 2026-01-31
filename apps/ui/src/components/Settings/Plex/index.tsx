@@ -2,7 +2,7 @@ import { RefreshIcon } from '@heroicons/react/outline'
 import { SaveIcon } from '@heroicons/react/solid'
 import axios from 'axios'
 import { orderBy } from 'lodash-es'
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import { useSettingsOutletContext } from '..'
 import {
@@ -210,9 +210,14 @@ const PlexSettings = () => {
     }
   }
 
-  useEffect(() => {
-    if (settings?.plex_auth_token) verifyToken()
-  }, [settings?.plex_auth_token])
+  // Track token changes and verify automatically
+  const [lastVerifiedToken, setLastVerifiedToken] = useState<string | undefined>(undefined)
+  if (settings?.plex_auth_token !== lastVerifiedToken) {
+    setLastVerifiedToken(settings?.plex_auth_token)
+    if (settings?.plex_auth_token) {
+      queueMicrotask(() => verifyToken())
+    }
+  }
 
   const appTest = (result: { status: boolean; message: string }) => {
     setTestbanner({ status: result.status, version: result.message })

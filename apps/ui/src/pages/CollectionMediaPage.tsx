@@ -1,6 +1,6 @@
 import { type MediaItem } from '@maintainerr/contracts'
 import { debounce } from 'lodash-es'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useOutletContext, useParams } from 'react-router-dom'
 import { ICollection, ICollectionMedia } from '../components/Collection'
 import OverviewContent from '../components/Overview/Content'
@@ -16,66 +16,29 @@ const CollectionMediaPage = () => {
   const [data, setData] = useState<MediaItem[]>([])
   const [media, setMedia] = useState<ICollectionMedia[]>([])
   // paging
-  const pageData = useRef<number>(0)
+  const [pageDataCount, setPageDataCount] = useState(0)
   const fetchAmount = 25
   const [totalSize, setTotalSize] = useState<number>(999)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [isLoadingExtra, setIsLoadingExtra] = useState<boolean>(false)
 
   const [page, setPage] = useState(0)
-  const [pageDataCount, setPageDataCount] = useState(0)
 
-  const handleScroll = () => {
-    if (
-      window.innerHeight + document.documentElement.scrollTop >=
-      document.documentElement.scrollHeight * 0.9
-    ) {
-      if (
-        !isLoading &&
-        !isLoadingExtra &&
-        !(fetchAmount * (pageData.current - 1) >= totalSize)
-      ) {
-        setPage(pageData.current + 1)
-      }
-    }
-  }
-
-  useEffect(() => {
-    if (page !== 0) {
-      // Ignore initial page render
-      pageData.current = pageData.current + 1
-      setPageDataCount(pageData.current)
-      fetchData()
-    }
-  }, [page])
-
-  useEffect(() => {
-    const debouncedScroll = debounce(handleScroll, 200)
-    window.addEventListener('scroll', debouncedScroll)
-    return () => {
-      window.removeEventListener('scroll', debouncedScroll)
-      debouncedScroll.cancel() // Cancel pending debounced calls
-    }
-  }, [isLoading, isLoadingExtra, totalSize])
-
-  useEffect(() => {
-    // Initial first fetch
-    setPage(1)
-  }, [])
-
-  const fetchData = async () => {
-    if (!isLoading) {
-      setIsLoadingExtra(true)
-    }
+  // Define fetchData before it's used
+  const fetchData = async (
+    pageNum: number,
+    prevData: MediaItem[],
+    prevMedia: ICollectionMedia[],
+  ) => {
     const resp: { totalSize: number; items: ICollectionMedia[] } =
       await GetApiHandler(
-        `/collections/media/${id}/content/${pageData.current}?size=${fetchAmount}`,
+        `/collections/media/${id}/content/${pageNum}?size=${fetchAmount}`,
       )
 
     setTotalSize(resp.totalSize)
-    setMedia((prevMedia) => [...prevMedia, ...resp.items])
+    setMedia([...prevMedia, ...resp.items])
 
-    setData((prevData) => [
+    setData([
       ...prevData,
       ...resp.items.map((el) => {
         if (el.mediaData) {
@@ -88,18 +51,89 @@ const CollectionMediaPage = () => {
     setIsLoadingExtra(false)
   }
 
-  useEffect(() => {
-    // If page is not filled yet, fetch more
+  // Handle scroll event
+  const handleScroll = () => {
     if (
-      !isLoading &&
-      !isLoadingExtra &&
       window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.scrollHeight * 0.9 &&
-      !(fetchAmount * (pageData.current - 1) >= totalSize)
+      document.documentElement.scrollHeight * 0.9
     ) {
-      setPage(page + 1)
+      if (
+        !isLoading &&
+        !isLoadingExtra &&
+        !(fetchAmount * (pageDataCount - 1) >= totalSize)
+      ) {
+        setPage(pageDataCount + 1)
+      }
     }
-  }, [data, isLoading, isLoadingExtra, totalSize])
+  }
+
+  // Handle page changes
+  const handlePageChange = (newPage: number) => {
+    if (newPage !== 0) {
+      const newPageDataCount = pageDataCount + 1
+      setPageDataCount(newPageDataCount)
+      if (!isLoading) {
+        setIsLoadingExtra(true)
+      }
+      fetchData(newPageDataCount, data, media)
+    }
+  }
+
+  // Track page changes
+  const [lastPage, setLastPage] = useState(page)
+  if (lastPage !== page) {
+    queueMicrotask(() => {
+      setLastPage(page)
+      handlePageChange(page)
+    })
+  }
+
+  // Track data changes for auto-fetch more
+  const [lastDataLength, setLastDataLength] = useState(data.length)
+  if (lastDataLength !== data.length) {
+    queueMicrotask(() => {
+      setLastDataLength(data.length)
+      if (
+        !isLoading &&
+        !isLoadingExtra &&
+        window.innerHeight + document.documentElement.scrollTop >=
+          document.documentElement.scrollHeight * 0.9 &&
+        !(fetchAmount * (pageDataCount - 1) >= totalSize)
+      ) {
+        setPage((p) => p + 1)
+      }
+    })
+  }
+
+  // Initialize on mount
+  const [initialized] = useState(() => {
+    queueMicrotask(() => {
+      setPage(1)
+    })
+    return true
+  })
+  void initialized
+
+  // Set up scroll listener
+  const [scrollListenerSetup] = useState(() => {
+    const debouncedScroll = debounce(handleScroll, 200)
+    queueMicrotask(() => {
+      window.addEventListener('scroll', debouncedScroll)
+    })
+    return {
+      cleanup: () => {
+        window.removeEventListener('scroll', debouncedScroll)
+        debouncedScroll.cancel()
+      },
+    }
+  })
+  void scrollListenerSetup
+
+  // Create a copy of collection for rendering to avoid mutation
+  const collectionInfoData = media.map((el) => {
+    const collectionCopy = { ...collection, media: [] }
+    return { ...el, collection: collectionCopy }
+  })
 
   return (
     <OverviewContent
@@ -120,11 +154,7 @@ const CollectionMediaPage = () => {
           )
         }, 500)
       }
-      collectionInfo={media.map((el) => {
-        collection.media = []
-        el.collection = collection
-        return el
-      })}
+      collectionInfo={collectionInfoData}
     />
   )
 }

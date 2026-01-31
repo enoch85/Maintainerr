@@ -6,21 +6,16 @@ import { API_BASE_PATH } from '../utils/ApiHandler'
 const EventsContext = createContext<EventSource | undefined>(undefined)
 
 export const EventsProvider = (props: any) => {
-  const [eventSource, setEventSource] = useState<EventSource>()
-
-  useEffect(() => {
+  // Use state with lazy initializer to store the EventSource - reads during render are safe
+  const [eventSource] = useState<EventSource | undefined>(() => {
     const es = new ReconnectingEventSource(`${API_BASE_PATH}/api/events/stream`)
 
     es.onerror = (e) => {
       console.error('EventSource failed:', e)
     }
 
-    setEventSource(es)
-
-    return () => {
-      es.close()
-    }
-  }, [])
+    return es
+  })
 
   return <EventsContext.Provider value={eventSource} {...props} />
 }

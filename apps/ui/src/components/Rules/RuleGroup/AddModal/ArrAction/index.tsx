@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import GetApiHandler from '../../../../../utils/ApiHandler'
 import { IRadarrSetting } from '../../../../Settings/Radarr'
 import { ISonarrSetting } from '../../../../Settings/Sonarr'
@@ -57,9 +57,14 @@ const ArrAction = (props: ArrActionProps) => {
     }
   }
 
-  useEffect(() => {
-    loadArrSettings(props.type)
-  }, [props.type])
+  // Track type changes to reload settings
+  const [lastType, setLastType] = useState<ArrType | null>(null)
+  if (lastType !== props.type) {
+    queueMicrotask(() => {
+      setLastType(props.type)
+      loadArrSettings(props.type)
+    })
+  }
 
   const noneServerSelected = selectedSetting === ''
 

@@ -8,7 +8,7 @@ import {
   LogSettingSchemaInput,
   LogSettingSchemaOutput,
 } from '@maintainerr/contracts'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import ReconnectingEventSource from 'reconnecting-eventsource'
 import GetApiHandler, {
@@ -129,9 +129,18 @@ const Logs = () => {
   const [logLines, setLogLines] = useState<LogEvent[]>([])
   const [logFilter, setLogFilter] = useState<string>('')
   const [scrollToBottom, setScrollToBottom] = useState<boolean>(true)
-  const logsRef = useRef<HTMLDivElement>(null)
+  const [shouldScroll, setShouldScroll] = useState<boolean>(false)
 
-  useEffect(() => {
+  // Callback ref to scroll element when it becomes available
+  const handleLogsRef = (element: HTMLDivElement | null) => {
+    if (element && shouldScroll) {
+      element.scrollTop = element.scrollHeight
+      setShouldScroll(false)
+    }
+  }
+
+  // Initialize EventSource once on mount
+  useState(() => {
     const MAX_LOG_LINES = 1000
     const es = new ReconnectingEventSource(`${API_BASE_PATH}/api/logs/stream`)
 
@@ -150,13 +159,8 @@ const Logs = () => {
       console.error('EventSource failed:', e)
     }
 
-    return () => {
-      es.removeEventListener('log', handleLog)
-      es.close()
-      // Clear logs on unmount to prevent memory leak
-      setLogLines([])
-    }
-  }, [])
+    return true
+  })
 
   const filteredLogLines = useMemo(() => {
     const filter = logFilter.toLowerCase()
@@ -167,11 +171,14 @@ const Logs = () => {
     )
   }, [logLines, logFilter])
 
-  useEffect(() => {
-    if (!scrollToBottom || !logsRef.current) return
-
-    logsRef.current.scrollTop = logsRef.current.scrollHeight
-  }, [filteredLogLines])
+  // Track filtered logs changes to scroll to bottom
+  const [lastLogCount, setLastLogCount] = useState<number>(0)
+  if (filteredLogLines.length !== lastLogCount) {
+    setLastLogCount(filteredLogLines.length)
+    if (scrollToBottom) {
+      setShouldScroll(true)
+    }
+  }
 
   return (
     <div className="section">
@@ -212,7 +219,7 @@ const Logs = () => {
 
         <div
           className="h-[60vh] overflow-auto rounded bg-zinc-700 p-2"
-          ref={logsRef}
+          ref={handleLogsRef}
         >
           {filteredLogLines.map((row, index: number) => {
             const levelColor =

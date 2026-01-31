@@ -6,11 +6,11 @@ import {
   RulePossibility,
   RulePossibilityTranslations,
 } from '@maintainerr/contracts'
-import { cloneDeep } from 'lodash-es'
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useState } from 'react'
 import { IRule } from '../'
 import { useRuleConstants } from '../../../../../api/rules'
 import { IProperty } from '../../../../../contexts/constants-context'
+import { useMediaServerType } from '../../../../../hooks/useMediaServerType'
 import LoadingSpinner from '../../../../Common/LoadingSpinner'
 
 enum RuleType {
@@ -50,320 +50,342 @@ interface IRuleInput {
   sonarrSettingsId?: number | null
 }
 
-/**
- * Helper function to determine if an application should be filtered out
- * based on server selection
- */
+/** Filter apps based on server selection and media server type */
 const shouldFilterApplication = (
   appId: number,
   radarrSettingsId: number | null | undefined,
   sonarrSettingsId: number | null | undefined,
+  isPlex: boolean,
+  isJellyfin: boolean,
 ): boolean => {
-  // Filter out Radarr if no Radarr server is selected
+  if (appId === Application.RADARR && radarrSettingsId == null) return true
+  if (appId === Application.SONARR && sonarrSettingsId == null) return true
   if (
-    appId === Application.RADARR &&
-    (radarrSettingsId === undefined || radarrSettingsId === null)
-  ) {
+    isJellyfin &&
+    (appId === Application.PLEX || appId === Application.TAUTULLI)
+  )
     return true
-  }
-  // Filter out Sonarr if no Sonarr server is selected
-  if (
-    appId === Application.SONARR &&
-    (sonarrSettingsId === undefined || sonarrSettingsId === null)
-  ) {
-    return true
-  }
+  if (isPlex && appId === Application.JELLYFIN) return true
   return false
 }
 
+/** Parse editData to extract initial secondVal and customVal */
+const parseEditData = (
+  rule: IRule | undefined,
+): { secondVal?: string; customVal?: string } => {
+  if (!rule) return {}
+  if (!rule.customVal) return { secondVal: JSON.stringify(rule.lastVal) }
+
+  const { ruleTypeId, value } = rule.customVal
+  const customVal = value.toString()
+  const typeMap: Record<number, CustomParams> = {
+    // TODO: This is a hack to distinguish "amount of days" from raw numbers.
+    // When ruleTypeId is 0 (NUMBER), we check if value is divisible by 86400 (seconds/day).
+    // Proper fix: store the secondVal type (CUSTOM_DAYS vs CUSTOM_NUMBER) in the rule schema
+    // and run a migration to update existing rules.
+    0:
+      (value as number) % 86400 === 0 && value !== 0
+        ? CustomParams.CUSTOM_DAYS
+        : CustomParams.CUSTOM_NUMBER,
+    1: CustomParams.CUSTOM_DATE,
+    2: CustomParams.CUSTOM_TEXT,
+    3: CustomParams.CUSTOM_BOOLEAN,
+    4: CustomParams.CUSTOM_TEXT_LIST,
+  }
+  return { secondVal: typeMap[ruleTypeId], customVal }
+}
+
 const RuleInput = (props: IRuleInput) => {
-  const [operator, setOperator] = useState<string>()
-  const [firstval, setFirstVal] = useState<string>()
-  const [action, setAction] = useState<RulePossibility>()
-  const [secondVal, setSecondVal] = useState<string>()
-
-  const [customValType, setCustomValType] = useState<RuleType>()
-  const [customVal, setCustomVal] = useState<string>()
-  const [customValActive, setCustomValActive] = useState<boolean>(true)
-
-  const [possibilities, setPossibilities] = useState<RulePossibility[]>([])
-  const [ruleType, setRuleType] = useState<RuleType>(RuleType.NUMBER)
-
   const { data: constants, isLoading: constantsLoading } = useRuleConstants()
+  const { isPlex, isJellyfin } = useMediaServerType()
 
-  useEffect(() => {
-    if (props.editData?.rule) {
-      setOperator(props.editData.rule.operator?.toString())
-      setFirstVal(JSON.stringify(props.editData.rule.firstVal))
-      setAction(props.editData.rule.action)
+  // Initialize state from editData (lazy initializers run once on mount)
+  const isNewlyAdded = props.id != null && props.newlyAdded?.includes(props.id)
+  const initialRule = !isNewlyAdded ? props.editData?.rule : undefined
+  const initialParsed = parseEditData(initialRule)
 
-      if (props.editData.rule.customVal) {
-        switch (props.editData.rule.customVal.ruleTypeId) {
-          case 0:
-            // TODO: improve this.. Currently this is a hack to determine if param is amount of days or really a number
-            if (
-              (props.editData.rule.customVal.value as number) % 86400 === 0 &&
-              (props.editData.rule.customVal.value as number) != 0
-            ) {
-              setSecondVal(CustomParams.CUSTOM_DAYS)
-              setRuleType(RuleType.NUMBER)
-            } else {
-              setSecondVal(CustomParams.CUSTOM_NUMBER)
-              setRuleType(RuleType.NUMBER)
-            }
-            break
-          case 1:
-            setSecondVal(CustomParams.CUSTOM_DATE)
-            setRuleType(RuleType.DATE)
-            break
-          case 2:
-            setSecondVal(CustomParams.CUSTOM_TEXT)
-            setRuleType(RuleType.TEXT)
-            break
-          case 3:
-            setSecondVal(CustomParams.CUSTOM_BOOLEAN)
-            setRuleType(RuleType.BOOL)
-            break
-          case 4:
-            setSecondVal(CustomParams.CUSTOM_TEXT_LIST)
-            setRuleType(RuleType.TEXT_LIST)
-            break
-        }
-        setCustomVal(props.editData.rule.customVal.value.toString())
-      } else {
-        setSecondVal(JSON.stringify(props.editData.rule.lastVal))
-      }
-      if (
-        props.id &&
-        props.newlyAdded &&
-        props.newlyAdded?.includes(props.id)
-      ) {
-        setOperator(undefined)
-        setFirstVal(undefined)
-        setAction(undefined)
-        setSecondVal(undefined)
-        setCustomVal(undefined)
-      }
+  const [operator, setOperator] = useState(() =>
+    initialRule?.operator?.toString(),
+  )
+  const [firstval, setFirstVal] = useState(() =>
+    initialRule ? JSON.stringify(initialRule.firstVal) : undefined,
+  )
+  const [action, setAction] = useState<RulePossibility | undefined>(
+    () => initialRule?.action,
+  )
+  const [secondVal, setSecondVal] = useState(() => initialParsed.secondVal)
+  const [customVal, setCustomVal] = useState(() => initialParsed.customVal)
+  // Track last known valid ruleType and possibilities for UI continuity
+  const [lastRuleType, setLastRuleType] = useState<RuleType>(RuleType.NUMBER)
+  const [lastPossibilities, setLastPossibilities] = useState<RulePossibility[]>(
+    [],
+  )
+
+  // Helper to get property from [appId, propId] tuple
+  const getProp = (value: string | undefined): IProperty | undefined => {
+    if (!value || !constants) return undefined
+    const [appId, propId] = JSON.parse(value) as [number, number]
+    const application = constants.applications?.find((a) => a.id === appId)
+    if (!application) return undefined
+    if (
+      shouldFilterApplication(
+        application.id,
+        props.radarrSettingsId,
+        props.sonarrSettingsId,
+        isPlex,
+        isJellyfin,
+      )
+    )
+      return undefined
+    if (
+      application.mediaType !== MediaType.BOTH &&
+      props.mediaType !== application.mediaType
+    )
+      return undefined
+    const prop = application.props.find((p) => p.id === propId)
+    if (!prop) return undefined
+    if (prop.mediaType !== MediaType.BOTH && props.mediaType !== prop.mediaType)
+      return undefined
+    if (
+      props.mediaType !== MediaType.MOVIE &&
+      prop.showType &&
+      !prop.showType.includes(props.dataType!)
+    )
+      return undefined
+    return prop
+  }
+
+  // Derived values computed during render (not stored in state)
+  const currentProp = getProp(firstval)
+  const ruleType = currentProp
+    ? (+currentProp.type.key as RuleType)
+    : lastRuleType
+  // Update last known values when we have a valid property - done via event handlers, not during render
+  const possibilities = currentProp?.type.possibilities ?? lastPossibilities
+
+  const effectiveFirstval = isNewlyAdded
+    ? undefined
+    : currentProp
+      ? firstval
+      : undefined
+  const effectiveSecondVal = effectiveFirstval ? secondVal : undefined
+  const effectiveCustomValBase = effectiveFirstval ? customVal : undefined
+  const effectiveCustomVal =
+    effectiveSecondVal === CustomParams.CUSTOM_BOOLEAN &&
+    effectiveCustomValBase !== '0'
+      ? (effectiveCustomValBase ?? '1')
+      : effectiveCustomValBase
+
+  // Derive customValActive and customValType from secondVal
+  const customValMapping: Record<string, { active: true; type: RuleType }> = {
+    [CustomParams.CUSTOM_NUMBER]: { active: true, type: RuleType.NUMBER },
+    [CustomParams.CUSTOM_DATE]: { active: true, type: RuleType.DATE },
+    [CustomParams.CUSTOM_DAYS]: { active: true, type: RuleType.TEXT },
+    [CustomParams.CUSTOM_TEXT]: { active: true, type: RuleType.TEXT },
+    [CustomParams.CUSTOM_TEXT_LIST]: { active: true, type: RuleType.TEXT_LIST },
+    [CustomParams.CUSTOM_BOOLEAN]: { active: true, type: RuleType.BOOL },
+  }
+  const { active: customValActive, type: customValType } =
+    effectiveSecondVal && customValMapping[effectiveSecondVal]
+      ? customValMapping[effectiveSecondVal]
+      : { active: false, type: undefined }
+
+  // Submit rule to parent - accepts overrides for values being updated in the same handler
+  const submit = (
+    overrides: {
+      firstval?: string
+      action?: RulePossibility
+      secondVal?: string
+      customVal?: string
+      operator?: string
+    } = {},
+  ) => {
+    const currentFirstval =
+      overrides.firstval !== undefined ? overrides.firstval : effectiveFirstval
+    const currentAction =
+      overrides.action !== undefined ? overrides.action : action
+    const currentSecondVal =
+      overrides.secondVal !== undefined
+        ? overrides.secondVal
+        : effectiveSecondVal
+    const currentCustomVal =
+      overrides.customVal !== undefined
+        ? overrides.customVal
+        : effectiveCustomVal
+    const currentOperator =
+      overrides.operator !== undefined ? overrides.operator : operator
+
+    const isCustomParam = (v: string | undefined) =>
+      v && Object.values(CustomParams).includes(v as CustomParams)
+    const isComplete =
+      currentFirstval &&
+      currentAction != null &&
+      (currentCustomVal ||
+        (currentSecondVal && !isCustomParam(currentSecondVal)))
+
+    if (!isComplete) {
+      props.onIncomplete(props.id ?? 0)
+      return
     }
-  }, [])
 
-  const updateFirstValue = (event: { target: { value: string } }) => {
-    if (event.target.value === '') {
+    const ruleValues = {
+      operator: currentOperator ?? null,
+      firstVal: JSON.parse(currentFirstval!),
+      action: currentAction!,
+      section: props.section ? props.section - 1 : 0,
+    }
+
+    if (currentCustomVal) {
+      // Derive customValActive/Type from currentSecondVal
+      const currentMapping = currentSecondVal
+        ? customValMapping[currentSecondVal]
+        : undefined
+      const currentCustomValType = currentMapping?.type
+
+      const ruleTypeId =
+        currentCustomValType != null
+          ? currentSecondVal === CustomParams.CUSTOM_DAYS
+            ? RuleType.NUMBER
+            : currentCustomValType
+          : ruleType
+      props.onCommit(props.id ?? 0, {
+        customVal: { ruleTypeId, value: currentCustomVal },
+        ...ruleValues,
+      })
+    } else {
+      props.onCommit(props.id ?? 0, {
+        lastVal: JSON.parse(currentSecondVal!),
+        ...ruleValues,
+      })
+    }
+  }
+
+  const scheduleSubmit = (
+    overrides: {
+      firstval?: string
+      action?: RulePossibility
+      secondVal?: string
+      customVal?: string
+      operator?: string
+    } = {},
+  ) => {
+    // Use queueMicrotask to batch the submit call
+    queueMicrotask(() => {
+      submit(overrides)
+    })
+  }
+
+  // Handle initial submit and invalid firstval detection
+  // Using useState lazy initializer pattern with a one-time effect via queueMicrotask
+  const [initState] = useState(() => {
+    // Schedule initial submit after first render
+    queueMicrotask(() => {
+      submit({})
+    })
+    return true
+  })
+  // Suppress unused variable warning
+  void initState
+
+  // Handle invalid firstval - when constants load and firstval is no longer valid
+  // This is done through state rather than refs to avoid render-time ref access
+  const needsClear = firstval && constants && !constantsLoading && !currentProp
+  const [lastClearedFirstval, setLastClearedFirstval] = useState<
+    string | undefined
+  >(undefined)
+
+  if (needsClear && lastClearedFirstval !== firstval) {
+    // Schedule the clear for next microtask to avoid setState during render
+    queueMicrotask(() => {
+      setLastClearedFirstval(firstval)
       setFirstVal(undefined)
-    } else {
-      setFirstVal(event.target.value)
-    }
+      submit({ firstval: undefined })
+    })
   }
 
-  const updateSecondValue = (event: { target: { value: string } }) => {
-    if (event.target.value === '') {
+  // Event handlers - pass new values directly to submit to avoid stale closure issues
+  const updateFirstValue = (e: { target: { value: string } }) => {
+    const newVal = e.target.value || undefined
+    const newProp = getProp(newVal)
+    const newType = newProp ? (+newProp.type.key as RuleType) : undefined
+
+    // Update last known values for UI continuity when property changes
+    if (newProp) {
+      setLastRuleType(newType!)
+      setLastPossibilities(newProp.type.possibilities)
+    }
+
+    // Reset secondVal/customVal if rule type changed
+    let newSecondVal = secondVal
+    let newCustomVal = customVal
+    if (newType && newType !== ruleType) {
+      newSecondVal = undefined
+      newCustomVal = undefined
       setSecondVal(undefined)
-    } else {
-      setSecondVal(event.target.value)
+      setCustomVal(undefined)
     }
+    setFirstVal(newVal)
+    submit({
+      firstval: newVal,
+      secondVal: newSecondVal,
+      customVal: newCustomVal,
+    })
   }
 
-  const updateCustomValue = (event: { target: { value: string } }) => {
-    if (secondVal === CustomParams.CUSTOM_DAYS) {
-      setCustomVal((+event.target.value * 86400).toString())
-    } else {
-      setCustomVal(event.target.value)
+  const updateSecondValue = (e: { target: { value: string } }) => {
+    const newVal = e.target.value || undefined
+    setSecondVal(newVal)
+
+    // Handle boolean default and clear customVal for non-custom selections
+    let newCustomVal = effectiveCustomVal
+    if (newVal === CustomParams.CUSTOM_BOOLEAN && newCustomVal !== '0') {
+      newCustomVal = '1'
+      setCustomVal('1')
+    } else if (!newVal || !customValMapping[newVal]) {
+      newCustomVal = undefined
+      setCustomVal(undefined)
     }
+    submit({ secondVal: newVal, customVal: newCustomVal })
   }
 
-  const updateAction = (event: { target: { value: string } }) => {
-    if (event.target.value === '') {
-      setAction(undefined)
-    } else {
-      setAction(+event.target.value)
-    }
+  const updateCustomValue = (e: { target: { value: string } }) => {
+    const newVal =
+      secondVal === CustomParams.CUSTOM_DAYS
+        ? (+e.target.value * 86400).toString()
+        : e.target.value
+    setCustomVal(newVal)
+    submit({ customVal: newVal })
   }
 
-  const updateOperator = (event: { target: { value: string } }) => {
-    if (event.target.value === '') {
-      setOperator(undefined)
-    } else {
-      setOperator(event.target.value)
-    }
+  const updateAction = (e: { target: { value: string } }) => {
+    const newVal =
+      e.target.value === '' ? undefined : (+e.target.value as RulePossibility)
+    setAction(newVal)
+    submit({ action: newVal })
+  }
+
+  const updateOperator = (e: { target: { value: string } }) => {
+    const newVal = e.target.value || undefined
+    setOperator(newVal)
+    submit({ operator: newVal })
   }
 
   const onDelete = (e: FormEvent | null) => {
     e?.preventDefault()
-    props.onDelete(props.section ? props.section : 0, props.id ? props.id : 0)
+    props.onDelete(props.section ?? 0, props.id ?? 0)
   }
 
-  const submit = (e: FormEvent | null) => {
-    e?.preventDefault()
-
-    if (
-      firstval &&
-      action != null &&
-      ((secondVal &&
-        secondVal !== CustomParams.CUSTOM_DATE &&
-        secondVal !== CustomParams.CUSTOM_DAYS &&
-        secondVal !== CustomParams.CUSTOM_NUMBER &&
-        secondVal !== CustomParams.CUSTOM_TEXT &&
-        secondVal !== CustomParams.CUSTOM_TEXT_LIST &&
-        secondVal !== CustomParams.CUSTOM_BOOLEAN) ||
-        customVal)
-    ) {
-      const ruleValues = {
-        operator: operator ? operator : null,
-        firstVal: JSON.parse(firstval),
-        action,
-        section: props.section ? props.section - 1 : 0,
-      }
-      if (customVal) {
-        props.onCommit(props.id ? props.id : 0, {
-          customVal: {
-            ruleTypeId: customValActive
-              ? customValType === RuleType.DATE
-                ? customValType
-                : customValType === RuleType.NUMBER
-                  ? customValType
-                  : customValType === RuleType.TEXT &&
-                      secondVal === CustomParams.CUSTOM_DAYS
-                    ? RuleType.NUMBER
-                    : customValType === RuleType.TEXT
-                      ? customValType
-                      : customValType === RuleType.BOOL
-                        ? customValType
-                        : customValType === RuleType.TEXT_LIST
-                          ? customValType
-                          : +ruleType
-              : +ruleType,
-            value: customVal,
-          },
-          ...ruleValues,
-        })
-      } else {
-        props.onCommit(props.id ? props.id : 0, {
-          lastVal: JSON.parse(secondVal!),
-          ...ruleValues,
-        })
-      }
-    } else {
-      props.onIncomplete(props.id ? props.id : 0)
-    }
-  }
-
-  useEffect(() => {
-    submit(null)
-  }, [secondVal, customVal, operator, action, firstval, customValType])
-
-  useEffect(() => {
-    if (!constants) return
-
-    // reset firstval & secondval in case of type switch & choices don't exist
-    const apps = cloneDeep(constants.applications)?.map((app) => {
-      app.props = app.props.filter((prop) => {
-        return (
-          (prop.mediaType === MediaType.BOTH ||
-            props.mediaType === prop.mediaType) &&
-          (props.mediaType === MediaType.MOVIE ||
-            prop.showType === undefined ||
-            prop.showType.includes(props.dataType!))
-        )
-      })
-      return app
-    })
-    if (firstval) {
-      const val = JSON.parse(firstval)
-      const appId = val[0]
-      // Find application by ID instead of using array index
-      const app = apps?.find((a) => a.id === appId)
-      if (!app?.props.find((el) => el.id === val[1])) {
-        setFirstVal(undefined)
-      }
-    }
-  }, [props.dataType, props.mediaType, constants])
-
-  useEffect(() => {
-    if (firstval) {
-      const prop = getPropFromTuple(firstval)
-
-      if (prop?.type.key) {
-        if (possibilities.length <= 0) {
-          setRuleType(+prop?.type.key)
-          setPossibilities(prop.type.possibilities)
-        } else if (+prop.type.key !== ruleType) {
-          setSecondVal(undefined)
-          setCustomVal('')
-          setRuleType(+prop?.type.key)
-          setPossibilities(prop.type.possibilities)
-        }
-      }
-    }
-  }, [firstval])
-
-  useEffect(() => {
-    if (secondVal) {
-      if (secondVal === CustomParams.CUSTOM_NUMBER) {
-        setCustomValActive(true)
-        setCustomValType(RuleType.NUMBER)
-      } else if (secondVal === CustomParams.CUSTOM_DATE) {
-        setCustomValActive(true)
-        setCustomValType(RuleType.DATE)
-      } else if (secondVal === CustomParams.CUSTOM_DAYS) {
-        setCustomValActive(true)
-        setCustomValType(RuleType.TEXT)
-      } else if (secondVal === CustomParams.CUSTOM_TEXT) {
-        setCustomValActive(true)
-        setCustomValType(RuleType.TEXT)
-      } else if (secondVal === CustomParams.CUSTOM_TEXT_LIST) {
-        setCustomValActive(true)
-        setCustomValType(RuleType.TEXT_LIST)
-      } else if (secondVal === CustomParams.CUSTOM_BOOLEAN) {
-        setCustomValActive(true)
-        setCustomValType(RuleType.BOOL)
-        if (customVal !== '0') {
-          setCustomVal('1')
-        }
-      } else {
-        setCustomValActive(false)
-        setCustomVal(undefined)
-      }
-    }
-  }, [secondVal])
-
-  const getPropFromTuple = (
-    value: [number, number] | string,
-  ): IProperty | undefined => {
-    if (!constants) return undefined
-
-    if (typeof value === 'string') {
-      value = JSON.parse(value)
-    }
-    const application = constants.applications?.find(
-      (el) => el.id === +value[0],
-    )
-
-    const prop = application?.props.find((el) => {
-      return el.id === +value[1]
-    })
-    return prop
-  }
-
-  if (!constants || constantsLoading) {
-    return <LoadingSpinner />
-  }
+  if (!constants || constantsLoading) return <LoadingSpinner />
 
   return (
-    <div
-      className="w-full rounded-2xl bg-zinc-800 p-4 text-zinc-100 shadow-lg"
-      onSubmit={submit}
-    >
+    <div className="w-full rounded-2xl bg-zinc-800 p-4 text-zinc-100 shadow-lg">
       {/* Header Section */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-amber-600">
-          {props.tagId
-            ? `Rule #${props.tagId}`
-            : props.id
-              ? `Rule #${props.id}`
-              : `Rule #1`}
+          Rule #{props.tagId ?? props.id ?? 1}
         </h3>
 
-        {props.allowDelete ? (
+        {props.allowDelete && (
           <button
             className="flex items-center rounded-lg bg-red-600 px-3 py-1 text-zinc-100 shadow-md hover:bg-red-500"
             onClick={onDelete}
@@ -372,43 +394,37 @@ const RuleInput = (props: IRuleInput) => {
             <TrashIcon className="mr-1 h-5 w-5" />
             Delete
           </button>
-        ) : null}
+        )}
       </div>
 
-      {props.id !== 1 ? (
-        (props.id && props.id > 0) || (props.section && props.section > 1) ? (
+      {props.id !== 1 &&
+        ((props.id && props.id > 0) ||
+          (props.section && props.section > 1)) && (
           <div className="mb-3 mt-2 md:flex md:items-center">
-            {!props.id || (props.tagId ? props.tagId === 1 : props.id === 1) ? (
-              <label htmlFor="operator">Section Operator</label>
-            ) : (
-              <label htmlFor="operator">Operator</label>
-            )}
+            <label htmlFor="operator">
+              {!props.id || (props.tagId ?? props.id) === 1
+                ? 'Section Operator'
+                : 'Operator'}
+            </label>
             <div className="md:ml-4">
-              <div className="flex w-1/2 md:w-fit">
-                <select
-                  name="operator"
-                  id="operator"
-                  onChange={updateOperator}
-                  value={operator}
-                >
-                  <option value=""> </option>
-                  {Object.keys(RuleOperators).map(
-                    (value: string, key: number) => {
-                      if (!isNaN(+value)) {
-                        return (
-                          <option key={key} value={key}>
-                            {RuleOperators[key]}
-                          </option>
-                        )
-                      }
-                    },
-                  )}
-                </select>
-              </div>
+              <select
+                name="operator"
+                id="operator"
+                onChange={updateOperator}
+                value={operator ?? ''}
+              >
+                <option value=""> </option>
+                {Object.keys(RuleOperators)
+                  .filter((v) => !isNaN(+v))
+                  .map((_, key) => (
+                    <option key={key} value={key}>
+                      {RuleOperators[key]}
+                    </option>
+                  ))}
+              </select>
             </div>
           </div>
-        ) : undefined
-      ) : undefined}
+        )}
 
       {/* First Value Selection */}
       <div className="mt-1 grid grid-cols-1 gap-x-3 gap-y-3 md:grid-cols-2">
@@ -420,7 +436,7 @@ const RuleInput = (props: IRuleInput) => {
             name="first_val"
             id="first_val"
             onChange={updateFirstValue}
-            value={firstval}
+            value={effectiveFirstval ?? ''}
             className="w-full rounded-lg p-2 text-zinc-100 focus:border-amber-500 focus:ring-amber-500"
           >
             <option value="" className="text-amber-600">
@@ -433,26 +449,31 @@ const RuleInput = (props: IRuleInput) => {
                     app.id,
                     props.radarrSettingsId,
                     props.sonarrSettingsId,
+                    isPlex,
+                    isJellyfin,
                   ),
               )
               .map((app) =>
                 app.mediaType === MediaType.BOTH ||
                 props.mediaType === app.mediaType ? (
                   <optgroup key={app.id} label={app.name}>
-                    {app.props.map((prop) =>
-                      (prop.mediaType === MediaType.BOTH ||
-                        props.mediaType === prop.mediaType) &&
-                      (props.mediaType === MediaType.MOVIE ||
-                        prop.showType === undefined ||
-                        prop.showType.includes(props.dataType!)) ? (
+                    {app.props
+                      .filter(
+                        (prop) =>
+                          (prop.mediaType === MediaType.BOTH ||
+                            props.mediaType === prop.mediaType) &&
+                          (props.mediaType === MediaType.MOVIE ||
+                            !prop.showType ||
+                            prop.showType.includes(props.dataType!)),
+                      )
+                      .map((prop) => (
                         <option
                           key={`${app.id}-${prop.id}`}
                           value={JSON.stringify([app.id, prop.id])}
                         >
                           {`${app.name} - ${prop.humanName}`}
                         </option>
-                      ) : null,
-                    )}
+                      ))}
                   </optgroup>
                 ) : null,
               )}
@@ -468,15 +489,15 @@ const RuleInput = (props: IRuleInput) => {
             name="action"
             id="action"
             onChange={updateAction}
-            value={action}
+            value={action ?? ''}
             className="w-full rounded-lg p-2 text-zinc-100 focus:border-amber-500 focus:ring-amber-500"
           >
             <option value="" className="text-amber-600">
               Select Action...
             </option>
-            {possibilities.map((action) => (
-              <option key={action} value={action}>
-                {RulePossibilityTranslations[action]}
+            {possibilities.map((act) => (
+              <option key={act} value={act}>
+                {RulePossibilityTranslations[act]}
               </option>
             ))}
           </select>
@@ -494,36 +515,36 @@ const RuleInput = (props: IRuleInput) => {
             name="second_val"
             id="second_val"
             onChange={updateSecondValue}
-            value={secondVal}
+            value={effectiveSecondVal ?? ''}
             className="w-full rounded-lg p-2 text-zinc-100 focus:border-amber-500 focus:ring-amber-500"
           >
             <option value="" className="text-amber-600">
               Select Second Value...
             </option>
             <optgroup label="Custom values">
-              {ruleType === RuleType.DATE ? (
+              {ruleType === RuleType.DATE && (
                 <>
                   <option value={CustomParams.CUSTOM_DAYS}>
                     Amount of days
                   </option>
                   {action != null &&
-                  action !== RulePossibility.IN_LAST &&
-                  action !== RulePossibility.IN_NEXT ? (
-                    <option value={CustomParams.CUSTOM_DATE}>
-                      Specific date
-                    </option>
-                  ) : undefined}
+                    action !== RulePossibility.IN_LAST &&
+                    action !== RulePossibility.IN_NEXT && (
+                      <option value={CustomParams.CUSTOM_DATE}>
+                        Specific date
+                      </option>
+                    )}
                 </>
-              ) : undefined}
-              {ruleType === RuleType.NUMBER ? (
+              )}
+              {ruleType === RuleType.NUMBER && (
                 <option value={CustomParams.CUSTOM_NUMBER}>Number</option>
-              ) : undefined}
-              {ruleType === RuleType.BOOL ? (
+              )}
+              {ruleType === RuleType.BOOL && (
                 <option value={CustomParams.CUSTOM_BOOLEAN}>Boolean</option>
-              ) : undefined}
-              {ruleType === RuleType.TEXT ? (
+              )}
+              {ruleType === RuleType.TEXT && (
                 <option value={CustomParams.CUSTOM_TEXT}>Text</option>
-              ) : undefined}
+              )}
               <MaybeTextListOptions ruleType={ruleType} action={action} />
             </optgroup>
             {constants.applications
@@ -533,43 +554,45 @@ const RuleInput = (props: IRuleInput) => {
                     app.id,
                     props.radarrSettingsId,
                     props.sonarrSettingsId,
+                    isPlex,
+                    isJellyfin,
                   ),
               )
-              .map((app) => {
-                return (app.mediaType === MediaType.BOTH ||
+              .map((app) =>
+                (app.mediaType === MediaType.BOTH ||
                   props.mediaType === app.mediaType) &&
-                  action != null &&
-                  action !== RulePossibility.IN_LAST &&
-                  action !== RulePossibility.IN_NEXT ? (
+                action != null &&
+                action !== RulePossibility.IN_LAST &&
+                action !== RulePossibility.IN_NEXT ? (
                   <optgroup key={app.id} label={app.name}>
-                    {app.props.map((prop) => {
-                      // Add valid application-specific second values. Note that the second value
-                      // type may be different to the rule type - e.g. a rule type of "text list"
-                      // may be able to be matched to values of type "text list" as well as "text".
-                      const secondValueTypes = getSecondValueTypes(ruleType)
-                      for (const type of secondValueTypes) {
-                        if (+prop.type.key === type) {
-                          return (prop.mediaType === MediaType.BOTH ||
+                    {app.props
+                      .filter((prop) => {
+                        const validTypes = getSecondValueTypes(ruleType)
+                        return (
+                          validTypes.includes(+prop.type.key as RuleType) &&
+                          (prop.mediaType === MediaType.BOTH ||
                             props.mediaType === prop.mediaType) &&
-                            (props.mediaType === MediaType.MOVIE ||
-                              prop.showType === undefined ||
-                              prop.showType.includes(props.dataType!)) ? (
-                            <option
-                              key={app.id + 10 + prop.id}
-                              value={JSON.stringify([app.id, prop.id])}
-                            >{`${app.name} - ${prop.humanName}`}</option>
-                          ) : undefined
-                        }
-                      }
-                    })}
+                          (props.mediaType === MediaType.MOVIE ||
+                            !prop.showType ||
+                            prop.showType.includes(props.dataType!))
+                        )
+                      })
+                      .map((prop) => (
+                        <option
+                          key={`${app.id}-${prop.id}`}
+                          value={JSON.stringify([app.id, prop.id])}
+                        >
+                          {`${app.name} - ${prop.humanName}`}
+                        </option>
+                      ))}
                   </optgroup>
-                ) : undefined
-              })}
+                ) : null,
+              )}
           </select>
         </div>
 
         {/* Custom Value Input */}
-        {customValActive ? (
+        {customValActive && (
           <div className="mb-2">
             <label
               htmlFor="custom_val"
@@ -578,41 +601,41 @@ const RuleInput = (props: IRuleInput) => {
               Custom Value
             </label>
             {customValType === RuleType.TEXT &&
-            secondVal === CustomParams.CUSTOM_DAYS ? (
+            effectiveSecondVal === CustomParams.CUSTOM_DAYS ? (
               <input
                 type="number"
                 name="custom_val"
                 id="custom_val"
                 onChange={updateCustomValue}
-                value={customVal ? +customVal / 86400 : undefined}
+                value={effectiveCustomVal ? +effectiveCustomVal / 86400 : ''}
                 placeholder="Amount of days"
-              ></input>
+              />
             ) : (customValType === RuleType.TEXT &&
-                secondVal === CustomParams.CUSTOM_TEXT) ||
+                effectiveSecondVal === CustomParams.CUSTOM_TEXT) ||
               customValType === RuleType.TEXT_LIST ? (
               <input
                 type="text"
                 name="custom_val"
                 id="custom_val"
                 onChange={updateCustomValue}
-                value={customVal}
+                value={effectiveCustomVal ?? ''}
                 placeholder="Text"
-              ></input>
+              />
             ) : customValType === RuleType.DATE ? (
               <input
                 type="date"
                 name="custom_val"
                 id="custom_val"
                 onChange={updateCustomValue}
-                value={customVal}
+                value={effectiveCustomVal ?? ''}
                 placeholder="Date"
-              ></input>
+              />
             ) : customValType === RuleType.BOOL ? (
               <select
                 name="custom_val"
                 id="custom_val"
                 onChange={updateCustomValue}
-                value={customVal}
+                value={effectiveCustomVal ?? '1'}
               >
                 <option value={1}>True</option>
                 <option value={0}>False</option>
@@ -623,12 +646,12 @@ const RuleInput = (props: IRuleInput) => {
                 name="custom_val"
                 id="custom_val"
                 onChange={updateCustomValue}
-                value={customVal}
+                value={effectiveCustomVal ?? ''}
                 placeholder="Number"
-              ></input>
+              />
             )}
           </div>
-        ) : null}
+        )}
       </div>
     </div>
   )

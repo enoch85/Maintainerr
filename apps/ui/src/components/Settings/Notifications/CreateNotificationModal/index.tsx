@@ -1,6 +1,6 @@
 import { BasicResponseDto } from '@maintainerr/contracts'
 import { Editor } from '@monaco-editor/react'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'react-toastify'
 import GetApiHandler, { PostApiHandler } from '../../../../utils/ApiHandler'
 import { camelCaseToPrettyText } from '../../../../utils/SettingsUtils'
@@ -41,25 +41,53 @@ interface CreateNotificationModal {
 const CreateNotificationModal = (props: CreateNotificationModal) => {
   const [availableAgents, setAvailableAgents] = useState<agentSpec[]>()
   const [availableTypes, setAvailableTypes] = useState<typeSpec[]>()
-  const nameRef = useRef<string>('')
-  const aboutScaleRef = useRef<number>(3)
-  const enabledRef = useRef<boolean>(false)
-  const [formValues, setFormValues] = useState<any>()
+  const [nameValue, setNameValue] = useState<string>(props.selected?.name ?? '')
+  const [aboutScaleValue, setAboutScaleValue] = useState<number>(props.selected?.aboutScale ?? 3)
+  const [enabledValue, setEnabledValue] = useState<boolean>(props.selected?.enabled ?? false)
+  const [formValues, setFormValues] = useState<any>(props.selected?.options)
 
   const [targetAgent, setTargetAgent] = useState<agentSpec>()
   const [targetTypes, setTargetTypes] = useState<typeSpec[]>([])
 
+  // Initialize data on mount
+  useState(() => {
+    queueMicrotask(async () => {
+      const agents = await GetApiHandler<agentSpec[]>('/notifications/agents')
+      setAvailableAgents([{ name: '-', options: [] } as agentSpec, ...agents])
+
+      // load selected agents if editing
+      if (props.selected && props.selected.agent) {
+        setTargetAgent(
+          agents.find(
+            (agent: agentSpec) => props.selected!.agent === agent.name,
+          ),
+        )
+      }
+
+      const types = await GetApiHandler<typeSpec[]>('/notifications/types')
+      setAvailableTypes(types)
+
+      // load selected types if editing
+      if (props.selected && props.selected.types) {
+        setTargetTypes(
+          types.filter((type) => props.selected!.types.includes(type.id)),
+        )
+      }
+    })
+    return true
+  })
+
   const handleSubmit = () => {
     const types = targetTypes ? targetTypes.map((t) => t.id) : []
 
-    if (targetAgent && nameRef.current !== '') {
+    if (targetAgent && nameValue !== '') {
       const payload: AgentConfiguration = {
         id: props.selected?.id,
-        name: nameRef.current,
+        name: nameValue,
         agent: targetAgent.name,
-        enabled: enabledRef.current,
+        enabled: enabledValue,
         types: types,
-        aboutScale: aboutScaleRef.current,
+        aboutScale: aboutScaleValue,
         options: formValues,
       }
       postNotificationConfig(payload)
@@ -69,16 +97,16 @@ const CreateNotificationModal = (props: CreateNotificationModal) => {
   }
 
   const doTest = () => {
-    if (targetAgent && nameRef.current !== '') {
+    if (targetAgent && nameValue !== '') {
       const types = targetTypes ? targetTypes.map((t) => t.id) : []
 
       PostApiHandler(`/notifications/test`, {
         id: props.selected?.id,
-        name: nameRef.current,
+        name: nameValue,
         agent: targetAgent.name,
-        enabled: enabledRef.current,
+        enabled: enabledValue,
         types: types,
-        aboutScale: aboutScaleRef.current,
+        aboutScale: aboutScaleValue,
         options: formValues,
       }).then((resp) => {
         if (resp !== 'Success') {
@@ -91,39 +119,6 @@ const CreateNotificationModal = (props: CreateNotificationModal) => {
       })
     }
   }
-
-  useEffect(() => {
-    GetApiHandler('/notifications/agents').then((agents) => {
-      setAvailableAgents([{ name: '-', options: [] }, ...agents])
-
-      // load selected agents if editing
-      if (props.selected && props.selected.agent) {
-        setTargetAgent(
-          agents.find(
-            (agent: agentSpec) => props.selected!.agent === agent.name,
-          ),
-        )
-      }
-    })
-
-    GetApiHandler('/notifications/types').then((types: typeSpec[]) => {
-      setAvailableTypes(types)
-
-      // load selected types if editing
-      if (props.selected && props.selected.types) {
-        setTargetTypes(
-          types.filter((type) => props.selected!.types.includes(type.id)),
-        )
-      }
-    })
-
-    // load rest of data if editing
-    if (props.selected) {
-      nameRef.current = props.selected.name
-      enabledRef.current = props.selected.enabled
-      setFormValues(props.selected.options)
-    }
-  }, [])
 
   const postNotificationConfig = (payload: AgentConfiguration) => {
     PostApiHandler('/notifications/configuration/add', payload).then(
@@ -179,9 +174,9 @@ const CreateNotificationModal = (props: CreateNotificationModal) => {
                     type="text"
                     id="name"
                     name="name"
-                    defaultValue={props.selected?.name}
+                    value={nameValue}
                     onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                      (nameRef.current = event.target.value)
+                      setNameValue(event.target.value)
                     }
                   ></input>
                 </div>
@@ -198,9 +193,9 @@ const CreateNotificationModal = (props: CreateNotificationModal) => {
                     type="checkbox"
                     name="enabled"
                     id="enabled"
-                    defaultChecked={props.selected?.enabled}
+                    checked={enabledValue}
                     onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                      (enabledRef.current = event.target.checked)
+                      setEnabledValue(event.target.checked)
                     }
                   ></input>
                 </div>
@@ -349,14 +344,11 @@ const CreateNotificationModal = (props: CreateNotificationModal) => {
                               <input
                                 type="number"
                                 name="about-scale"
-                                defaultValue={
-                                  props.selected?.aboutScale ||
-                                  aboutScaleRef.current
-                                }
+                                value={aboutScaleValue}
                                 onChange={(
                                   event: React.ChangeEvent<HTMLInputElement>,
                                 ) =>
-                                  (aboutScaleRef.current = +event.target.value)
+                                  setAboutScaleValue(+event.target.value)
                                 }
                               />
                             </div>
