@@ -390,7 +390,7 @@ const CollectionInfo = (props: ICollectionInfo) => {
                     )
                   })}
 
-                  {loadingExtraRef.current ? (
+                  {isLoadingExtra ? (
                     <tr>
                       <Table.TD colSpan={2} noPadding>
                         <SmallLoadingSpinner className="m-auto mb-2 mt-2 w-8" />
