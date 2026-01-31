@@ -8,7 +8,7 @@ import {
   LogSettingSchemaInput,
   LogSettingSchemaOutput,
 } from '@maintainerr/contracts'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import ReconnectingEventSource from 'reconnecting-eventsource'
 import GetApiHandler, {
@@ -139,8 +139,9 @@ const Logs = () => {
     }
   }
 
-  // Initialize EventSource once on mount
-  useState(() => {
+  // Initialize EventSource - useEffect is correct here because we need cleanup
+  // when the component unmounts (closing the EventSource connection)
+  useEffect(() => {
     const MAX_LOG_LINES = 1000
     const es = new ReconnectingEventSource(`${API_BASE_PATH}/api/logs/stream`)
 
@@ -159,8 +160,11 @@ const Logs = () => {
       console.error('EventSource failed:', e)
     }
 
-    return true
-  })
+    // Cleanup: close EventSource when component unmounts
+    return () => {
+      es.close()
+    }
+  }, [])
 
   // Compute inline - React Compiler will optimize
   const filter = logFilter.toLowerCase()

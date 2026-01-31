@@ -1,30 +1,48 @@
 import { MaintainerrEvent } from '@maintainerr/contracts'
-import { createContext, use, useRef, useState, useSyncExternalStore } from 'react'
+import {
+  createContext,
+  use,
+  useEffect,
+  useRef,
+  useSyncExternalStore,
+} from 'react'
 import ReconnectingEventSource from 'reconnecting-eventsource'
 import { API_BASE_PATH } from '../utils/ApiHandler'
 
-const EventsContext = createContext<EventSource | undefined>(undefined)
+const EventsContext = createContext<React.RefObject<EventSource | null>>({
+  current: null,
+})
 
 export const EventsProvider = (props: any) => {
-  // Use state with lazy initializer to store the EventSource - reads during render are safe
-  const [eventSource] = useState<EventSource | undefined>(() => {
+  // Use ref to store the EventSource - stable reference across renders
+  const eventSourceRef = useRef<EventSource | null>(null)
+
+  // useEffect is correct here - we're synchronizing with an external system (EventSource)
+  // and need cleanup when the provider unmounts
+  useEffect(() => {
     const es = new ReconnectingEventSource(`${API_BASE_PATH}/api/events/stream`)
 
     es.onerror = (e) => {
       console.error('EventSource failed:', e)
     }
 
-    return es
-  })
+    eventSourceRef.current = es
 
-  return <EventsContext value={eventSource} {...props} />
+    // Cleanup: close EventSource when provider unmounts
+    return () => {
+      es.close()
+      eventSourceRef.current = null
+    }
+  }, [])
+
+  return <EventsContext value={eventSourceRef} {...props} />
 }
 
 export const useEvent = <T,>(
   type: MaintainerrEvent,
   listener?: (event: T) => any,
 ) => {
-  const context = use(EventsContext)
+  const contextRef = use(EventsContext)
   // Store listener in a ref that we update only inside the subscription callback
   const listenerRef = useRef(listener)
 
@@ -34,6 +52,7 @@ export const useEvent = <T,>(
   // Use useSyncExternalStore for safe subscription to external event source
   const lastEvent = useSyncExternalStore(
     (callback) => {
+      const context = contextRef.current
       if (!context) return () => {}
 
       // Update listener ref inside subscription - this is not during render
