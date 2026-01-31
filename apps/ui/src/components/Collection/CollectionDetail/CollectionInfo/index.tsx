@@ -14,7 +14,7 @@ import {
 } from '@maintainerr/contracts'
 import { Editor } from '@monaco-editor/react'
 import { debounce } from 'lodash-es'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import YAML from 'yaml'
 import { ICollection } from '../..'
 import useDebouncedState from '../../../..//hooks/useDebouncedState'
@@ -38,11 +38,9 @@ interface ICollectionInfoLogApiResponse {
 
 const CollectionInfo = (props: ICollectionInfo) => {
   const [data, setData] = useState<CollectionLogDto[]>([])
-  const [page, setPage] = useState(0)
-  const [pageDataCount, setPageDataCount] = useState(0)
-  const [totalSize, setTotalSize] = useState<number>(999)
+  const [totalSize, setTotalSize] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [isLoadingExtra, setIsLoadingExtra] = useState<boolean>(false)
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false)
   const [searchFilter, debouncedSearchFilter, setSearchFilter] =
     useDebouncedState('')
   const [currentSort, setCurrentSort] = useState<'ASC' | 'DESC'>('DESC')
@@ -54,10 +52,28 @@ const CollectionInfo = (props: ICollectionInfo) => {
 
   const fetchAmount = 25
 
-  // Define fetchData function before it's used
+  // Use refs to track current state for scroll handler (avoids stale closures)
+  const stateRef = useRef({
+    data: data,
+    totalSize: totalSize,
+    isLoading: isLoading,
+    isLoadingMore: isLoadingMore,
+  })
+
+  // Keep ref in sync with state (outside of render effects)
+  useEffect(() => {
+    stateRef.current = {
+      data,
+      totalSize,
+      isLoading,
+      isLoadingMore,
+    }
+  })
+
+  // Fetch data - pageNum is 1-based
   const fetchData = async (
     pageNum: number,
-    prevData: CollectionLogDto[],
+    append: boolean,
     search: string,
     sort: 'ASC' | 'DESC',
     filter: ECollectionLogType | -1,
@@ -69,137 +85,77 @@ const CollectionInfo = (props: ICollectionInfo) => {
     )
 
     setTotalSize(resp.totalSize)
-    setData([...prevData, ...resp.items])
+    if (append) {
+      setData((prev) => [...prev, ...resp.items])
+    } else {
+      setData(resp.items)
+    }
     setIsLoading(false)
-    setIsLoadingExtra(false)
+    setIsLoadingMore(false)
   }
 
-  // Define resetAll function before it's used
-  const resetAll = () => {
-    setIsLoading(true)
-    setIsLoadingExtra(false)
-    setPageDataCount(0)
-    setPage(0)
-    setTotalSize(999)
-    setData([])
+  // Load more data (for infinite scroll)
+  const loadMore = () => {
+    const state = stateRef.current
+    // Don't load if already loading or if we have all data
+    if (state.isLoading || state.isLoadingMore) return
+    if (state.totalSize !== null && state.data.length >= state.totalSize) return
+
+    setIsLoadingMore(true)
+    const nextPage = Math.floor(state.data.length / fetchAmount) + 1
+    fetchData(nextPage, true, debouncedSearchFilter, currentSort, currentFilter)
   }
 
-  // Handle scroll event
+  // Handle scroll event - uses refs to avoid stale closures
   const handleScroll = () => {
-    if (
+    const state = stateRef.current
+    const scrolledNearBottom =
       window.innerHeight + document.documentElement.scrollTop >=
       document.documentElement.scrollHeight * 0.9
-    ) {
-      if (
-        !isLoading &&
-        !isLoadingExtra &&
-        !(fetchAmount * (pageDataCount - 1) >= totalSize)
-      ) {
-        setPage((p) => pageDataCount + 1)
-      }
+
+    if (scrolledNearBottom) {
+      // Don't load if already loading or if we have all data
+      if (state.isLoading || state.isLoadingMore) return
+      if (state.totalSize !== null && state.data.length >= state.totalSize)
+        return
+
+      loadMore()
     }
   }
 
-  // Handle page changes - fetch more data
-  const handlePageChange = (newPage: number) => {
-    if (newPage !== 0) {
-      const newPageDataCount = pageDataCount + 1
-      setPageDataCount(newPageDataCount)
-      if (!isLoading) {
-        setIsLoadingExtra(true)
-      }
-      fetchData(
-        newPageDataCount,
-        data,
-        debouncedSearchFilter,
-        currentSort,
-        currentFilter,
-      )
-    }
-  }
-
-  // Handle filter/sort/search changes - reset and refetch
-  const handleFilterChange = () => {
-    resetAll()
-    // Delay the fetch slightly to allow state to settle
-    setTimeout(() => {
-      setPage(1)
-    }, 500)
-  }
-
-  // Track last filter values to detect changes
-  const [lastFilters, setLastFilters] = useState({
-    search: debouncedSearchFilter,
-    sort: currentSort,
-    filter: currentFilter,
-  })
-
-  // Check if filters changed during render and schedule update
-  if (
-    lastFilters.search !== debouncedSearchFilter ||
-    lastFilters.sort !== currentSort ||
-    lastFilters.filter !== currentFilter
-  ) {
-    queueMicrotask(() => {
-      setLastFilters({
-        search: debouncedSearchFilter,
-        sort: currentSort,
-        filter: currentFilter,
-      })
-      handleFilterChange()
-    })
-  }
-
-  // Check if page changed during render and schedule fetch
-  const [lastPage, setLastPage] = useState(page)
-  if (lastPage !== page) {
-    queueMicrotask(() => {
-      setLastPage(page)
-      handlePageChange(page)
-    })
-  }
-
-  // Check if we need to fetch more data when data changes (page not filled)
-  const [lastDataLength, setLastDataLength] = useState(data.length)
-  if (lastDataLength !== data.length) {
-    queueMicrotask(() => {
-      setLastDataLength(data.length)
-      if (
-        !isLoading &&
-        !isLoadingExtra &&
-        window.innerHeight + document.documentElement.scrollTop >=
-          document.documentElement.scrollHeight * 0.9 &&
-        !(fetchAmount * (pageDataCount - 1) >= totalSize)
-      ) {
-        setPage((p) => p + 1)
-      }
-    })
-  }
-
-  // Initialize data on mount using lazy state initializer
-  const [initialized] = useState(() => {
-    queueMicrotask(() => {
-      setPage(1)
-    })
-    return true
-  })
-  void initialized
-
-  // Set up scroll listener using lazy state initializer
-  const [scrollListenerSetup] = useState(() => {
+  // Set up scroll listener - useEffect needed for DOM event cleanup
+  useEffect(() => {
     const debouncedScroll = debounce(handleScroll, 200)
-    queueMicrotask(() => {
-      window.addEventListener('scroll', debouncedScroll)
-    })
-    // Return cleanup function stored for potential use
-    return {
-      cleanup: () => {
-        window.removeEventListener('scroll', debouncedScroll)
-        debouncedScroll.cancel()
-      },
+    window.addEventListener('scroll', debouncedScroll)
+    return () => {
+      window.removeEventListener('scroll', debouncedScroll)
+      debouncedScroll.cancel()
     }
-  })
-  void scrollListenerSetup
+  }, [])
+
+  // Initial load and filter/sort/search changes - useEffect for API synchronization
+  useEffect(() => {
+    // Reset state and fetch fresh data when filters change
+    setData([])
+    setTotalSize(null)
+    setIsLoading(true)
+    setIsLoadingMore(false)
+    fetchData(1, false, debouncedSearchFilter, currentSort, currentFilter)
+  }, [debouncedSearchFilter, currentSort, currentFilter, props.collection.id])
+
+  // Check if we need to load more after data loads (content doesn't fill page)
+  useEffect(() => {
+    if (isLoading || isLoadingMore) return
+    if (totalSize !== null && data.length >= totalSize) return
+
+    const scrolledNearBottom =
+      window.innerHeight + document.documentElement.scrollTop >=
+      document.documentElement.scrollHeight * 0.9
+
+    if (scrolledNearBottom) {
+      loadMore()
+    }
+  }, [data.length, isLoading, isLoadingMore, totalSize])
 
   return (
     <>
@@ -390,7 +346,7 @@ const CollectionInfo = (props: ICollectionInfo) => {
                     )
                   })}
 
-                  {isLoadingExtra ? (
+                  {isLoadingMore ? (
                     <tr>
                       <Table.TD colSpan={2} noPadding>
                         <SmallLoadingSpinner className="m-auto mb-2 mt-2 w-8" />
