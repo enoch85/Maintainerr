@@ -1,8 +1,15 @@
-# Maintainerr Development Environment
-# ====================================
+# Maintainerr Development Test Environment
+# =========================================
 #
 # Quick Start:
+#   cd docker-dev
 #   docker compose up -d
+#
+# Build from a specific branch:
+#   BRANCH=my-feature docker compose up -d --build
+#
+# Build from a fork:
+#   REPO=https://github.com/yourfork/Maintainerr.git BRANCH=my-feature docker compose up -d --build
 #
 # Access:
 #   - Maintainerr: http://localhost:6246
@@ -39,7 +46,10 @@ services:
   maintainerr:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
+      args:
+        BRANCH: ${BRANCH:-remaining-issues/abstraction-cleanup-squashed}
+        REPO: ${REPO:-https://github.com/enoch85/Maintainerr.git}
     container_name: maintainerr-dev
     user: "1000:1000"
     depends_on:

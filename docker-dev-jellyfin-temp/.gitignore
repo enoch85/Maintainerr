@@ -1,0 +1,8 @@
+# Ignore media directories
+media/
+
+# Ignore Maintainerr data directory
+maintainerr-data/
+
+# Build logs
+*.log
