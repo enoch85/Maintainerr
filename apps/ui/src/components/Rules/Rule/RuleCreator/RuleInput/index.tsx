@@ -285,22 +285,6 @@ const RuleInput = (props: IRuleInput) => {
   // Suppress unused variable warning
   void initState
 
-  // Handle invalid firstval - when constants load and firstval is no longer valid
-  // This is done through state rather than refs to avoid render-time ref access
-  const needsClear = firstval && constants && !constantsLoading && !currentProp
-  const [lastClearedFirstval, setLastClearedFirstval] = useState<
-    string | undefined
-  >(undefined)
-
-  if (needsClear && lastClearedFirstval !== firstval) {
-    // Schedule the clear for next microtask to avoid setState during render
-    queueMicrotask(() => {
-      setLastClearedFirstval(firstval)
-      setFirstVal(undefined)
-      submit({ firstval: undefined })
-    })
-  }
-
   // Event handlers - pass new values directly to submit to avoid stale closure issues
   const updateFirstValue = (e: { target: { value: string } }) => {
     const newVal = e.target.value || undefined
