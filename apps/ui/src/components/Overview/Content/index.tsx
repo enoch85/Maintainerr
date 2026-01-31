@@ -3,7 +3,7 @@ import {
   type MediaItemWithParent,
 } from '@maintainerr/contracts'
 import { debounce } from 'lodash-es'
-import { useEffect } from 'react'
+import { useState } from 'react'
 import { ICollectionMedia } from '../../Collection'
 import LoadingSpinner, {
   SmallLoadingSpinner,
@@ -55,16 +55,17 @@ const OverviewContent = (props: IOverviewContent) => {
     }
   }
 
-  useEffect(() => {
+  // Set up scroll listener on mount
+  useState(() => {
     const debouncedScroll = debounce(handleScroll, 200)
     window.addEventListener('scroll', debouncedScroll, { passive: true })
-    return () => {
-      window.removeEventListener('scroll', debouncedScroll)
-      debouncedScroll.cancel() // Cancel pending debounced calls
-    }
-  }, [])
+    return true
+  })
 
-  useEffect(() => {
+  // Track data changes to trigger fetch if needed
+  const [lastDataLength, setLastDataLength] = useState<number>(0)
+  if (props.data.length !== lastDataLength) {
+    setLastDataLength(props.data.length)
     if (
       window.innerHeight + document.documentElement.scrollTop >=
         document.documentElement.scrollHeight * 0.8 &&
@@ -72,9 +73,9 @@ const OverviewContent = (props: IOverviewContent) => {
       !props.extrasLoading &&
       !props.dataFinished
     ) {
-      props.fetchData()
+      queueMicrotask(() => props.fetchData())
     }
-  }, [props.data])
+  }
 
   const getDaysLeft = (mediaId: string) => {
     if (props.collectionInfo) {

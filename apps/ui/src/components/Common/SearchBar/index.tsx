@@ -1,4 +1,4 @@
-import { ChangeEvent, useContext, useEffect, useState } from 'react'
+import { ChangeEvent, useContext, useState } from 'react'
 import SearchContext from '../../../contexts/search-context'
 
 interface ISearchBar {
@@ -10,18 +10,19 @@ const SearchBar = (props: ISearchBar) => {
   const [text, setText] = useState<string>('')
   const SearchCtx = useContext(SearchContext)
 
-  useEffect(() => {
-    if (SearchCtx.search.text === '') {
+  // Track context search text changes
+  const [lastContextText, setLastContextText] = useState<string>('')
+  if (SearchCtx.search.text !== lastContextText) {
+    setLastContextText(SearchCtx.search.text)
+    if (SearchCtx.search.text === '' && text !== '') {
       setText('')
     }
-  }, [SearchCtx.search.text])
-
-  useEffect(() => {
-    props.onSearch(text)
-  }, [text])
+  }
 
   const inputHandler = (e: ChangeEvent<HTMLInputElement>) => {
-    setText(e.target.value.toLowerCase())
+    const newText = e.target.value.toLowerCase()
+    setText(newText)
+    props.onSearch(newText)
   }
 
   return (

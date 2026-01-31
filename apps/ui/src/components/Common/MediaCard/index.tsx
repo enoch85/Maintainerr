@@ -1,7 +1,7 @@
 import { Transition } from '@headlessui/react'
 import { DocumentAddIcon, DocumentRemoveIcon } from '@heroicons/react/solid'
 import { MediaItemType } from '@maintainerr/contracts'
-import React, { memo, useEffect, useState } from 'react'
+import React, { memo, useState } from 'react'
 import GetApiHandler from '../../../utils/ApiHandler'
 import AddModal from '../../AddModal'
 import RemoveFromCollectionBtn from '../../Collection/CollectionDetail/RemoveFromCollectionBtn'
@@ -60,15 +60,6 @@ const MediaCard: React.FC<IMediaCard> = ({
 
   const closeMediaModal = () => setShowMediaModal(false)
 
-  useEffect(() => {
-    if (tmdbid) {
-      GetApiHandler(`/moviedb/image/${mediaType}/${tmdbid}`).then((resp) =>
-        setImage(resp),
-      )
-    }
-    getExclusions()
-  }, [])
-
   const getExclusions = () => {
     if (!collectionPage) {
       GetApiHandler(`/rules/exclusion?mediaServerId=${id}`).then((resp: []) =>
@@ -76,6 +67,18 @@ const MediaCard: React.FC<IMediaCard> = ({
       )
     }
   }
+
+  // Initialize data on mount
+  useState(() => {
+    queueMicrotask(async () => {
+      if (tmdbid) {
+        const resp = await GetApiHandler<string>(`/moviedb/image/${mediaType}/${tmdbid}`)
+        setImage(resp)
+      }
+      getExclusions()
+    })
+    return true
+  })
 
   // Just to get the year from the date
   if (year && mediaType !== 'episode') {

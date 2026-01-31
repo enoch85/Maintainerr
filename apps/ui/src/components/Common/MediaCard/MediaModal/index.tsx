@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useMemo, useState } from 'react'
+import React, { memo, useMemo, useState } from 'react'
 import { useMediaServerType } from '../../../../hooks/useMediaServerType'
 import GetApiHandler from '../../../../utils/ApiHandler'
 
@@ -66,48 +66,51 @@ const MediaModalContent: React.FC<ModalContentProps> = memo(
 
     const basePath = import.meta.env.VITE_BASE_PATH ?? ''
 
-    useEffect(() => {
-      GetApiHandler('/media-server').then((resp) => {
-        setMachineId(resp?.machineId)
+    // Initialize data on mount
+    useState(() => {
+      queueMicrotask(async () => {
+        const resp = await GetApiHandler<{ machineId?: string; url?: string }>('/media-server')
+        setMachineId(resp?.machineId ?? null)
         // For Jellyfin, we need the server URL to construct links
         if (resp?.url) {
           setServerUrl(resp.url)
         }
-      })
-      GetApiHandler('/settings').then((resp) =>
-        setTautulliModalUrl(resp?.tautulli_url || null),
-      )
-      GetApiHandler<Metadata>(`/media-server/meta/${id}`).then((data) => {
+
+        const settings = await GetApiHandler<{ tautulli_url?: string }>('/settings')
+        setTautulliModalUrl(settings?.tautulli_url || null)
+
+        const data = await GetApiHandler<Metadata>(`/media-server/meta/${id}`)
         setMetadata(data)
         setLoading(false)
-      })
-      // Only fetch backdrop if tmdbid is available
-      if (tmdbid) {
-        GetApiHandler(`/moviedb/backdrop/${mediaType}/${tmdbid}`)
-          .then((resp) => setBackdrop(resp))
-          .catch((error) => {
+
+        // Only fetch backdrop if tmdbid is available
+        if (tmdbid) {
+          try {
+            const backdropResp = await GetApiHandler<string>(`/moviedb/backdrop/${mediaType}/${tmdbid}`)
+            setBackdrop(backdropResp)
+          } catch (error) {
             console.error(
               'Error fetching backdrop image. Check your media server metadata',
               error,
             )
             setBackdrop(null)
-          })
-      } else {
-        console.warn(
-          `No TMDB ID found for "${title}" (id: ${id}). Backdrop image unavailable. ` +
-            'Please check your media server metadata - the item may not be matched correctly.',
-        )
-        setBackdrop(null)
-      }
-    }, [id, mediaType, tmdbid, title])
+          }
+        } else {
+          console.warn(
+            `No TMDB ID found for "${title}" (id: ${id}). Backdrop image unavailable. ` +
+              'Please check your media server metadata - the item may not be matched correctly.',
+          )
+          setBackdrop(null)
+        }
+      })
+      return true
+    })
 
-    useEffect(() => {
+    // Lock body scroll while modal is open
+    useState(() => {
       document.body.style.overflow = 'hidden'
-
-      return () => {
-        document.body.style.overflow = ''
-      }
-    }, [])
+      return true
+    })
     return (
       <div
         className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 px-3"

@@ -3,7 +3,7 @@ import {
   PlusCircleIcon,
   TrashIcon,
 } from '@heroicons/react/solid'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import GetApiHandler, { DeleteApiHandler } from '../../../utils/ApiHandler'
 import { ICollection } from '../../Collection'
 import Button from '../../Common/Button'
@@ -71,14 +71,14 @@ const SonarrSettings = () => {
       })
   }
 
-  useEffect(() => {
-    if (loaded) return
-
-    GetApiHandler<ISonarrSetting[]>('/settings/sonarr').then((resp) => {
+  useState(() => {
+    queueMicrotask(async () => {
+      const resp = await GetApiHandler<ISonarrSetting[]>('/settings/sonarr')
       setSettings(resp)
       setLoaded(true)
     })
-  }, [])
+    return true
+  })
 
   const showAddModal = () => {
     setSettingsModalActive(true)

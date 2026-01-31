@@ -1,6 +1,6 @@
 import { type MediaItem } from '@maintainerr/contracts'
 import { debounce } from 'lodash-es'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { ICollection } from '../..'
 import GetApiHandler from '../../../../utils/ApiHandler'
 import OverviewContent from '../../../Overview/Content'
@@ -23,67 +23,24 @@ export interface IExclusionMedia {
 const CollectionExcludions = (props: ICollectionExclusions) => {
   const [data, setData] = useState<MediaItem[]>([])
   // paging
-  const pageData = useRef<number>(0)
+  const [pageDataCount, setPageDataCount] = useState(0)
   const fetchAmount = 25
   const [totalSize, setTotalSize] = useState<number>(999)
-  const totalSizeRef = useRef<number>(999)
-  const dataRef = useRef<MediaItem[]>([])
-  const loadingRef = useRef<boolean>(true)
-  const loadingExtraRef = useRef<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [isLoadingExtra, setIsLoadingExtra] = useState<boolean>(false)
   const [page, setPage] = useState(0)
 
-  useEffect(() => {
-    // Initial first fetch
-    setPage(1)
-  }, [])
-
-  const handleScroll = () => {
-    if (
-      window.innerHeight + document.documentElement.scrollTop >=
-      document.documentElement.scrollHeight * 0.9
-    ) {
-      if (
-        !loadingRef.current &&
-        !loadingExtraRef.current &&
-        !(fetchAmount * (pageData.current - 1) >= totalSizeRef.current)
-      ) {
-        setPage(pageData.current + 1)
-      }
-    }
-  }
-
-  useEffect(() => {
-    if (page !== 0) {
-      // Ignore initial page render
-      pageData.current = pageData.current + 1
-      fetchData()
-    }
-  }, [page])
-
-  useEffect(() => {
-    const debouncedScroll = debounce(handleScroll, 200)
-    window.addEventListener('scroll', debouncedScroll)
-    return () => {
-      window.removeEventListener('scroll', debouncedScroll)
-      debouncedScroll.cancel() // Cancel pending debounced calls
-    }
-  }, [])
-
-  const fetchData = async () => {
-    if (!loadingRef.current) {
-      loadingExtraRef.current = true
-    }
-    // setLoading(true)
+  // Define fetchData before it's used
+  const fetchData = async (pageNum: number, prevData: MediaItem[]) => {
     const resp: { totalSize: number; items: IExclusionMedia[] } =
       await GetApiHandler(
-        `/collections/exclusions/${props.collection.id}/content/${pageData.current}?size=${fetchAmount}`,
+        `/collections/exclusions/${props.collection.id}/content/${pageNum}?size=${fetchAmount}`,
       )
 
     setTotalSize(resp.totalSize)
-    // pageData.current = pageData.current + 1
 
     setData([
-      ...dataRef.current,
+      ...prevData,
       ...resp.items.map((el) => {
         if (el.mediaData) {
           el.mediaData.maintainerrExclusionId = el.id
@@ -94,46 +51,103 @@ const CollectionExcludions = (props: ICollectionExclusions) => {
         return el.mediaData ? el.mediaData : ({} as MediaItem)
       }),
     ])
-    loadingRef.current = false
-    loadingExtraRef.current = false
+    setIsLoading(false)
+    setIsLoadingExtra(false)
   }
 
-  useEffect(() => {
-    dataRef.current = data
-
-    // If page is not filled yet, fetch more
+  // Handle scroll event
+  const handleScroll = () => {
     if (
-      !loadingRef.current &&
-      !loadingExtraRef.current &&
       window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.scrollHeight * 0.9 &&
-      !(fetchAmount * (pageData.current - 1) >= totalSizeRef.current)
+      document.documentElement.scrollHeight * 0.9
     ) {
-      setPage(page + 1)
+      if (
+        !isLoading &&
+        !isLoadingExtra &&
+        !(fetchAmount * (pageDataCount - 1) >= totalSize)
+      ) {
+        setPage(pageDataCount + 1)
+      }
     }
-  }, [data])
+  }
 
-  useEffect(() => {
-    totalSizeRef.current = totalSize
-  }, [totalSize])
+  // Handle page changes
+  const handlePageChange = (newPage: number) => {
+    if (newPage !== 0) {
+      const newPageDataCount = pageDataCount + 1
+      setPageDataCount(newPageDataCount)
+      if (!isLoading) {
+        setIsLoadingExtra(true)
+      }
+      fetchData(newPageDataCount, data)
+    }
+  }
+
+  // Track page changes
+  const [lastPage, setLastPage] = useState(page)
+  if (lastPage !== page) {
+    queueMicrotask(() => {
+      setLastPage(page)
+      handlePageChange(page)
+    })
+  }
+
+  // Track data changes for auto-fetch more
+  const [lastDataLength, setLastDataLength] = useState(data.length)
+  if (lastDataLength !== data.length) {
+    queueMicrotask(() => {
+      setLastDataLength(data.length)
+      if (
+        !isLoading &&
+        !isLoadingExtra &&
+        window.innerHeight + document.documentElement.scrollTop >=
+          document.documentElement.scrollHeight * 0.9 &&
+        !(fetchAmount * (pageDataCount - 1) >= totalSize)
+      ) {
+        setPage((p) => p + 1)
+      }
+    })
+  }
+
+  // Initialize on mount
+  const [initialized] = useState(() => {
+    queueMicrotask(() => {
+      setPage(1)
+    })
+    return true
+  })
+  void initialized
+
+  // Set up scroll listener
+  const [scrollListenerSetup] = useState(() => {
+    const debouncedScroll = debounce(handleScroll, 200)
+    queueMicrotask(() => {
+      window.addEventListener('scroll', debouncedScroll)
+    })
+    return {
+      cleanup: () => {
+        window.removeEventListener('scroll', debouncedScroll)
+        debouncedScroll.cancel()
+      },
+    }
+  })
+  void scrollListenerSetup
 
   return (
     <OverviewContent
       dataFinished={true}
       fetchData={() => {}}
-      loading={loadingRef.current}
+      loading={isLoading}
       data={data}
       libraryId={props.libraryId}
       collectionPage={true}
       collectionId={props.collection.id}
       extrasLoading={
-        loadingExtraRef &&
-        !loadingRef.current &&
-        totalSize >= pageData.current * fetchAmount
+        isLoadingExtra && !isLoading && totalSize >= pageDataCount * fetchAmount
       }
       onRemove={(id: string) =>
         setTimeout(() => {
-          setData(dataRef.current.filter((el) => el.id !== id))
+          setData((prevData) => prevData.filter((el) => el.id !== id))
         }, 500)
       }
     />

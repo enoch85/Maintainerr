@@ -1,5 +1,5 @@
 import { AxiosError } from 'axios'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useStopAllRuleExecution } from '../api/rules'
@@ -26,28 +26,39 @@ const RulesListPage = () => {
     },
   })
 
-  const fetchData = async () => {
-    if (selectedLibrary === 'all') return await GetApiHandler('/rules')
-    else return await GetApiHandler(`/rules?libraryId=${selectedLibrary}`)
+  // Define fetchData before it's used
+  const fetchData = async (library: string) => {
+    if (library === 'all') return await GetApiHandler('/rules')
+    else return await GetApiHandler(`/rules?libraryId=${library}`)
   }
 
-  useEffect(() => {
-    fetchData().then((resp) => {
+  // Define refreshData before it's used
+  const refreshData = (library: string): void => {
+    fetchData(library).then((resp) => setData(resp))
+  }
+
+  // Initialize on mount
+  const [initialized] = useState(() => {
+    queueMicrotask(async () => {
+      const resp = await fetchData('all')
       setData(resp)
       setIsLoading(false)
     })
-  }, [])
+    return true
+  })
+  void initialized
 
-  useEffect(() => {
-    refreshData()
-  }, [selectedLibrary])
+  // Track library changes
+  const [lastLibrary, setLastLibrary] = useState(selectedLibrary)
+  if (lastLibrary !== selectedLibrary) {
+    queueMicrotask(() => {
+      setLastLibrary(selectedLibrary)
+      refreshData(selectedLibrary)
+    })
+  }
 
   const onSwitchLibrary = (libraryId: string) => {
     setSelectedLibrary(libraryId)
-  }
-
-  const refreshData = (): void => {
-    fetchData().then((resp) => setData(resp))
   }
 
   const editHandler = (group: IRuleGroup): void => {
@@ -112,7 +123,7 @@ const RulesListPage = () => {
               className="collection relative mb-5 flex h-fit transform-gpu flex-col rounded-xl bg-zinc-800 bg-cover bg-center p-4 text-zinc-400 shadow ring-1 ring-zinc-700 xs:w-full sm:mb-0 sm:mr-5"
             >
               <RuleGroup
-                onDelete={refreshData}
+                onDelete={() => refreshData(selectedLibrary)}
                 onEdit={editHandler}
                 group={el}
               />

@@ -14,7 +14,7 @@ import {
 } from '@maintainerr/contracts'
 import { Editor } from '@monaco-editor/react'
 import { debounce } from 'lodash-es'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import YAML from 'yaml'
 import { ICollection } from '../..'
 import useDebouncedState from '../../../..//hooks/useDebouncedState'
@@ -39,12 +39,10 @@ interface ICollectionInfoLogApiResponse {
 const CollectionInfo = (props: ICollectionInfo) => {
   const [data, setData] = useState<CollectionLogDto[]>([])
   const [page, setPage] = useState(0)
-  const pageData = useRef<number>(0)
+  const [pageDataCount, setPageDataCount] = useState(0)
   const [totalSize, setTotalSize] = useState<number>(999)
-  const totalSizeRef = useRef<number>(999)
-  const dataRef = useRef<CollectionLogDto[]>([])
-  const loadingRef = useRef<boolean>(true)
-  const loadingExtraRef = useRef<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [isLoadingExtra, setIsLoadingExtra] = useState<boolean>(false)
   const [searchFilter, debouncedSearchFilter, setSearchFilter] =
     useDebouncedState('')
   const [currentSort, setCurrentSort] = useState<'ASC' | 'DESC'>('DESC')
@@ -56,112 +54,152 @@ const CollectionInfo = (props: ICollectionInfo) => {
 
   const fetchAmount = 25
 
-  useEffect(() => {
-    // Initial first fetch
-    setPage(1)
+  // Define fetchData function before it's used
+  const fetchData = async (
+    pageNum: number,
+    prevData: CollectionLogDto[],
+    search: string,
+    sort: 'ASC' | 'DESC',
+    filter: ECollectionLogType | -1,
+  ) => {
+    const resp = await GetApiHandler<ICollectionInfoLogApiResponse>(
+      `/collections/logs/${props.collection.id}/content/${pageNum}?size=${fetchAmount}${
+        search ? `&search=${search}` : ''
+      }${sort ? `&sort=${sort}` : ''}${filter !== -1 ? `&filter=${filter}` : ''}`,
+    )
 
-    // Cleanup on unmount
-    return () => {
-      // Clear all data to prevent memory leaks
-      setData([])
-      dataRef.current = []
-      totalSizeRef.current = 999
-      pageData.current = 0
-    }
-  }, [])
+    setTotalSize(resp.totalSize)
+    setData([...prevData, ...resp.items])
+    setIsLoading(false)
+    setIsLoadingExtra(false)
+  }
 
-  useEffect(() => {
-    // reset state
-    resetAll()
+  // Define resetAll function before it's used
+  const resetAll = () => {
+    setIsLoading(true)
+    setIsLoadingExtra(false)
+    setPageDataCount(0)
+    setPage(0)
+    setTotalSize(999)
+    setData([])
+  }
 
-    // wait 500ms and then refetch
-    setTimeout(() => {
-      setPage(1)
-    }, 500)
-  }, [debouncedSearchFilter, currentSort, currentFilter])
-
-  useEffect(() => {
-    if (page !== 0) {
-      // Ignore initial page render
-      pageData.current = pageData.current + 1
-      fetchData()
-    }
-  }, [page])
-
+  // Handle scroll event
   const handleScroll = () => {
     if (
       window.innerHeight + document.documentElement.scrollTop >=
       document.documentElement.scrollHeight * 0.9
     ) {
       if (
-        !loadingRef.current &&
-        !loadingExtraRef.current &&
-        !(fetchAmount * (pageData.current - 1) >= totalSizeRef.current)
+        !isLoading &&
+        !isLoadingExtra &&
+        !(fetchAmount * (pageDataCount - 1) >= totalSize)
       ) {
-        setPage(pageData.current + 1)
+        setPage((p) => pageDataCount + 1)
       }
     }
   }
 
-  useEffect(() => {
+  // Handle page changes - fetch more data
+  const handlePageChange = (newPage: number) => {
+    if (newPage !== 0) {
+      const newPageDataCount = pageDataCount + 1
+      setPageDataCount(newPageDataCount)
+      if (!isLoading) {
+        setIsLoadingExtra(true)
+      }
+      fetchData(
+        newPageDataCount,
+        data,
+        debouncedSearchFilter,
+        currentSort,
+        currentFilter,
+      )
+    }
+  }
+
+  // Handle filter/sort/search changes - reset and refetch
+  const handleFilterChange = () => {
+    resetAll()
+    // Delay the fetch slightly to allow state to settle
+    setTimeout(() => {
+      setPage(1)
+    }, 500)
+  }
+
+  // Track last filter values to detect changes
+  const [lastFilters, setLastFilters] = useState({
+    search: debouncedSearchFilter,
+    sort: currentSort,
+    filter: currentFilter,
+  })
+
+  // Check if filters changed during render and schedule update
+  if (
+    lastFilters.search !== debouncedSearchFilter ||
+    lastFilters.sort !== currentSort ||
+    lastFilters.filter !== currentFilter
+  ) {
+    queueMicrotask(() => {
+      setLastFilters({
+        search: debouncedSearchFilter,
+        sort: currentSort,
+        filter: currentFilter,
+      })
+      handleFilterChange()
+    })
+  }
+
+  // Check if page changed during render and schedule fetch
+  const [lastPage, setLastPage] = useState(page)
+  if (lastPage !== page) {
+    queueMicrotask(() => {
+      setLastPage(page)
+      handlePageChange(page)
+    })
+  }
+
+  // Check if we need to fetch more data when data changes (page not filled)
+  const [lastDataLength, setLastDataLength] = useState(data.length)
+  if (lastDataLength !== data.length) {
+    queueMicrotask(() => {
+      setLastDataLength(data.length)
+      if (
+        !isLoading &&
+        !isLoadingExtra &&
+        window.innerHeight + document.documentElement.scrollTop >=
+          document.documentElement.scrollHeight * 0.9 &&
+        !(fetchAmount * (pageDataCount - 1) >= totalSize)
+      ) {
+        setPage((p) => p + 1)
+      }
+    })
+  }
+
+  // Initialize data on mount using lazy state initializer
+  const [initialized] = useState(() => {
+    queueMicrotask(() => {
+      setPage(1)
+    })
+    return true
+  })
+  void initialized
+
+  // Set up scroll listener using lazy state initializer
+  const [scrollListenerSetup] = useState(() => {
     const debouncedScroll = debounce(handleScroll, 200)
-    window.addEventListener('scroll', debouncedScroll)
-    return () => {
-      window.removeEventListener('scroll', debouncedScroll)
-      debouncedScroll.cancel() // Cancel pending debounced calls
+    queueMicrotask(() => {
+      window.addEventListener('scroll', debouncedScroll)
+    })
+    // Return cleanup function stored for potential use
+    return {
+      cleanup: () => {
+        window.removeEventListener('scroll', debouncedScroll)
+        debouncedScroll.cancel()
+      },
     }
-  }, [])
-
-  const fetchData = async () => {
-    if (!loadingRef.current) {
-      loadingExtraRef.current = true
-    }
-
-    const resp = await GetApiHandler<ICollectionInfoLogApiResponse>(
-      `/collections/logs/${props.collection.id}/content/${pageData.current}?size=${fetchAmount}${
-        debouncedSearchFilter ? `&search=${debouncedSearchFilter}` : ''
-      }${currentSort ? `&sort=${currentSort}` : ''}${currentFilter !== -1 ? `&filter=${currentFilter}` : ''}`,
-    )
-
-    setTotalSize(resp.totalSize)
-
-    setData([...dataRef.current, ...resp.items])
-    loadingRef.current = false
-    loadingExtraRef.current = false
-  }
-
-  useEffect(() => {
-    dataRef.current = data
-
-    // If page is not filled yet, fetch more
-    if (
-      !loadingRef.current &&
-      !loadingExtraRef.current &&
-      window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.scrollHeight * 0.9 &&
-      !(fetchAmount * (pageData.current - 1) >= totalSizeRef.current)
-    ) {
-      setPage(page + 1)
-    }
-  }, [data])
-
-  useEffect(() => {
-    totalSizeRef.current = totalSize
-  }, [totalSize])
-
-  const resetAll = () => {
-    // set loading
-    loadingRef.current = true
-    loadingExtraRef.current = false
-
-    // reset all
-    pageData.current = 0
-    setPage(0)
-    totalSizeRef.current = 999
-    setTotalSize(999)
-    dataRef.current = []
-    setData([])
-  }
+  })
+  void scrollListenerSetup
 
   return (
     <>
@@ -279,7 +317,7 @@ const CollectionInfo = (props: ICollectionInfo) => {
               </tr>
             </thead>
             <Table.TBody>
-              {loadingRef.current ? (
+              {isLoading ? (
                 <tr>
                   <Table.TD colSpan={4} noPadding>
                     <LoadingSpinner />

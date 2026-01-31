@@ -1,5 +1,5 @@
 import { AxiosError } from 'axios'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { ICollection } from '../components/Collection'
@@ -20,9 +20,14 @@ const CollectionsListPage = () => {
     setIsLoading(false)
   }
 
-  useEffect(() => {
-    getCollections()
-  }, [])
+  // Initialize on mount
+  const [initialized] = useState(() => {
+    queueMicrotask(() => {
+      getCollections()
+    })
+    return true
+  })
+  void initialized
 
   const onSwitchLibrary = (id: string) => {
     getCollections(id !== 'all' ? id : undefined)
