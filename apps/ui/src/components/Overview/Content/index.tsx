@@ -3,7 +3,7 @@ import {
   type MediaItemWithParent,
 } from '@maintainerr/contracts'
 import { debounce } from 'lodash-es'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ICollectionMedia } from '../../Collection'
 import LoadingSpinner, {
   SmallLoadingSpinner,
@@ -44,38 +44,48 @@ function extractTmdbId(
 }
 
 const OverviewContent = (props: IOverviewContent) => {
+  // Use ref to track current props for scroll handler (avoids stale closures)
+  const propsRef = useRef(props)
+
+  // Keep ref in sync with props
+  useEffect(() => {
+    propsRef.current = props
+  })
+
   const handleScroll = () => {
+    const currentProps = propsRef.current
     if (
       window.innerHeight + document.documentElement.scrollTop >=
       document.documentElement.scrollHeight * 0.8
     ) {
-      if (!props.extrasLoading && !props.dataFinished) {
-        props.fetchData()
+      if (!currentProps.extrasLoading && !currentProps.dataFinished) {
+        currentProps.fetchData()
       }
     }
   }
 
-  // Set up scroll listener on mount
-  useState(() => {
+  // Set up scroll listener - useEffect needed for DOM event cleanup
+  useEffect(() => {
     const debouncedScroll = debounce(handleScroll, 200)
     window.addEventListener('scroll', debouncedScroll, { passive: true })
-    return true
-  })
-
-  // Track data changes to trigger fetch if needed
-  const [lastDataLength, setLastDataLength] = useState<number>(0)
-  if (props.data.length !== lastDataLength) {
-    setLastDataLength(props.data.length)
-    if (
-      window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.scrollHeight * 0.8 &&
-      !props.loading &&
-      !props.extrasLoading &&
-      !props.dataFinished
-    ) {
-      queueMicrotask(() => props.fetchData())
+    return () => {
+      window.removeEventListener('scroll', debouncedScroll)
+      debouncedScroll.cancel()
     }
-  }
+  }, [])
+
+  // Check if we need to load more after data loads (content doesn't fill page)
+  useEffect(() => {
+    if (props.loading || props.extrasLoading || props.dataFinished) return
+
+    const scrolledNearBottom =
+      window.innerHeight + document.documentElement.scrollTop >=
+      document.documentElement.scrollHeight * 0.8
+
+    if (scrolledNearBottom) {
+      props.fetchData()
+    }
+  }, [props.data.length, props.loading, props.extrasLoading, props.dataFinished])
 
   const getDaysLeft = (mediaId: string) => {
     if (props.collectionInfo) {
