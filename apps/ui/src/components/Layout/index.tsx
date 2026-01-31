@@ -1,6 +1,6 @@
 import { ArrowLeftIcon, MenuAlt2Icon } from '@heroicons/react/solid'
 import { debounce } from 'lodash-es'
-import { ReactNode, useContext, useEffect, useState } from 'react'
+import { ReactNode, use, useState } from 'react'
 import {
   isRouteErrorResponse,
   Outlet,
@@ -20,7 +20,7 @@ type LayoutShellProps = {
 
 const LayoutShell: React.FC<LayoutShellProps> = ({ children }) => {
   const [navBarOpen, setNavBarOpen] = useState(false)
-  const SearchCtx = useContext(SearchContext)
+  const SearchCtx = use(SearchContext)
   const navigate = useNavigate()
   const basePath = import.meta.env.VITE_BASE_PATH ?? ''
   const location = useLocation()
@@ -29,12 +29,20 @@ const LayoutShell: React.FC<LayoutShellProps> = ({ children }) => {
     setNavBarOpen(!navBarOpen)
   }
 
-  useEffect(() => {
-    // Check if setup is complete, if not redirect to appropriate settings page
-    Promise.all([
-      GetApiHandler('/settings/test/setup'),
-      GetApiHandler('/settings'),
-    ]).then(([setupDone, settings]) => {
+  // Track last checked path to avoid repeated checks
+  const [lastCheckedPath, setLastCheckedPath] = useState<string | undefined>(undefined)
+  
+  // Check setup on path change using state-based change detection
+  if (location.pathname !== lastCheckedPath) {
+    queueMicrotask(async () => {
+      setLastCheckedPath(location.pathname)
+      
+      // Check if setup is complete, if not redirect to appropriate settings page
+      const [setupDone, settings] = await Promise.all([
+        GetApiHandler('/settings/test/setup'),
+        GetApiHandler('/settings'),
+      ])
+      
       if (!setupDone) {
         const mediaServerType = settings?.media_server_type
         if (mediaServerType) {
@@ -46,7 +54,7 @@ const LayoutShell: React.FC<LayoutShellProps> = ({ children }) => {
         }
       }
     })
-  }, [navigate, location.pathname])
+  }
 
   return (
     <section>

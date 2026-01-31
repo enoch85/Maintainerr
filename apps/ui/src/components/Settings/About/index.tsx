@@ -1,58 +1,40 @@
 import { InformationCircleIcon } from '@heroicons/react/solid'
 import { type VersionResponse } from '@maintainerr/contracts'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import GetApiHandler from '../../../utils/ApiHandler'
 import Releases from './Releases'
 
 const AboutSettings = () => {
-  // Maintainerr Timezone
+  // Maintainerr state
   const [timezone, setTimezone] = useState<string>('')
-  useEffect(() => {
-    GetApiHandler<string>('/app/timezone').then((resp) => {
-      setTimezone(resp)
-    })
-  }, [])
-  // End Maintainerr Timezone
-
-  // Maintainerr Version
   const [version, setVersion] = useState<string>('')
   const [commitTag, setCommitTag] = useState<string>('')
-  useEffect(() => {
-    GetApiHandler('/app/status').then((resp: VersionResponse) => {
-      if (resp.status) {
-        setVersion(resp.version)
-        setCommitTag(resp.commitTag)
-      }
-    })
-  }, [])
-  // End Maintainerr Version
-
-  // Maintainerr Rules Count
   const [ruleCount, setRuleCount] = useState<number>()
-  useEffect(() => {
-    GetApiHandler<number>('/rules/count/').then((resp) => {
-      setRuleCount(resp)
-    })
-  }, [])
-  // End Maintainerr Rules Count
-
-  // Maintainerr Collection Items
   const [itemCount, setItemCount] = useState<number>()
-  useEffect(() => {
-    GetApiHandler<number>('/collections/media/count').then((resp) => {
-      setItemCount(resp)
-    })
-  }, [])
-  // End Maintainerr Collection Items
-
-  // Maintainerr Community Rules Count
   const [communityCount, setCommunityCount] = useState<number>()
-  useEffect(() => {
-    GetApiHandler<number>('/rules/community/count').then((resp) => {
-      setCommunityCount(resp)
+
+  // Initialize all data on mount using lazy state initializer
+  useState(() => {
+    queueMicrotask(async () => {
+      const [timezoneResp, statusResp, rulesResp, mediaResp, communityResp] = await Promise.all([
+        GetApiHandler<string>('/app/timezone'),
+        GetApiHandler<VersionResponse>('/app/status'),
+        GetApiHandler<number>('/rules/count/'),
+        GetApiHandler<number>('/collections/media/count'),
+        GetApiHandler<number>('/rules/community/count'),
+      ])
+      
+      setTimezone(timezoneResp)
+      if (statusResp.status) {
+        setVersion(statusResp.version)
+        setCommitTag(statusResp.commitTag)
+      }
+      setRuleCount(rulesResp)
+      setItemCount(mediaResp)
+      setCommunityCount(communityResp)
     })
-  }, [])
-  // End Maintainerr Community Rules Count
+    return true
+  })
 
   return (
     <>

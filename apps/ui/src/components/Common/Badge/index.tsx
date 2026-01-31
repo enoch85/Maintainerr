@@ -13,11 +13,11 @@ interface BadgeProps {
   className?: string
   href?: string
   children: React.ReactNode
+  ref?: React.Ref<HTMLElement>
 }
 
 const Badge = (
-  { badgeType = 'default', className, href, children }: BadgeProps,
-  ref?: React.Ref<HTMLElement>,
+  { badgeType = 'default', className, href, children, ref }: BadgeProps,
 ) => {
   const badgeStyle = [
     'px-2 inline-flex text-xs leading-5 font-semibold rounded-full whitespace-nowrap',
@@ -113,4 +113,4 @@ const Badge = (
   }
 }
 
-export default React.forwardRef(Badge) as typeof Badge
+export default Badge

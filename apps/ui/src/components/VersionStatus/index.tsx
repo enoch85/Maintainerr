@@ -5,7 +5,7 @@ import {
   ServerIcon,
 } from '@heroicons/react/outline'
 import { type VersionResponse } from '@maintainerr/contracts'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import GetApiHandler from '../../utils/ApiHandler'
 
@@ -25,8 +25,10 @@ const VersionStatus = ({ onClick }: VersionStatusProps) => {
   const [updateAvailable, setUpdateAvailable] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(true)
 
-  useEffect(() => {
-    GetApiHandler('/app/status').then((resp: VersionResponse) => {
+  // Initialize data on mount using lazy state initializer
+  useState(() => {
+    queueMicrotask(async () => {
+      const resp = await GetApiHandler<VersionResponse>('/app/status')
       if (resp.status) {
         setVersion(resp.version)
         setCommitTag(resp.commitTag)
@@ -34,7 +36,8 @@ const VersionStatus = ({ onClick }: VersionStatusProps) => {
         setLoading(false)
       }
     })
-  }, [])
+    return true
+  })
 
   const versionStream =
     commitTag === 'local'

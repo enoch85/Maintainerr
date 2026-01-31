@@ -2,7 +2,7 @@ import { RefreshIcon } from '@heroicons/react/outline'
 import { SaveIcon } from '@heroicons/react/solid'
 import axios from 'axios'
 import { orderBy } from 'lodash-es'
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import { useSettingsOutletContext } from '..'
 import {
@@ -145,7 +145,8 @@ const PlexSettings = () => {
     }
   }
 
-  const availablePresets = useMemo(() => {
+  // Compute inline - React Compiler will optimize
+  const availablePresets = (() => {
     const finalPresets: PresetServerDisplay[] = []
     availableServers?.forEach((dev) => {
       dev.connection.forEach((conn) =>
@@ -162,7 +163,7 @@ const PlexSettings = () => {
       )
     })
     return orderBy(finalPresets, ['status', 'ssl'], ['desc', 'desc'])
-  }, [availableServers])
+  })()
 
   const authsuccess = (token: string) => {
     setError(undefined)

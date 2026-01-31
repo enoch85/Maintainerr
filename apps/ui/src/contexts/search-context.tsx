@@ -37,9 +37,9 @@ export function SearchContextProvider(props: { children: ReactNode }) {
   }
 
   return (
-    <SearchContext.Provider value={context}>
+    <SearchContext value={context}>
       {props.children}
-    </SearchContext.Provider>
+    </SearchContext>
   )
 }
 

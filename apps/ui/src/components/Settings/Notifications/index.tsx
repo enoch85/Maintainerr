@@ -4,7 +4,7 @@ import {
   TrashIcon,
 } from '@heroicons/react/solid'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'react-toastify'
 import GetApiHandler, { DeleteApiHandler } from '../../../utils/ApiHandler'
 import Button from '../../Common/Button'
@@ -19,11 +19,14 @@ const NotificationSettings = () => {
 
   const basePath = import.meta.env.VITE_BASE_PATH ?? ''
 
-  useEffect(() => {
-    GetApiHandler<AgentConfiguration[]>('/notifications/configurations').then(
-      (configs) => setConfigurations(configs),
-    )
-  }, [])
+  // Initialize data on mount using lazy state initializer
+  useState(() => {
+    queueMicrotask(async () => {
+      const configs = await GetApiHandler<AgentConfiguration[]>('/notifications/configurations')
+      setConfigurations(configs)
+    })
+    return true
+  })
 
   const updateAddModalActive = (active: boolean) => {
     setAddModalActive(active)

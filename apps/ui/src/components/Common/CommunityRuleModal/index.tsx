@@ -1,6 +1,6 @@
 import { UploadIcon } from '@heroicons/react/solid'
 import { compareVersions } from 'compare-versions'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import GetApiHandler, { PostApiHandler } from '../../../utils/ApiHandler'
 import { IRule } from '../../Rules/Rule/RuleCreator'
 import CommunityRuleUpload from '../../Rules/Rule/RuleCreator/CommunityRuleUpload'
@@ -96,41 +96,36 @@ const CommunityRuleModal = (props: ICommunityRuleModal) => {
   })
   void initialized
 
-  const applicableCommunityRules = useMemo(() => {
-    return communityRules
-      .filter((rule) => {
-        const versionCheck =
-          compareVersions(rule.appVersion || '0.0.0', appVersion) <= 0
-        const typeCheck = rule.type === props.type
+  // Compute inline - React Compiler will optimize
+  const applicableCommunityRules = communityRules
+    .filter((rule) => {
+      const versionCheck =
+        compareVersions(rule.appVersion || '0.0.0', appVersion) <= 0
+      const typeCheck = rule.type === props.type
 
-        return versionCheck && typeCheck
-      })
-      .sort((a, b) => b.karma! - a.karma!)
-  }, [communityRules, appVersion, props.type])
-
-  const filteredCommunityRules = useMemo(() => {
-    return applicableCommunityRules.filter((rule) => {
-      const searchCheck =
-        searchText !== ''
-          ? rule.name.toLowerCase().includes(searchText.trim().toLowerCase()) ||
-            rule.description
-              .toLowerCase()
-              .includes(searchText.trim().toLowerCase()) ||
-            rule.uploadedBy
-              ?.toLowerCase()
-              .includes(searchText.trim().toLowerCase())
-          : true
-
-      return searchCheck
+      return versionCheck && typeCheck
     })
-  }, [applicableCommunityRules, searchText])
+    .sort((a, b) => b.karma! - a.karma!)
 
-  const shownRules = useMemo(() => {
-    return filteredCommunityRules.slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage,
-    )
-  }, [filteredCommunityRules, currentPage, itemsPerPage])
+  const filteredCommunityRules = applicableCommunityRules.filter((rule) => {
+    const searchCheck =
+      searchText !== ''
+        ? rule.name.toLowerCase().includes(searchText.trim().toLowerCase()) ||
+          rule.description
+            .toLowerCase()
+            .includes(searchText.trim().toLowerCase()) ||
+          rule.uploadedBy
+            ?.toLowerCase()
+            .includes(searchText.trim().toLowerCase())
+        : true
+
+    return searchCheck
+  })
+
+  const shownRules = filteredCommunityRules.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  )
 
   const lastPage = Math.max(
     1,

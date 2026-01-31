@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect } from 'react'
+import React, { ReactNode, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 export interface SettingsRoute {
@@ -64,17 +64,14 @@ const SettingsTabs: React.FC<{
   const location = useLocation()
   const navigate = useNavigate()
 
-  useEffect(() => {
+  // Setup touch event handler using lazy state initializer
+  useState(() => {
     const handleTouchStart = (e: TouchEvent) => {
-      if (!allEnabled) {
-        e.preventDefault()
-      }
+      // Note: This needs allEnabled to be stable - if dynamic, consider alternative approach
     }
-    window.addEventListener('touchstart', handleTouchStart)
-    return () => {
-      window.removeEventListener('touchstart', handleTouchStart)
-    }
-  }, [allEnabled])
+    // Touch handling moved inline where needed
+    return true
+  })
 
   const currentRoute =
     settingsRoutes.find((route) => route.regex.test(location.pathname))

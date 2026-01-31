@@ -1,6 +1,6 @@
 import { ClipboardCopyIcon } from '@heroicons/react/solid'
 import { Editor } from '@monaco-editor/react'
-import { useMemo, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import YAML from 'yaml'
 import { useRuleGroupForCollection } from '../../../../api/rules'
@@ -52,7 +52,8 @@ const TestMediaItem = (props: ITestMediaItem) => {
     }
   }
 
-  const testable = useMemo(() => {
+  // Compute testable inline - React Compiler will optimize
+  const testable = (() => {
     if (!mediaItem || !ruleGroup) return false
 
     // if movies or shows is selected
@@ -74,7 +75,7 @@ const TestMediaItem = (props: ITestMediaItem) => {
     }
 
     return false
-  }, [mediaItem, ruleGroup, selectedSeasons, selectedEpisodes])
+  })()
 
   function handleEditorDidMount(editor: any) {
     editorRef.current = editor
@@ -146,15 +147,14 @@ const TestMediaItem = (props: ITestMediaItem) => {
     setComparisonResult(result)
   }
 
-  const selectedMediaId = useMemo(() => {
-    if (mediaItem) {
-      return selectedEpisodes !== -1
-        ? selectedEpisodes
-        : selectedSeasons !== -1
-          ? selectedSeasons
-          : mediaItem?.id
-    }
-  }, [selectedSeasons, selectedEpisodes, mediaItem])
+  // Compute selectedMediaId inline - React Compiler will optimize
+  const selectedMediaId = mediaItem
+    ? selectedEpisodes !== -1
+      ? selectedEpisodes
+      : selectedSeasons !== -1
+        ? selectedSeasons
+        : mediaItem?.id
+    : undefined
 
   if (ruleGroupQuery.isLoading || !ruleGroup) {
     return null

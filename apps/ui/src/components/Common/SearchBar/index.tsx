@@ -1,4 +1,4 @@
-import { ChangeEvent, useContext, useState } from 'react'
+import { ChangeEvent, use, useState } from 'react'
 import SearchContext from '../../../contexts/search-context'
 
 interface ISearchBar {
@@ -8,7 +8,7 @@ interface ISearchBar {
 
 const SearchBar = (props: ISearchBar) => {
   const [text, setText] = useState<string>('')
-  const SearchCtx = useContext(SearchContext)
+  const SearchCtx = use(SearchContext)
 
   // Track context search text changes
   const [lastContextText, setLastContextText] = useState<string>('')

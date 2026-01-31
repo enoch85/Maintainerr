@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { useMediaServerLibraries } from '../../../api/media-server'
 
 interface ILibrarySwitcher {
@@ -13,28 +13,34 @@ const LibrarySwitcher = (props: ILibrarySwitcher) => {
     error: librariesError,
     isLoading: librariesLoading,
   } = useMediaServerLibraries()
-  const lastAutoSelectedLibraryId = useRef<string | null>(null)
+  const [lastAutoSelectedLibraryId, setLastAutoSelectedLibraryId] = useState<string | null>(null)
 
   const onSwitchLibrary = (event: { target: { value: string } }) => {
     onLibraryChange(event.target.value)
   }
 
-  useEffect(() => {
-    if (!libraries || libraries.length === 0) {
-      return
-    }
-
-    if (shouldShowAllOption === false) {
-      const firstId = libraries[0].id
-
-      if (firstId && lastAutoSelectedLibraryId.current !== firstId) {
-        lastAutoSelectedLibraryId.current = firstId
-        onLibraryChange(firstId)
+  // State-based change detection for auto-selecting first library
+  const [lastLibraryState, setLastLibraryState] = useState<{ length: number; showAll: boolean | undefined } | null>(null)
+  const currentState = { length: libraries?.length ?? 0, showAll: shouldShowAllOption }
+  
+  if (
+    libraries && 
+    libraries.length > 0 && 
+    (lastLibraryState?.length !== currentState.length || lastLibraryState?.showAll !== currentState.showAll)
+  ) {
+    queueMicrotask(() => {
+      setLastLibraryState(currentState)
+      if (shouldShowAllOption === false) {
+        const firstId = libraries[0].id
+        if (firstId && lastAutoSelectedLibraryId !== firstId) {
+          setLastAutoSelectedLibraryId(firstId)
+          onLibraryChange(firstId)
+        }
+      } else {
+        setLastAutoSelectedLibraryId(null)
       }
-    } else {
-      lastAutoSelectedLibraryId.current = null
-    }
-  }, [libraries, shouldShowAllOption, onLibraryChange])
+    })
+  }
 
   return (
     <>

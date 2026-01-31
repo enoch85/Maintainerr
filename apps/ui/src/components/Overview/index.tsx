@@ -1,6 +1,6 @@
 import { type MediaItem } from '@maintainerr/contracts'
 import { clone } from 'lodash'
-import { useContext, useState } from 'react'
+import { use, useState } from 'react'
 import { useMediaServerLibraries } from '../../api/media-server'
 import SearchContext from '../../contexts/search-context'
 import GetApiHandler from '../../utils/ApiHandler'
@@ -20,7 +20,7 @@ const Overview = () => {
   const [searchUsed, setSearchUsed] = useState<boolean>(false)
 
   const [pageCount, setPageCount] = useState<number>(0)
-  const SearchCtx = useContext(SearchContext)
+  const SearchCtx = use(SearchContext)
 
   const { data: libraries } = useMediaServerLibraries()
 

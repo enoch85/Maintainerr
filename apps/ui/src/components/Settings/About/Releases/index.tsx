@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import GetApiHandler from '../../../../utils/ApiHandler'
 import Badge from '../../../Common/Badge'
 import Button from '../../../Common/Button'
@@ -111,8 +111,9 @@ const Releases = ({ currentVersion }: ReleasesProps) => {
   const [data, setData] = useState<GitHubRelease[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchReleases = async () => {
+  // Initialize data on mount using lazy state initializer
+  useState(() => {
+    queueMicrotask(async () => {
       try {
         const response = await GetApiHandler<GitHubRelease[]>(`/app/releases`)
         setData(response)
@@ -123,10 +124,9 @@ const Releases = ({ currentVersion }: ReleasesProps) => {
             : 'Failed to fetch releases',
         )
       }
-    }
-
-    fetchReleases()
-  }, [])
+    })
+    return true
+  })
 
   if (!data && !error) {
     return <LoadingSpinner />

@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useState } from 'react'
+import React, { memo, useState } from 'react'
 import { useMediaServerType } from '../../../../hooks/useMediaServerType'
 import GetApiHandler from '../../../../utils/ApiHandler'
 
@@ -58,11 +58,9 @@ const MediaModalContent: React.FC<ModalContentProps> = memo(
     )
     const [metadata, setMetadata] = useState<Metadata | null>(null)
 
-    const mediaTypeOf = useMemo(
-      () =>
-        ['show', 'season', 'episode'].includes(mediaType) ? 'tv' : mediaType,
-      [mediaType],
-    )
+    // Compute inline - React Compiler will optimize
+    const mediaTypeOf =
+      ['show', 'season', 'episode'].includes(mediaType) ? 'tv' : mediaType
 
     const basePath = import.meta.env.VITE_BASE_PATH ?? ''
 

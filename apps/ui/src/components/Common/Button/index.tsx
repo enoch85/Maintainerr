@@ -1,4 +1,4 @@
-import React, { ForwardedRef, type JSX } from 'react'
+import React, { type JSX } from 'react'
 
 export type ButtonType =
   | 'default'
@@ -31,23 +31,22 @@ type BaseProps<P> = {
   onClick?: (
     e: React.MouseEvent<P extends 'a' ? HTMLAnchorElement : HTMLButtonElement>,
   ) => void
+  ref?: React.Ref<Element<P>>
 }
 
 type ButtonProps<P extends React.ElementType> = {
   as?: P
 } & MergeElementProps<P, BaseProps<P>>
 
-function Button<P extends ElementTypes = 'button'>(
-  {
-    buttonType = 'default',
-    buttonSize = 'default',
-    as,
-    children,
-    className,
-    ...props
-  }: ButtonProps<P>,
-  ref?: React.Ref<Element<P>>,
-): JSX.Element {
+function Button<P extends ElementTypes = 'button'>({
+  buttonType = 'default',
+  buttonSize = 'default',
+  as,
+  children,
+  className,
+  ref,
+  ...props
+}: ButtonProps<P>): JSX.Element {
   const buttonStyle = [
     'inline-flex items-center justify-center border border-transparent leading-5 font-medium focus:outline-none transition ease-in-out duration-150 cursor-pointer disabled:opacity-50 whitespace-nowrap',
   ]
@@ -122,7 +121,7 @@ function Button<P extends ElementTypes = 'button'>(
       <a
         className={buttonStyle.join(' ')}
         {...(props as React.ComponentProps<'a'>)}
-        ref={ref as ForwardedRef<HTMLAnchorElement>}
+        ref={ref as React.Ref<HTMLAnchorElement>}
       >
         <span className="flex items-center">{children}</span>
       </a>
@@ -132,7 +131,7 @@ function Button<P extends ElementTypes = 'button'>(
       <button
         className={buttonStyle.join(' ')}
         {...(props as React.ComponentProps<'button'>)}
-        ref={ref as ForwardedRef<HTMLButtonElement>}
+        ref={ref as React.Ref<HTMLButtonElement>}
       >
         <span className="flex items-center">{children}</span>
       </button>
@@ -140,4 +139,4 @@ function Button<P extends ElementTypes = 'button'>(
   }
 }
 
-export default React.forwardRef(Button) as typeof Button
+export default Button

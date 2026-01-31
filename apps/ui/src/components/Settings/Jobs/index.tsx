@@ -1,17 +1,18 @@
 import { SaveIcon } from '@heroicons/react/solid'
 import { isValidCron } from 'cron-validator'
-import { useRef, useState } from 'react'
+import { useActionState, useState } from 'react'
 import { useSettingsOutletContext } from '..'
 import { usePatchSettings } from '../../../api/settings'
 import Alert from '../../Common/Alert'
 import Button from '../../Common/Button'
 
 const JobSettings = () => {
-  const rulehanderRef = useRef<HTMLInputElement>(null)
-  const collectionHandlerRef = useRef<HTMLInputElement>(null)
+  const [ruleHandler, setRuleHandler] = useState('')
+  const [collectionHandler, setCollectionHandler] = useState('')
+  const [formInitialized, setFormInitialized] = useState(false)
   const [secondCronValid, setSecondCronValid] = useState(true)
   const [firstCronValid, setFirstCronValid] = useState(true)
-  const [missingValuesError, setMissingValuesError] = useState<boolean>(false)
+  
   const {
     mutateAsync: updateSettings,
     isError: updateSettingsError,
@@ -20,26 +21,37 @@ const JobSettings = () => {
   } = usePatchSettings()
   const { settings } = useSettingsOutletContext()
 
-  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setMissingValuesError(false)
-
-    if (
-      rulehanderRef.current?.value &&
-      collectionHandlerRef.current?.value &&
-      isValidCron(rulehanderRef.current.value) &&
-      isValidCron(collectionHandlerRef.current.value)
-    ) {
-      const payload = {
-        collection_handler_job_cron: collectionHandlerRef.current.value,
-        rules_handler_job_cron: rulehanderRef.current.value,
-      }
-
-      await updateSettings(payload)
-    } else {
-      setMissingValuesError(true)
-    }
+  // Initialize form from settings
+  if (settings && !formInitialized) {
+    setFormInitialized(true)
+    setRuleHandler(settings.rules_handler_job_cron || '')
+    setCollectionHandler(settings.collection_handler_job_cron || '')
   }
+
+  // Form action for React 19
+  const [error, submitAction, isSubmitting] = useActionState(
+    async (_prevState: string | null, formData: FormData) => {
+      const ruleHandlerValue = formData.get('ruleHandler') as string
+      const collectionHandlerValue = formData.get('collectionHandler') as string
+      
+      if (
+        !ruleHandlerValue ||
+        !collectionHandlerValue ||
+        !isValidCron(ruleHandlerValue) ||
+        !isValidCron(collectionHandlerValue)
+      ) {
+        return 'Please make sure all values are valid'
+      }
+      
+      await updateSettings({
+        collection_handler_job_cron: collectionHandlerValue,
+        rules_handler_job_cron: ruleHandlerValue,
+      })
+      
+      return null
+    },
+    null
+  )
 
   return (
     <>
@@ -50,8 +62,8 @@ const JobSettings = () => {
           <p className="description">Job configuration</p>
         </div>
 
-        {missingValuesError && (
-          <Alert type="error" title="Please make sure all values are valid" />
+        {error && (
+          <Alert type="error" title={error} />
         )}
 
         {updateSettingsError && (
@@ -66,7 +78,7 @@ const JobSettings = () => {
         )}
 
         <div className="section">
-          <form onSubmit={submit}>
+          <form action={submitAction}>
             <div className="form-row">
               <label htmlFor="ruleHandler" className="text-label">
                 Rule Handler
@@ -92,22 +104,18 @@ const JobSettings = () => {
                     name="ruleHandler"
                     id="ruleHandler"
                     type="text"
-                    onChange={() => {
-                      setFirstCronValid(
-                        rulehanderRef.current?.value
-                          ? isValidCron(rulehanderRef.current.value)
-                          : false,
-                      )
+                    value={ruleHandler}
+                    onChange={(e) => {
+                      setRuleHandler(e.target.value)
+                      setFirstCronValid(e.target.value ? isValidCron(e.target.value) : false)
                     }}
-                    ref={rulehanderRef}
-                    defaultValue={settings.rules_handler_job_cron}
-                  ></input>
+                  />
                 </div>
               </div>
             </div>
 
             <div className="form-row">
-              <label htmlFor="collectionHanlder" className="text-label">
+              <label htmlFor="collectionHandler" className="text-label">
                 Collection Handler
                 <p className="text-xs font-normal">
                   Supports all standard{' '}
@@ -129,19 +137,15 @@ const JobSettings = () => {
                   }`}
                 >
                   <input
-                    name="collectionHanlder"
-                    id="collectionHanlder"
+                    name="collectionHandler"
+                    id="collectionHandler"
                     type="text"
-                    onChange={() => {
-                      setSecondCronValid(
-                        collectionHandlerRef.current?.value
-                          ? isValidCron(collectionHandlerRef.current.value)
-                          : false,
-                      )
+                    value={collectionHandler}
+                    onChange={(e) => {
+                      setCollectionHandler(e.target.value)
+                      setSecondCronValid(e.target.value ? isValidCron(e.target.value) : false)
                     }}
-                    ref={collectionHandlerRef}
-                    defaultValue={settings.collection_handler_job_cron}
-                  ></input>
+                  />
                 </div>
               </div>
             </div>
@@ -152,7 +156,7 @@ const JobSettings = () => {
                   <Button
                     buttonType="primary"
                     type="submit"
-                    disabled={updateSettingsPending}
+                    disabled={updateSettingsPending || isSubmitting}
                   >
                     <SaveIcon />
                     <span>Save Changes</span>

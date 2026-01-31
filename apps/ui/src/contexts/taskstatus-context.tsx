@@ -9,7 +9,7 @@ import {
   TaskStatusDto,
 } from '@maintainerr/contracts'
 import { useQuery } from '@tanstack/react-query'
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, use, useState } from 'react'
 import { useRuleHandlerStatus } from '../api/rules'
 import GetApiHandler from '../utils/ApiHandler'
 import { useEvent } from './events-context'
@@ -99,43 +99,30 @@ export const TaskStatusProvider = (props: any) => {
     },
   )
 
-  const ruleHandlerRunning = useMemo(() => {
-    if (ruleHandlerRunningState) return ruleHandlerRunningState
+  // Compute derived values inline - React Compiler will optimize
+  const ruleHandlerRunning = ruleHandlerRunningState
+    ? ruleHandlerRunningState
+    : ruleHandlerStatus
+      ? ({
+          time: new Date(),
+          running: ruleHandlerStatus.processingQueue,
+        } satisfies TaskStatusDto)
+      : undefined
 
-    if (ruleHandlerStatus) {
-      return {
-        time: new Date(),
-        running: ruleHandlerStatus.processingQueue,
-      } satisfies TaskStatusDto
-    }
+  const collectionHandlerRunning = collectionHandlerRunningState
+    ? collectionHandlerRunningState
+    : collectionHandlerStatusQuery.data ?? undefined
 
-    return undefined
-  }, [ruleHandlerRunningState, ruleHandlerStatus])
+  const queueStatus = queueStatusState?.data ?? ruleHandlerStatus
 
-  const collectionHandlerRunning = useMemo(() => {
-    if (collectionHandlerRunningState) return collectionHandlerRunningState
+  // Compute context value inline - React Compiler will optimize
+  const contextValue = {
+    ruleHandlerRunning,
+    collectionHandlerRunning,
+    queueStatus,
+  } satisfies TaskStatusState
 
-    if (collectionHandlerStatusQuery.data) {
-      return collectionHandlerStatusQuery.data
-    }
-
-    return undefined
-  }, [collectionHandlerRunningState, collectionHandlerStatusQuery.data])
-
-  const queueStatus = useMemo(() => {
-    if (queueStatusState?.data) return queueStatusState.data
-    return ruleHandlerStatus
-  }, [queueStatusState, ruleHandlerStatus])
-
-  const contextValue = useMemo(() => {
-    return {
-      ruleHandlerRunning,
-      collectionHandlerRunning,
-      queueStatus,
-    } satisfies TaskStatusState
-  }, [ruleHandlerRunning, collectionHandlerRunning, queueStatus])
-
-  return <TaskStatusContext.Provider value={contextValue} {...props} />
+  return <TaskStatusContext value={contextValue} {...props} />
 }
 
 export type TaskStatusContext = {
@@ -145,7 +132,7 @@ export type TaskStatusContext = {
 }
 
 export const useTaskStatusContext = (): TaskStatusContext => {
-  const context = useContext(TaskStatusContext)
+  const context = use(TaskStatusContext)
 
   if (!context) {
     throw new Error(

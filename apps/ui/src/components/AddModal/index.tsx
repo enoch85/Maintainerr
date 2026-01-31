@@ -1,5 +1,5 @@
 import { MediaItemType } from '@maintainerr/contracts'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import GetApiHandler, { PostApiHandler } from '../../utils/ApiHandler'
 import Alert from '../Common/Alert'
 import FormItem from '../Common/FormItem'
@@ -34,36 +34,32 @@ const AddModal = (props: IAddModal) => {
     },
   ])
 
-  const origCollectionOptions = useMemo(
-    () =>
-      props.modalType === 'exclude'
-        ? [
-            {
-              id: -1,
-              title: 'All collections',
-            },
-          ]
-        : [],
-    [props.modalType],
-  )
+  // Compute inline - React Compiler will optimize
+  const origCollectionOptions =
+    props.modalType === 'exclude'
+      ? [
+          {
+            id: -1,
+            title: 'All collections',
+          },
+        ]
+      : []
 
-  const selectedMediaId = useMemo(() => {
-    return props.type === 'movie'
+  const selectedMediaId =
+    props.type === 'movie'
       ? -1
       : selectedEpisodes !== -1
         ? selectedEpisodes
         : selectedSeasons
-  }, [selectedSeasons, selectedEpisodes, props.type])
 
-  const selectedContext = useMemo((): MediaItemType => {
-    return props.type === 'show'
+  const selectedContext: MediaItemType =
+    props.type === 'show'
       ? selectedEpisodes !== -1
         ? 'episode'
         : selectedSeasons !== -1
           ? 'season'
           : 'show'
       : 'movie'
-  }, [selectedSeasons, selectedEpisodes, props.type])
 
   const handleCancel = () => {
     props.onCancel()

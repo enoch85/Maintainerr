@@ -4,7 +4,7 @@ import {
   ExclamationIcon,
   SaveIcon,
 } from '@heroicons/react/solid'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'react-toastify'
 import { useSettingsOutletContext } from '..'
 import {
@@ -17,10 +17,6 @@ import Button from '../../Common/Button'
 import DocsButton from '../../Common/DocsButton'
 
 const JellyfinSettings = () => {
-  const urlRef = useRef<HTMLInputElement>(null)
-  const apiKeyRef = useRef<HTMLInputElement>(null)
-  const userIdRef = useRef<HTMLInputElement>(null)
-
   const [error, setError] = useState<string | undefined>()
   const [testResult, setTestResult] = useState<{
     status: boolean
@@ -30,6 +26,12 @@ const JellyfinSettings = () => {
     url: string
     apiKey: string
   } | null>(null)
+  
+  // Form state
+  const [url, setUrl] = useState('')
+  const [apiKey, setApiKey] = useState('')
+  const [userId, setUserId] = useState('')
+  const [formInitialized, setFormInitialized] = useState(false)
 
   const { settings } = useSettingsOutletContext()
 
@@ -49,18 +51,15 @@ const JellyfinSettings = () => {
     isSuccess: deleteSuccess,
   } = useDeleteJellyfinSettings()
 
-  // Initialize form with existing settings
-  useEffect(() => {
-    if (settings?.jellyfin_url && urlRef.current) {
-      urlRef.current.value = settings.jellyfin_url
-    }
-    if (settings?.jellyfin_api_key && apiKeyRef.current) {
-      apiKeyRef.current.value = settings.jellyfin_api_key
-    }
-    if (settings?.jellyfin_user_id && userIdRef.current) {
-      userIdRef.current.value = settings.jellyfin_user_id
-    }
-  }, [settings])
+  // Initialize form values from settings once
+  const settingsKey = settings ? `${settings.jellyfin_url}-${settings.jellyfin_api_key}-${settings.jellyfin_user_id}` : undefined
+  
+  if (settingsKey && !formInitialized) {
+    setFormInitialized(true)
+    setUrl(settings?.jellyfin_url || '')
+    setApiKey(settings?.jellyfin_api_key || '')
+    setUserId(settings?.jellyfin_user_id || '')
+  }
 
   // Clear test result when URL or API key changes
   const handleCredentialChange = () => {
@@ -74,19 +73,19 @@ const JellyfinSettings = () => {
     setError(undefined)
     setTestResult(null)
 
-    const url = urlRef.current?.value?.trim()
-    const apiKey = apiKeyRef.current?.value?.trim()
+    const trimmedUrl = url.trim()
+    const trimmedApiKey = apiKey.trim()
 
-    if (!url || !apiKey) {
+    if (!trimmedUrl || !trimmedApiKey) {
       setError('Please fill in the Jellyfin URL and API key')
       return
     }
 
     try {
       const result = await testJellyfin({
-        jellyfin_url: url,
-        jellyfin_api_key: apiKey,
-        jellyfin_user_id: userIdRef.current?.value?.trim() || undefined,
+        jellyfin_url: trimmedUrl,
+        jellyfin_api_key: trimmedApiKey,
+        jellyfin_user_id: userId.trim() || undefined,
       })
 
       if (result.code === 1) {
@@ -96,7 +95,7 @@ const JellyfinSettings = () => {
             ? `Connected to ${result.serverName} (v${result.version})`
             : result.message,
         })
-        setTestedSettings({ url, apiKey })
+        setTestedSettings({ url: trimmedUrl, apiKey: trimmedApiKey })
         toast.success('Jellyfin connection successful!')
       } else {
         setTestResult({ status: false, message: result.message })
@@ -115,11 +114,11 @@ const JellyfinSettings = () => {
     e.preventDefault()
     setError(undefined)
 
-    const url = urlRef.current?.value?.trim() ?? ''
-    const apiKey = apiKeyRef.current?.value?.trim() ?? ''
+    const trimmedUrl = url.trim()
+    const trimmedApiKey = apiKey.trim()
 
     // If both fields are empty, delete the settings (like Jellyseerr pattern)
-    const isRemovingSettings = url === '' && apiKey === ''
+    const isRemovingSettings = trimmedUrl === '' && trimmedApiKey === ''
 
     if (isRemovingSettings) {
       try {
@@ -134,7 +133,7 @@ const JellyfinSettings = () => {
     }
 
     // Validate required fields for saving
-    if (!url || !apiKey) {
+    if (!trimmedUrl || !trimmedApiKey) {
       setError('Please fill in the Jellyfin URL and API key')
       toast.error('Please fill in the required fields')
       return
@@ -142,10 +141,10 @@ const JellyfinSettings = () => {
 
     // Check if settings have been tested
     const currentSettingsAreSameAsSaved =
-      url === settings?.jellyfin_url && apiKey === settings?.jellyfin_api_key
+      trimmedUrl === settings?.jellyfin_url && trimmedApiKey === settings?.jellyfin_api_key
     const currentSettingsHaveBeenTested =
-      testedSettings?.url === url &&
-      testedSettings?.apiKey === apiKey &&
+      testedSettings?.url === trimmedUrl &&
+      testedSettings?.apiKey === trimmedApiKey &&
       testResult?.status
 
     if (!currentSettingsAreSameAsSaved && !currentSettingsHaveBeenTested) {
@@ -156,9 +155,9 @@ const JellyfinSettings = () => {
 
     try {
       await saveSettings({
-        jellyfin_url: url,
-        jellyfin_api_key: apiKey,
-        jellyfin_user_id: userIdRef.current?.value?.trim() || undefined,
+        jellyfin_url: trimmedUrl,
+        jellyfin_api_key: trimmedApiKey,
+        jellyfin_user_id: userId.trim() || undefined,
       })
       toast.success('Jellyfin settings saved successfully!')
     } catch (err) {
@@ -211,10 +210,12 @@ const JellyfinSettings = () => {
                     name="jellyfin_url"
                     id="jellyfin_url"
                     type="text"
-                    ref={urlRef}
                     placeholder="http://jellyfin.local:8096"
-                    defaultValue={settings?.jellyfin_url || ''}
-                    onChange={handleCredentialChange}
+                    value={url}
+                    onChange={(e) => {
+                      setUrl(e.target.value)
+                      handleCredentialChange()
+                    }}
                   />
                 </div>
               </div>
@@ -230,10 +231,12 @@ const JellyfinSettings = () => {
                     name="jellyfin_api_key"
                     id="jellyfin_api_key"
                     type="password"
-                    ref={apiKeyRef}
                     placeholder="Enter your Jellyfin API key"
-                    defaultValue={settings?.jellyfin_api_key || ''}
-                    onChange={handleCredentialChange}
+                    value={apiKey}
+                    onChange={(e) => {
+                      setApiKey(e.target.value)
+                      handleCredentialChange()
+                    }}
                   />
                 </div>
                 <p className="mt-2 text-sm text-zinc-400">
@@ -253,9 +256,9 @@ const JellyfinSettings = () => {
                     name="jellyfin_user_id"
                     id="jellyfin_user_id"
                     type="text"
-                    ref={userIdRef}
                     placeholder="Auto-detected if not specified"
-                    defaultValue={settings?.jellyfin_user_id || ''}
+                    value={userId}
+                    onChange={(e) => setUserId(e.target.value)}
                   />
                 </div>
                 <p className="mt-1 text-sm text-zinc-400">

@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react'
-import { useEffect, useState } from 'react'
+import { useRef, useState, useSyncExternalStore } from 'react'
 
 /**
  * A hook to help with debouncing state
@@ -17,16 +17,38 @@ const useDebouncedState = <S>(
 ): [S, S, Dispatch<SetStateAction<S>>] => {
   const [value, setValue] = useState(initialValue)
   const [finalValue, setFinalValue] = useState(initialValue)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastValueRef = useRef(value)
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setFinalValue(value)
-    }, debounceTime)
+  // Use useSyncExternalStore to manage the debounce timer
+  useSyncExternalStore(
+    (onStoreChange) => {
+      // Check if value changed and setup new timer
+      if (lastValueRef.current !== value) {
+        lastValueRef.current = value
 
-    return () => {
-      clearTimeout(timeout)
-    }
-  }, [value, debounceTime])
+        // Clear existing timeout
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current)
+        }
+
+        // Set new timeout
+        timeoutRef.current = setTimeout(() => {
+          setFinalValue(value)
+        }, debounceTime)
+      }
+
+      // Cleanup on unmount
+      return () => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current)
+        }
+      }
+    },
+    // Return value as snapshot to trigger re-subscription on value change
+    () => value,
+    () => initialValue,
+  )
 
   return [value, finalValue, setValue]
 }

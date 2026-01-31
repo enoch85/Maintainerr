@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useSyncExternalStore } from 'react'
 
 /**
  * useClickOutside
@@ -13,18 +13,26 @@ const useClickOutside = (
   ref: React.RefObject<HTMLElement | null | undefined>,
   callback: (e: MouseEvent) => void,
 ): void => {
-  useEffect(() => {
-    const handleBodyClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        callback(e)
+  useSyncExternalStore(
+    (onStoreChange) => {
+      const handleBodyClick = (e: MouseEvent) => {
+        if (ref.current && !ref.current.contains(e.target as Node)) {
+          callback(e)
+        }
       }
-    }
-    document.body.addEventListener('click', handleBodyClick, { capture: true })
+      document.body.addEventListener('click', handleBodyClick, { capture: true })
 
-    return () => {
-      document.body.removeEventListener('click', handleBodyClick)
-    }
-  }, [ref, callback])
+      return () => {
+        document.body.removeEventListener('click', handleBodyClick, {
+          capture: true,
+        })
+      }
+    },
+    // getSnapshot: we don't need to track state, just maintain the subscription
+    () => null,
+    // getServerSnapshot
+    () => null,
+  )
 }
 
 export default useClickOutside

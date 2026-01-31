@@ -1,5 +1,5 @@
 import { RefreshIcon, SaveIcon } from '@heroicons/react/solid'
-import React, { useRef, useState } from 'react'
+import React, { useActionState, useState } from 'react'
 import { useSettingsOutletContext } from '..'
 import { usePatchSettings } from '../../../api/settings'
 import GetApiHandler from '../../../utils/ApiHandler'
@@ -9,9 +9,10 @@ import DocsButton from '../../Common/DocsButton'
 import MediaServerSelector from '../MediaServerSelector'
 
 const MainSettings = () => {
-  const hostnameRef = useRef<HTMLInputElement>(null)
-  const apiKeyRef = useRef<HTMLInputElement>(null)
-  const [missingValuesError, setMissingValuesError] = useState<boolean>()
+  const [hostname, setHostname] = useState('')
+  const [apiKey, setApiKey] = useState('')
+  const [formInitialized, setFormInitialized] = useState(false)
+  
   const { settings } = useSettingsOutletContext()
   const {
     mutateAsync: updateSettings,
@@ -19,24 +20,36 @@ const MainSettings = () => {
     isPending,
   } = usePatchSettings()
 
-  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setMissingValuesError(false)
-    if (hostnameRef.current?.value && apiKeyRef.current?.value) {
-      const payload = {
-        applicationUrl: hostnameRef.current.value,
-        apikey: apiKeyRef.current.value,
-      }
-
-      await updateSettings(payload)
-    } else {
-      setMissingValuesError(true)
-    }
+  // Initialize form from settings
+  if (settings && !formInitialized) {
+    setFormInitialized(true)
+    setHostname(settings.applicationUrl || '')
+    setApiKey(settings.apikey || '')
   }
+
+  // Form action for React 19
+  const [error, submitAction, isSubmitting] = useActionState(
+    async (_prevState: string | null, formData: FormData) => {
+      const hostnameValue = formData.get('hostname') as string
+      const apiKeyValue = formData.get('apikey') as string
+      
+      if (!hostnameValue || !apiKeyValue) {
+        return 'Not all fields contain values'
+      }
+      
+      await updateSettings({
+        applicationUrl: hostnameValue,
+        apikey: apiKeyValue,
+      })
+      
+      return null
+    },
+    null
+  )
 
   const regenerateApi = async () => {
     const key = await GetApiHandler('/settings/api/generate')
-
+    setApiKey(key)
     await updateSettings({
       apikey: key,
     })
@@ -50,50 +63,48 @@ const MainSettings = () => {
           <h3 className="heading">General Settings</h3>
           <p className="description">Configure global settings</p>
         </div>
-        {missingValuesError && (
-          <Alert type="error" title="Not all fields contain values" />
+        {error && (
+          <Alert type="error" title={error} />
         )}
 
         {isSuccess && (
           <Alert type="info" title="Settings successfully updated" />
         )}
         <div className="section">
-          <form onSubmit={submit}>
+          <form action={submitAction}>
             <div className="form-row">
-              <label htmlFor="name" className="text-label">
+              <label htmlFor="hostname" className="text-label">
                 Hostname
               </label>
               <div className="form-input">
                 <div className="form-input-field">
                   <input
-                    name="name"
-                    id="name"
+                    name="hostname"
+                    id="hostname"
                     type="text"
-                    ref={hostnameRef}
-                    defaultValue={settings.applicationUrl}
-                  ></input>
+                    value={hostname}
+                    onChange={(e) => setHostname(e.target.value)}
+                  />
                 </div>
               </div>
             </div>
 
             <div className="form-row">
-              <label htmlFor="name" className="text-label">
+              <label htmlFor="apikey" className="text-label">
                 API key
               </label>
               <div className="form-input">
                 <div className="form-input-field">
                   <input
-                    name="name"
-                    id="name"
+                    name="apikey"
+                    id="apikey"
                     type="text"
-                    ref={apiKeyRef}
-                    defaultValue={settings.apikey}
-                  ></input>
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                  />
                   <button
-                    onClick={(e) => {
-                      e.preventDefault()
-                      regenerateApi()
-                    }}
+                    type="button"
+                    onClick={regenerateApi}
                     className="input-action ml-3"
                   >
                     <RefreshIcon />
@@ -112,7 +123,7 @@ const MainSettings = () => {
                     <Button
                       buttonType="primary"
                       type="submit"
-                      disabled={isPending}
+                      disabled={isPending || isSubmitting}
                     >
                       <SaveIcon />
                       <span>Save Changes</span>

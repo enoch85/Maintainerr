@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 
 /**
  * Hook to lock the body scroll whenever a component is mounted or
@@ -14,15 +14,34 @@ export const useLockBodyScroll = (
   isLocked: boolean,
   disabled?: boolean,
 ): void => {
-  useEffect(() => {
-    const originalStyle = window.getComputedStyle(document.body).overflow
-    if (isLocked && !disabled) {
-      document.body.style.overflow = 'hidden'
-    }
-    return () => {
-      if (!disabled) {
-        document.body.style.overflow = originalStyle
+  // Store the original style for cleanup
+  const [originalStyle] = useState(() =>
+    typeof document !== 'undefined'
+      ? window.getComputedStyle(document.body).overflow
+      : '',
+  )
+
+  // Use useSyncExternalStore to manage the body scroll state
+  useSyncExternalStore(
+    (onStoreChange) => {
+      // Subscribe: apply the scroll lock
+      if (typeof document !== 'undefined') {
+        if (isLocked && !disabled) {
+          document.body.style.overflow = 'hidden'
+        } else if (!disabled) {
+          document.body.style.overflow = originalStyle
+        }
       }
-    }
-  }, [isLocked, disabled])
+      // Return cleanup function
+      return () => {
+        if (typeof document !== 'undefined' && !disabled) {
+          document.body.style.overflow = originalStyle
+        }
+      }
+    },
+    // getSnapshot: return current lock state as string for comparison
+    () => `${isLocked}-${disabled}`,
+    // getServerSnapshot
+    () => `${isLocked}-${disabled}`,
+  )
 }

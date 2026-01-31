@@ -8,7 +8,7 @@ import {
   LogSettingSchemaInput,
   LogSettingSchemaOutput,
 } from '@maintainerr/contracts'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import ReconnectingEventSource from 'reconnecting-eventsource'
 import GetApiHandler, {
@@ -162,14 +162,13 @@ const Logs = () => {
     return true
   })
 
-  const filteredLogLines = useMemo(() => {
-    const filter = logFilter.toLowerCase()
-    return logLines.filter(
-      (log) =>
-        log.message.toLowerCase().includes(filter) ||
-        log.level.toLowerCase() == filter,
-    )
-  }, [logLines, logFilter])
+  // Compute inline - React Compiler will optimize
+  const filter = logFilter.toLowerCase()
+  const filteredLogLines = logLines.filter(
+    (log) =>
+      log.message.toLowerCase().includes(filter) ||
+      log.level.toLowerCase() == filter,
+  )
 
   // Track filtered logs changes to scroll to bottom
   const [lastLogCount, setLastLogCount] = useState<number>(0)
@@ -259,8 +258,10 @@ const LogFiles = () => {
   const [loading, setLoading] = useState<boolean>(true)
   const [page, setPage] = useState<number>(1)
 
-  useEffect(() => {
-    GetApiHandler<LogFile[]>(`/logs/files`).then((resp) => {
+  // Initialize data fetch using lazy state initializer
+  useState(() => {
+    queueMicrotask(async () => {
+      const resp = await GetApiHandler<LogFile[]>(`/logs/files`)
       // Sort the resp by name descending:
       resp.sort((a, b) => {
         if (a.name < b.name) {
@@ -275,16 +276,16 @@ const LogFiles = () => {
       setLogFiles(resp)
       setLoading(false)
     })
-  }, [])
+    return true
+  })
 
   const filesPerPage = 10
   const lastPage = Math.ceil(logFiles.length / filesPerPage)
 
-  const pagedLogFiles = useMemo(() => {
-    const start = (page - 1) * filesPerPage
-    const end = start + filesPerPage
-    return logFiles.slice(start, end)
-  }, [logFiles, page])
+  // Inline computation - React Compiler will optimize if needed
+  const start = (page - 1) * filesPerPage
+  const end = start + filesPerPage
+  const pagedLogFiles = logFiles.slice(start, end)
 
   return (
     <div className="section">

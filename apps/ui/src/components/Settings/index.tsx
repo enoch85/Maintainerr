@@ -1,5 +1,4 @@
 import { MediaServerType } from '@maintainerr/contracts'
-import { useMemo } from 'react'
 import { Outlet, useOutletContext } from 'react-router-dom'
 import { useSettings, type UseSettingsResult } from '../../api/settings'
 import Alert from '../Common/Alert'
@@ -19,7 +18,8 @@ const SettingsWrapper = () => {
   // Determine which media server tab to show based on settings
   const mediaServerType = settings?.media_server_type
 
-  const settingsRoutes: SettingsRoute[] = useMemo(() => {
+  // Compute inline - React Compiler will optimize
+  const settingsRoutes: SettingsRoute[] = (() => {
     const baseRoutes: SettingsRoute[] = [
       {
         text: 'General',
@@ -96,7 +96,7 @@ const SettingsWrapper = () => {
     )
 
     return baseRoutes
-  }, [mediaServerType])
+  })()
 
   if (error) {
     return (

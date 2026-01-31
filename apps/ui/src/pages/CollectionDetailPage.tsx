@@ -1,5 +1,5 @@
 import { PlayIcon } from '@heroicons/react/solid'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useRuleGroupForCollection } from '../api/rules'
 import { ICollection } from '../components/Collection'
@@ -29,19 +29,21 @@ const CollectionDetailPage = () => {
   const { data: ruleGroup, isLoading: ruleGroupLoading } =
     useRuleGroupForCollection(id)
 
-  useEffect(() => {
-    if (id) {
-      GetApiHandler(`/collections/collection/${id}`)
-        .then((resp) => {
-          setCollection(resp)
-          setIsLoading(false)
-        })
-        .catch((err) => {
-          console.error('Failed to load collection:', err)
-          setIsLoading(false)
-        })
-    }
-  }, [id])
+  // Initialize data on mount using lazy state initializer
+  const [lastLoadedId, setLastLoadedId] = useState<string | undefined>(undefined)
+  if (id && id !== lastLoadedId) {
+    queueMicrotask(async () => {
+      setLastLoadedId(id)
+      try {
+        const resp = await GetApiHandler(`/collections/collection/${id}`)
+        setCollection(resp)
+        setIsLoading(false)
+      } catch (err) {
+        console.error('Failed to load collection:', err)
+        setIsLoading(false)
+      }
+    })
+  }
 
   const tabbedRoutes: TabbedRoute[] = [
     {

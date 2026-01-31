@@ -1,5 +1,5 @@
 import { MaintainerrEvent } from '@maintainerr/contracts'
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, use, useRef, useState, useSyncExternalStore } from 'react'
 import ReconnectingEventSource from 'reconnecting-eventsource'
 import { API_BASE_PATH } from '../utils/ApiHandler'
 
@@ -17,44 +17,55 @@ export const EventsProvider = (props: any) => {
     return es
   })
 
-  return <EventsContext.Provider value={eventSource} {...props} />
+  return <EventsContext value={eventSource} {...props} />
 }
 
 export const useEvent = <T,>(
   type: MaintainerrEvent,
   listener?: (event: T) => any,
 ) => {
-  const context = useContext(EventsContext)
+  const context = use(EventsContext)
+  // Store listener in a ref that we update only inside the subscription callback
   const listenerRef = useRef(listener)
-  const [lastEvent, setLastEvent] = useState<T>()
 
-  useEffect(() => {
-    listenerRef.current = listener
-  }, [listener])
+  const lastEventRef = useRef<T | undefined>(undefined)
+  const subscribersRef = useRef(new Set<() => void>())
 
-  useEffect(() => {
-    if (!context) return
+  // Use useSyncExternalStore for safe subscription to external event source
+  const lastEvent = useSyncExternalStore(
+    (callback) => {
+      if (!context) return () => {}
 
-    const options: AddEventListenerOptions = {
-      passive: true,
-    }
+      // Update listener ref inside subscription - this is not during render
+      listenerRef.current = listener
+      subscribersRef.current.add(callback)
 
-    const parserListener = (ev: MessageEvent) => {
-      try {
-        const parsed = JSON.parse(ev.data) as T
-        setLastEvent(parsed)
-        listenerRef.current?.(parsed)
-      } catch (error) {
-        console.error('Error parsing event data:', error)
+      const options: AddEventListenerOptions = {
+        passive: true,
       }
-    }
 
-    context.addEventListener(type, parserListener, options)
+      const parserListener = (ev: MessageEvent) => {
+        try {
+          const parsed = JSON.parse(ev.data) as T
+          lastEventRef.current = parsed
+          listenerRef.current?.(parsed)
+          // Notify all subscribers
+          subscribersRef.current.forEach((cb) => cb())
+        } catch (error) {
+          console.error('Error parsing event data:', error)
+        }
+      }
 
-    return () => {
-      context.removeEventListener(type, parserListener, options)
-    }
-  }, [context, type])
+      context.addEventListener(type, parserListener, options)
+
+      return () => {
+        subscribersRef.current.delete(callback)
+        context.removeEventListener(type, parserListener, options)
+      }
+    },
+    () => lastEventRef.current,
+    () => undefined, // Server snapshot
+  )
 
   return lastEvent
 }
