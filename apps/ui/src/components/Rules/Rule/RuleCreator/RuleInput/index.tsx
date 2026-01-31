@@ -298,51 +298,89 @@ const RuleInput = (props: IRuleInput) => {
       ? (customVal ?? '1')
       : customVal
 
-  // Submit function - called from event handlers
-  const submit = () => {
+  // Submit function - accepts overrides for values being updated in the same event handler
+  // This avoids stale closure issues since we pass the NEW values directly
+  const submit = (
+    overrides: {
+      firstval?: string
+      action?: RulePossibility
+      secondVal?: string
+      customVal?: string
+      operator?: string
+    } = {},
+  ) => {
+    const currentFirstval =
+      overrides.firstval !== undefined ? overrides.firstval : firstval
+    const currentAction =
+      overrides.action !== undefined ? overrides.action : action
+    const currentSecondVal =
+      overrides.secondVal !== undefined ? overrides.secondVal : secondVal
+    const currentCustomVal =
+      overrides.customVal !== undefined ? overrides.customVal : customVal
+    const currentOperator =
+      overrides.operator !== undefined ? overrides.operator : operator
+
+    // Derive effective custom val for the current values
+    const currentEffectiveCustomVal =
+      currentSecondVal === CustomParams.CUSTOM_BOOLEAN &&
+      currentCustomVal !== '0'
+        ? (currentCustomVal ?? '1')
+        : currentCustomVal
+
+    // Derive customValActive/Type for current secondVal
+    const { active: currentCustomValActive, type: currentCustomValType } =
+      deriveCustomValState(currentSecondVal)
+
+    // Get current ruleType from currentFirstval
+    const currentProp = getPropFromConstants(currentFirstval, constants)
+    const currentRuleType = currentProp
+      ? (+currentProp.type.key as RuleType)
+      : initialRuleType
+
     const isCustomParam = (v: string | undefined) =>
       v && Object.values(CustomParams).includes(v as CustomParams)
 
     if (
-      firstval &&
-      action != null &&
-      ((secondVal && !isCustomParam(secondVal)) || effectiveCustomVal)
+      currentFirstval &&
+      currentAction != null &&
+      ((currentSecondVal && !isCustomParam(currentSecondVal)) ||
+        currentEffectiveCustomVal)
     ) {
       const ruleValues = {
-        operator: operator ?? null,
-        firstVal: JSON.parse(firstval),
-        action,
+        operator: currentOperator ?? null,
+        firstVal: JSON.parse(currentFirstval),
+        action: currentAction,
         section: props.section ? props.section - 1 : 0,
       }
 
-      if (effectiveCustomVal) {
-        const effectiveRuleTypeId = customValActive
-          ? customValType === RuleType.DATE
-            ? customValType
-            : customValType === RuleType.NUMBER
-              ? customValType
-              : customValType === RuleType.TEXT &&
-                  secondVal === CustomParams.CUSTOM_DAYS
+      if (currentEffectiveCustomVal) {
+        const effectiveRuleTypeId = currentCustomValActive
+          ? currentCustomValType === RuleType.DATE
+            ? currentCustomValType
+            : currentCustomValType === RuleType.NUMBER
+              ? currentCustomValType
+              : currentCustomValType === RuleType.TEXT &&
+                  currentSecondVal === CustomParams.CUSTOM_DAYS
                 ? RuleType.NUMBER
-                : customValType === RuleType.TEXT
-                  ? customValType
-                  : customValType === RuleType.BOOL
-                    ? customValType
-                    : customValType === RuleType.TEXT_LIST
-                      ? customValType
-                      : ruleType
-          : ruleType
+                : currentCustomValType === RuleType.TEXT
+                  ? currentCustomValType
+                  : currentCustomValType === RuleType.BOOL
+                    ? currentCustomValType
+                    : currentCustomValType === RuleType.TEXT_LIST
+                      ? currentCustomValType
+                      : currentRuleType
+          : currentRuleType
 
         props.onCommit(props.id ?? 0, {
           customVal: {
             ruleTypeId: effectiveRuleTypeId,
-            value: effectiveCustomVal,
+            value: currentEffectiveCustomVal,
           },
           ...ruleValues,
         })
       } else {
         props.onCommit(props.id ?? 0, {
-          lastVal: JSON.parse(secondVal!),
+          lastVal: JSON.parse(currentSecondVal!),
           ...ruleValues,
         })
       }
@@ -353,16 +391,16 @@ const RuleInput = (props: IRuleInput) => {
 
   // Schedule initial submit after first render
   const [didInitialSubmit] = useState(() => {
-    queueMicrotask(() => submit())
+    queueMicrotask(() => submit({}))
     return true
   })
   void didInitialSubmit
 
-  // Event handlers - update state and call submit
+  // Event handlers - pass new values directly to submit to avoid stale closures
   const updateOperator = (event: { target: { value: string } }) => {
     const newValue = event.target.value || undefined
     setOperator(newValue)
-    queueMicrotask(() => submit())
+    submit({ operator: newValue })
   }
 
   const updateFirstValue = (event: { target: { value: string } }) => {
@@ -371,13 +409,17 @@ const RuleInput = (props: IRuleInput) => {
     const newRuleType = newProp ? (+newProp.type.key as RuleType) : undefined
 
     // If rule type changed, clear secondVal and customVal
+    let newSecondVal = secondVal
+    let newCustomVal = customVal
     if (newRuleType !== undefined && newRuleType !== ruleType) {
+      newSecondVal = undefined
+      newCustomVal = undefined
       setSecondVal(undefined)
       setCustomVal(undefined)
     }
 
     setFirstVal(newValue)
-    queueMicrotask(() => submit())
+    submit({ firstval: newValue, secondVal: newSecondVal, customVal: newCustomVal })
   }
 
   const updateAction = (event: { target: { value: string } }) => {
@@ -386,7 +428,7 @@ const RuleInput = (props: IRuleInput) => {
         ? undefined
         : (+event.target.value as RulePossibility)
     setAction(newValue)
-    queueMicrotask(() => submit())
+    submit({ action: newValue })
   }
 
   const updateSecondValue = (event: { target: { value: string } }) => {
@@ -395,13 +437,16 @@ const RuleInput = (props: IRuleInput) => {
 
     // Handle custom value state based on new secondVal
     const { active } = deriveCustomValState(newValue)
+    let newCustomVal = customVal
     if (!active) {
+      newCustomVal = undefined
       setCustomVal(undefined)
     } else if (newValue === CustomParams.CUSTOM_BOOLEAN && customVal !== '0') {
+      newCustomVal = '1'
       setCustomVal('1')
     }
 
-    queueMicrotask(() => submit())
+    submit({ secondVal: newValue, customVal: newCustomVal })
   }
 
   const updateCustomValue = (event: { target: { value: string } }) => {
@@ -410,7 +455,7 @@ const RuleInput = (props: IRuleInput) => {
         ? (+event.target.value * 86400).toString()
         : event.target.value
     setCustomVal(newValue)
-    queueMicrotask(() => submit())
+    submit({ customVal: newValue })
   }
 
   const onDelete = (e: FormEvent | null) => {
