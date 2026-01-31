@@ -1,0 +1,64 @@
+# Maintainerr Development Environment
+# ====================================
+#
+# Quick Start:
+#   docker compose up -d
+#
+# Access:
+#   - Maintainerr: http://localhost:6246
+#
+# Configure Maintainerr with your Plex server:
+#   1. Open http://localhost:6246
+#   2. Settings -> Media Server -> Configure Plex
+#   3. Enter your Plex server URL and token
+#
+# Clean up:
+#   docker compose down -v  # Removes containers and volumes
+
+services:
+  # ==========================================
+  # Init container to set permissions
+  # ==========================================
+  init-permissions:
+    image: alpine:latest
+    container_name: maintainerr-init
+    volumes:
+      - maintainerr-data:/opt/data
+    command: >
+      sh -c "
+        echo 'Setting up directories and permissions...' &&
+        mkdir -p /opt/data/logs &&
+        chown -R 1000:1000 /opt/data &&
+        chmod -R 755 /opt/data &&
+        echo 'Permissions set successfully'
+      "
+
+  # ==========================================
+  # Maintainerr - Built from specified branch
+  # ==========================================
+  maintainerr:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: maintainerr-dev
+    user: "1000:1000"
+    depends_on:
+      init-permissions:
+        condition: service_completed_successfully
+    ports:
+      - "6246:6246"
+    volumes:
+      - maintainerr-data:/opt/data
+    environment:
+      - TZ=UTC
+      - DEBUG=true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6246/api/app/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  maintainerr-data:
