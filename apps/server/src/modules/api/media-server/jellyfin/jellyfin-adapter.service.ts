@@ -1083,10 +1083,19 @@ export class JellyfinAdapterService implements IMediaServerService {
     if (!this.api) return [];
 
     try {
-      // Jellyfin playlists are not library-specific, but we filter by parentId
-      // to maintain consistency with the interface contract
+      // Get admin user ID from settings - Jellyfin requires userId for playlist visibility
+      const settings = await this.settingsService.getSettings();
+      const userId =
+        settings && 'jellyfin_user_id' in settings
+          ? settings.jellyfin_user_id
+          : undefined;
+
+      // Jellyfin playlists are global (not library-specific), so only pass
+      // parentId when a real library ID is provided; omit it otherwise
+      // to search from root
       const response = await getItemsApi(this.api).getItems({
-        parentId: libraryId,
+        userId,
+        ...(libraryId ? { parentId: libraryId } : {}),
         includeItemTypes: [BaseItemKind.Playlist],
         recursive: true,
         fields: [ItemFields.Overview, ItemFields.DateCreated],
@@ -1106,8 +1115,17 @@ export class JellyfinAdapterService implements IMediaServerService {
     if (!this.api) return [];
 
     try {
+      // Get admin user ID from settings - Jellyfin requires userId for
+      // playlist visibility (GetPlaylistForUser checks IsVisible per user)
+      const settings = await this.settingsService.getSettings();
+      const userId =
+        settings && 'jellyfin_user_id' in settings
+          ? settings.jellyfin_user_id
+          : undefined;
+
       const response = await getPlaylistsApi(this.api).getPlaylistItems({
         playlistId,
+        userId,
       });
 
       return (response.data.Items || []).map(JellyfinMapper.toMediaItem);
