@@ -1247,6 +1247,21 @@ export class RuleConstants {
           type: RuleType.NUMBER,
           showType: ['episode'],
         },
+        {
+          id: 32,
+          name: 'favoritedBy',
+          humanName: '[list] Favorited by (username)',
+          mediaType: MediaType.MOVIE,
+          type: RuleType.TEXT_LIST,
+        },
+        {
+          id: 33,
+          name: 'sw_favoritedBy',
+          humanName: '[list] Favorited by (username)',
+          mediaType: MediaType.SHOW,
+          type: RuleType.TEXT_LIST,
+          showType: ['show', 'season', 'episode'],
+        },
       ],
     },
   ];

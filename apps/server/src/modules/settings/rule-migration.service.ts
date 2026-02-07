@@ -49,9 +49,18 @@ const PLEX_ONLY_PROPERTIES = new Set([
 /**
  * Properties that exist in Jellyfin but NOT in Plex.
  * Rules using these properties cannot be migrated.
+ *
+ * From rules.constants.ts, Jellyfin has these properties that Plex doesn't:
+ * - 30: playCount (total play attempts)
+ * - 31: sw_playCount (total play attempts for shows)
+ * - 32: favoritedBy (users who favorited the item)
+ * - 33: sw_favoritedBy (users who favorited the show/season/episode)
  */
 const JELLYFIN_ONLY_PROPERTIES = new Set<number>([
-  // Currently none - Jellyfin properties are a subset of Plex
+  30, // playCount
+  31, // sw_playCount
+  32, // favoritedBy
+  33, // sw_favoritedBy
 ]);
 
 export interface RuleMigrationResult {
